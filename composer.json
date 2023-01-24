@@ -1,0 +1,41 @@
+{
+  "name": "alnv/prosearch-indexer-contao-adapter-bundle",
+  "type": "contao-bundle",
+  "license": "proprietary",
+  "description": "",
+  "authors": [
+    {
+      "name": "Alexander Naumov",
+      "homepage": "https://alexandernaumov.de",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Alnv\\ProSearchIndexerContaoAdapterBundle\\": "src/"
+    },
+    "classmap": [
+      "src/Resources/contao/"
+    ],
+    "exclude-from-classmap": [
+      "src/Resources/contao/config/",
+      "src/Resources/contao/dca/"
+    ]
+  },
+  "require": {
+    "contao/core-bundle": "~4.9",
+    "fusonic/opengraph": "^2.2",
+    "yooper/php-text-analysis": "^1.8"
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "extra": {
+    "contao": {
+      "sources": {
+        "": "system/modules/prosearch-indexer-contao-adapter-bundle"
+      }
+    },
+    "contao-manager-plugin": "Alnv\\ProSearchIndexerContaoAdapterBundle\\ContaoManager\\Plugin"
+  }
+}
