@@ -25,6 +25,7 @@
   "require": {
     "contao/core-bundle": "~4.9",
     "fusonic/opengraph": "^2.2",
+    "elasticsearch/elasticsearch": "^8.6",
     "yooper/php-text-analysis": "^1.8"
   },
   "config": {

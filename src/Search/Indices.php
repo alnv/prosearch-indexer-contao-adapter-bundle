@@ -2,6 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Contao\CoreBundle\Search\Document;
 use Fusonic\OpenGraph\Consumer;
@@ -48,7 +49,9 @@ class Indices
             'links' => $this->getValuesByTagName('a')
         ];
 
-        $objIndicesModel = IndicesModel::findByUrl($objPageObject->url);
+        $strUrl = $document->getUri()->__toString();
+        $objIndicesModel = IndicesModel::findByUrl($strUrl);
+        $arrSearchTypes = $this->objCrawler->filterXpath("//meta[@name='search:type']")->extract(['content']);
 
         if (!$objIndicesModel) {
             $objIndicesModel = new IndicesModel();
@@ -70,14 +73,49 @@ class Indices
         }
 
         $objIndicesModel->tstamp = time();
-        $objIndicesModel->url = $objPageObject->url;
-        $objIndicesModel->title = $objPageObject->title;
+        $objIndicesModel->url = $strUrl;
+        $objIndicesModel->state = States::ACTIVE;
+        $objIndicesModel->types = $arrSearchTypes;
+        $objIndicesModel->title = $this->tokenize($this->getTitle($objPageObject));
         $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
-        $objIndicesModel->description = $objPageObject->description;
+        $objIndicesModel->description = $this->tokenize($this->getDescription($objPageObject));
         $objIndicesModel->save();
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
+    }
+
+    protected function getDescription($objPageObject) {
+
+        if ($objPageObject->description) {
+            return $objPageObject->description;
+        }
+
+        $arrDescriptions = $this->objCrawler->filterXpath("//meta[@name='description']")->extract(['content']);
+        if (!empty($arrDescriptions)) {
+            return $arrDescriptions[0] ?? '';
+        }
+
+        return '';
+    }
+
+    protected function getTitle($objPageObject) {
+
+        if ($objPageObject->title) {
+            return $objPageObject->title;
+        }
+
+        $strTitle = $this->objCrawler->filter('title')->text();
+        if ($strTitle) {
+            return $strTitle;
+        }
+
+        $arrH1 = $this->getValuesByTagName('h1');
+        if (empty($arrH1)) {
+            return '';
+        }
+
+        return $arrH1[0] ?? '';
     }
 
     /**
@@ -89,17 +127,28 @@ class Indices
 
         $arrReturn = [];
         $objNodes = $this->objCrawler->filter("body $strTagName");
+
         foreach ($objNodes as $objNode) {
-            $strText = preg_replace("/\r|\n/", "", $objNode->textContent);
+
+            $strText = $this->tokenize($objNode->textContent);
+
             if (!$strText) {
                 continue;
             }
+
             if (!in_array($strText, $arrReturn)) {
                 $arrReturn[] = $strText;
             }
         }
 
         return $arrReturn;
+    }
+
+    protected function tokenize($strString) {
+
+        $strString = str_replace(["\r", "\n"], " ", $strString);
+        $strString = preg_replace('/\s+/', ' ', $strString);
+        return trim($strString);
     }
 
     /**

@@ -16,14 +16,13 @@ $GLOBALS['TL_DCA']['tl_microdata'] = [
             'sql' => ['type' => 'integer', 'autoincrement' => true, 'notnull' => true, 'unsigned' => true]
         ],
         'tstamp' => [
-            'flag' => 6,
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
         ],
         'pid' => [
             'sql' => ['type' => 'integer','notnull' => false,'unsigned' => true,'default' => 0]
         ],
         'type' => [
-            'sql' => "varchar(16) NOT NULL default ''"
+            'sql' => "varchar(32) NOT NULL default ''"
         ],
         'data' => [
             'sql' => "longblob NULL"

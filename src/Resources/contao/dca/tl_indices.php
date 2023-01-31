@@ -14,8 +14,10 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'sql' => ['type' => 'integer', 'autoincrement' => true, 'notnull' => true, 'unsigned' => true]
         ],
         'tstamp' => [
-            'flag' => 6,
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
+        ],
+        'types' => [
+            'sql' => "blob NULL"
         ],
         'title' => [
             'sql' => "text NULL"
@@ -31,6 +33,12 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ],
         'document' => [
             'sql' => "longblob NULL"
+        ],
+        'last_indexed' => [
+            'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
+        ],
+        'state' => [
+            'sql' => "varchar(16) NOT NULL default ''"
         ]
     ]
 ];

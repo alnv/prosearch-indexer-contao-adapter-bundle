@@ -27,4 +27,15 @@ class MicrodataModel extends Model
 
         return static::findOneBy($arrColumns, [$strChecksum, $intPid], []);
     }
+
+    public static function findByPid(int $intPid) {
+
+        $t = static::$strTable;
+
+        return static::findAll([
+            'column' => ["$t.pid=?"],
+            'value' => [$intPid],
+            'order' => 'tstamp DESC'
+        ]);
+    }
 }

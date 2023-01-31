@@ -26,19 +26,22 @@ abstract class MicroData
             return;
         }
 
-        $strChecksum = md5(serialize($jsonLdScriptsData));
-        $objMicrodataModel = MicrodataModel::findByChecksumAndPid($strChecksum, $indicesId);
+        foreach ($jsonLdScriptsData as $arrDataScriptsData) {
 
-        if (!$objMicrodataModel) {
-            $objMicrodataModel = new MicrodataModel();
+            $strChecksum = md5(serialize($arrDataScriptsData));
+            $objMicrodataModel = MicrodataModel::findByChecksumAndPid($strChecksum, $indicesId);
+
+            if (!$objMicrodataModel) {
+                $objMicrodataModel = new MicrodataModel();
+            }
+
+            $objMicrodataModel->tstamp = time();
+            $objMicrodataModel->pid = $indicesId;
+            $objMicrodataModel->type = $this->type;
+            $objMicrodataModel->checksum = $strChecksum;
+            $objMicrodataModel->data = serialize($arrDataScriptsData);
+
+            $objMicrodataModel->save();
         }
-
-        $objMicrodataModel->tstamp = time();
-        $objMicrodataModel->pid = $indicesId;
-        $objMicrodataModel->type = $this->type;
-        $objMicrodataModel->checksum = $strChecksum;
-        $objMicrodataModel->data = serialize(serialize($jsonLdScriptsData));
-
-        $objMicrodataModel->save();
     }
 }
