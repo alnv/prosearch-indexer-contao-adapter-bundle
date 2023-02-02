@@ -5,10 +5,68 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
+use Contao\CoreBundle\Monolog\ContaoContext;
+use Contao\System;
+use Elastic\Elasticsearch\ClientBuilder;
+use Psr\Log\LogLevel;
 
-class ElasticsearchAdapter {
+// https://github.com/elastic/elasticsearch-php
+class ElasticsearchAdapter
+{
 
-    public function getIndex($intLimit=100) {
+    public function connect()
+    {
+
+        $arrCredentials = (new Credentials())->getCredentials();
+
+        if ($arrCredentials === false) {
+            return;
+        }
+
+        switch ($arrCredentials['type']) {
+            case 'elasticsearch':
+                try {
+                    $objClient = ClientBuilder::create()
+                        ->setHosts([$arrCredentials['host'] . ($arrCredentials['port'] ? ':' . $arrCredentials['port'] : '')])
+                        ->setBasicAuthentication($arrCredentials['host'], $arrCredentials['password'])
+                        ->setCABundle($arrCredentials['cert'])
+                        ->build();
+
+                    // todo
+
+                } catch (\Exception $objError) {
+                    System::getContainer()
+                        ->get('monolog.logger.contao')
+                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__.'::'.__FUNCTION__, TL_ERROR)]);
+                }
+                break;
+            case 'elasticsearch_cloud':
+                try {
+                    $objClient = ClientBuilder::create()
+                        ->setElasticCloudId($arrCredentials['cloudid'])
+                        ->setApiKey($arrCredentials['key'])
+                        ->build();
+
+                    // todo
+
+                } catch (\Exception $objError) {
+                    System::getContainer()
+                        ->get('monolog.logger.contao')
+                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__.'::'.__FUNCTION__, TL_ERROR)]);
+                    exit;
+                }
+
+                break;
+            case 'licence':
+
+                // todo
+
+                break;
+        }
+    }
+
+    public function getIndex($intLimit = 100)
+    {
 
         $objIndices = IndicesModel::findAll([
             'column' => ['state=?'],
@@ -30,7 +88,8 @@ class ElasticsearchAdapter {
         //
     }
 
-    protected function createDocument($strIndicesId) {
+    protected function createDocument($strIndicesId)
+    {
 
         $objIndices = IndicesModel::findByPk($strIndicesId);
 

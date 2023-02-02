@@ -1,10 +1,37 @@
 <?php
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Search\ElasticsearchAdapter;
+use Contao\DataContainer;
+
 $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
         'dataContainer' => 'Table',
         'enableVersioning' => true,
-        'sql'=> [
+        'onload_callback' => [
+            function () {
+                $objEntity = \Database::getInstance()->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')->limit(1)->execute();
+
+                if ($objEntity->numRows) {
+                    if (!\Input::get('act') && !\Input::get('id')) {
+                        $this->redirect($this->addToUrl('act=edit&id=' . $objEntity->id . '&rt=' . REQUEST_TOKEN));
+                    }
+                } else {
+                    if (!\Input::get('act')) {
+                        $this->redirect($this->addToUrl('act=create'));
+                    }
+                }
+            }
+        ],
+        'onsubmit_callback' => [function (DataContainer $dataContainer) {
+            switch ($dataContainer->activeRecord->type) {
+                case 'licence':
+                case 'elasticsearch':
+                case 'elasticsearch_cloud':
+                    $varConnect = (new ElasticsearchAdapter())->connect();
+                    break;
+            }
+        }],
+        'sql' => [
             'keys' => [
                 'id' => 'primary'
             ]
@@ -36,31 +63,32 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             ]
         ]
     ],
-    'palettes'=> [
+    'palettes' => [
         '__selector__' => ['type'],
         'default' => 'type',
         'licence' => 'type,key',
-        'self' => 'type,host,port,username,password'
+        'elasticsearch' => 'type,host,port,username,password',
+        'elasticsearch_cloud' => 'type,cloudid,key'
     ],
     'fields' => [
         'id' => [
-            'sql' => ['type'=>'integer','autoincrement'=>true,'notnull'=>true,'unsigned'=>true]
+            'sql' => ['type' => 'integer', 'autoincrement' => true, 'notnull' => true, 'unsigned' => true]
         ],
         'tstamp' => [
             'flag' => 6,
-            'sql' => ['type'=>'integer','notnull'=>false,'unsigned'=>true,'default' => 0]
+            'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
         ],
         'type' => [
             'inputType' => 'select',
             'eval' => [
-                'maxlength' => 16,
+                'maxlength' => 32,
                 'tl_class' => 'w50',
                 'submitOnChange' => true,
                 'includeBlankOption' => true
             ],
-            'options' => ['self', 'licence'],
+            'options' => ['licence', 'elasticsearch', 'elasticsearch_cloud'],
             'reference' => &$GLOBALS['TL_LANG']['tl_search_credentials'],
-            'sql' => "varchar(16) NOT NULL default ''"
+            'sql' => "varchar(32) NOT NULL default ''"
         ],
         'host' => [
             'inputType' => 'text',
@@ -94,18 +122,38 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'eval' => [
                 'maxlength' => 128,
                 'tl_class' => 'w50',
-                'mandatory' => true
+                'mandatory' => true,
+                'decodeEntities' => true
             ],
             'sql' => "varchar(128) NOT NULL default ''"
         ],
         'key' => [
             'inputType' => 'text',
             'eval' => [
-                'maxlength' => 64,
+                'maxlength' => 255,
                 'tl_class' => 'w50',
-                'mandatory' => true
+                'mandatory' => true,
+                'decodeEntities' => true
             ],
-            'sql' => "varchar(64) NOT NULL default ''"
+            'sql' => "varchar(255) NOT NULL default ''"
+        ],
+        'cloudid' => [
+            'inputType' => 'text',
+            'eval' => [
+                'maxlength' => 255,
+                'tl_class' => 'w50',
+                'mandatory' => true,
+                'decodeEntities' => true
+            ],
+            'sql' => "varchar(255) NOT NULL default ''"
+        ],
+        'cert' => [
+            'inputType' => 'text',
+            'eval' => [
+                'maxlength' => 255,
+                'tl_class' => 'w50'
+            ],
+            'sql' => "varchar(255) NOT NULL default ''"
         ]
     ]
 ];
