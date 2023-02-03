@@ -46,7 +46,7 @@ class Indices
             'h4' => $this->getValuesByTagName('h4'),
             'h5' => $this->getValuesByTagName('h5'),
             'h6' => $this->getValuesByTagName('h6'),
-            'links' => $this->getValuesByTagName('a')
+            // 'links' => $this->getValuesByTagName('a')
         ];
 
         $strUrl = $document->getUri()->__toString();

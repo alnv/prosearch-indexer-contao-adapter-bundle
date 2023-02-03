@@ -1,0 +1,35 @@
+<script>
+    (function () {
+        let objState = {
+            categories: [],
+            keywords: ''
+        };
+        new Vue({
+            el: "#<?= $this->elementId ?>",
+            data: function () {
+                return objState
+            },
+            methods: {
+                getSearchResults: function () {
+                    this.$http.post('/ps/search/results/' + this.keywords, {categories: this.categories},
+                        {
+                            emulateJSON: true,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    ).then(function (res) {
+                        console.log(res)
+                    }.bind(this));
+                },
+                search: function () {
+                    this.getSearchResults();
+                }
+            },
+            watch: {
+                //
+            },
+            mounted: function () {
+                //
+            }
+        })
+    })();
+</script>

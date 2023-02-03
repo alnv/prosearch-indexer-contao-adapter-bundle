@@ -9,10 +9,15 @@ use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\System;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
+use Elastic\Elasticsearch\Exception\ClientResponseException;
+use Elastic\Elasticsearch\Exception\ServerResponseException;
 
 // https://github.com/elastic/elasticsearch-php
 class ElasticsearchAdapter
 {
+
+    private $strType;
+    private $objClient;
 
     public function connect()
     {
@@ -20,49 +25,59 @@ class ElasticsearchAdapter
         $arrCredentials = (new Credentials())->getCredentials();
 
         if ($arrCredentials === false) {
+
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::ERROR, 'No credentials for elasticsearch found', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+
             return;
         }
+
+        $this->strType = $arrCredentials['type'];
 
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
                 try {
-                    $objClient = ClientBuilder::create()
+                    $this->objClient = ClientBuilder::create()
                         ->setHosts([$arrCredentials['host'] . ($arrCredentials['port'] ? ':' . $arrCredentials['port'] : '')])
                         ->setBasicAuthentication($arrCredentials['host'], $arrCredentials['password'])
                         ->setCABundle($arrCredentials['cert'])
                         ->build();
-
-                    // todo
-
                 } catch (\Exception $objError) {
                     System::getContainer()
                         ->get('monolog.logger.contao')
-                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__.'::'.__FUNCTION__, TL_ERROR)]);
+                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
                 }
                 break;
             case 'elasticsearch_cloud':
                 try {
-                    $objClient = ClientBuilder::create()
+                    $this->objClient = ClientBuilder::create()
                         ->setElasticCloudId($arrCredentials['cloudid'])
                         ->setApiKey($arrCredentials['key'])
                         ->build();
-
-                    // todo
-
                 } catch (\Exception $objError) {
                     System::getContainer()
                         ->get('monolog.logger.contao')
-                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__.'::'.__FUNCTION__, TL_ERROR)]);
+                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
                     exit;
                 }
-
                 break;
             case 'licence':
-
                 // todo
-
                 break;
         }
+
+        if (!$this->objClient) {
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::ERROR, 'No connection to elasticsearch found', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+        }
+    }
+
+    public function getClient()
+    {
+
+        return $this->objClient;
     }
 
     public function getIndex($intLimit = 100)
@@ -76,7 +91,7 @@ class ElasticsearchAdapter
         ]);
 
         if (!$objIndices) {
-            return;
+            return [];
         }
 
         $arrDocuments = [];
@@ -85,7 +100,43 @@ class ElasticsearchAdapter
             $arrDocuments[$objIndices->url] = $this->createDocument($objIndices->id);
         }
 
-        //
+        return $arrDocuments;
+    }
+
+    public function indexDocuments() {
+
+        $this->connect();
+        $arrDocuments = $this->getIndex();
+
+        if (!$this->objClient) {
+            return;
+        }
+
+        foreach ($arrDocuments as $arrDocument) {
+
+            $objIndicesModel = IndicesModel::findByPk($arrDocument['id']);
+
+            if (!$objIndicesModel) {
+                continue;
+            }
+
+            $arrParams = [
+                'index' => 'contao_search',
+                'body'  => $arrDocument
+            ];
+
+            try {
+                $this->objClient->index($arrParams);
+            } catch (\Exception $e) {
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::ERROR, $e->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                continue;
+            }
+
+            $objIndicesModel->last_indexed = time();
+            $objIndicesModel->save();
+        }
     }
 
     protected function createDocument($strIndicesId)
@@ -98,12 +149,14 @@ class ElasticsearchAdapter
         }
 
         $arrDomDocument = \StringUtil::deserialize($objIndices->document, true);
+        $arrUrlFragments = parse_url($objIndices->url);
 
         $arrDocument = [
-            'origin_id' => $strIndicesId,
+            'id' => $strIndicesId,
             'title' => $objIndices->title ?: '',
             'description' => $objIndices->description ?: '',
             'url' => $objIndices->url,
+            'domain' => $arrUrlFragments['host'] ?? '',
             'microdata' => []
         ];
 
@@ -125,14 +178,12 @@ class ElasticsearchAdapter
         $arrDocument['types'] = $arrTypes;
 
         foreach ($arrDomDocument as $strField => $varValues) {
+
             if (is_array($varValues)) {
                 $varValues = implode(', ', $varValues);
             }
-            $arrDocument[$strField] = $varValues;
-        }
 
-        if (!empty($arrDocument['types'])) {
-            // dd($arrDocument);
+            $arrDocument[$strField] = $varValues;
         }
 
         return $arrDocument;

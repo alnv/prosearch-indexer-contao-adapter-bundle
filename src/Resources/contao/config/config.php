@@ -39,7 +39,7 @@ array_insert($GLOBALS['FE_MOD'], 3, [
 
 // dev
 /*
-if (TL_MODE == 'BE') {
-    (new \Alnv\ProSearchIndexerContaoAdapterBundle\Search\ElasticsearchAdapter())->getIndex(100);exit;
+if (TL_MODE == 'FE') {
+    (new \Alnv\ProSearchIndexerContaoAdapterBundle\Search\ElasticsearchAdapter())->indexDocuments();exit;
 }
 */

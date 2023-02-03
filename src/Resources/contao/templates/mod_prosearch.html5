@@ -1,0 +1,35 @@
+<?php $this->extend('block_unsearchable'); ?>
+<?php $this->block('content'); ?>
+
+<div id="<?= $this->elementId ?>" class="search-container">
+    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET">
+        <div class="formbody">
+            <div class="widget widget-text">
+                <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
+                <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>">
+            </div>
+            <div class="widget widget-submit">
+                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit" @click.stop.prevent="search()"><?= $this->search ?></button>
+            </div>
+            <?php if (!empty($this->categories)): ?>
+                <div class="widget checkbox-radio">
+                    <fieldset class="checkbox_container">
+                        <legend class="invisible"><?= $this->optionsLabel ?></legend>
+                        <?php foreach ($this->categories as $index => $strCategory): ?>
+                            <span>
+                                <input type="checkbox" name="categories[]" v-model="categories" id="id_category_<?= $index ?>" class="checkbox" value="<?= $strCategory['value'] ?>"<?= (in_array($strCategory['value'], $this->checkedCategories)?' checked':'') ?>>
+                                <label for="id_category_<?= $index ?>"><?= $strCategory['label'] ?></label>
+                            </span>
+                        <?php endforeach; ?>
+                    </fieldset>
+                </div>
+            <?php endif; ?>
+        </div>
+    </form>
+</div>
+
+<?php if ($this->script): ?>
+    <?= $this->script ?>
+<?php endif; ?>
+
+<?php $this->endblock(); ?>
