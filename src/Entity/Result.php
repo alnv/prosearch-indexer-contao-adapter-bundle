@@ -65,6 +65,7 @@ class Result
             'url' => $objDocument->url,
             'images' => $arrImages,
             'types' => $this->arrHit['source']['types'] ?? [],
+            'score' => $this->arrHit['source']['score'] ?? 0,
             'microdata' => []
         ];
 

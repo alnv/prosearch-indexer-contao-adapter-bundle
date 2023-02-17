@@ -2,7 +2,10 @@
     (function () {
         let objState = {
             categories: [],
-            keywords: ''
+            timeout: null,
+            keywords: '',
+            hits: [],
+            suggests: []
         };
         new Vue({
             el: "#<?= $this->elementId ?>",
@@ -11,21 +14,39 @@
             },
             methods: {
                 getSearchResults: function () {
+                    this.hits = [];
+                    this.suggests = [];
                     this.$http.post('/ps/search/results?query=' + this.keywords, {categories: this.categories},
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     ).then(function (res) {
-                        console.log(res)
+                        this.suggests = res.body['results']['didYouMean']
+                        this.hits = res.body['results']['hits'];
                     }.bind(this));
                 },
                 search: function () {
                     this.getSearchResults();
+                },
+                liveSearch: function () {
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(function () {
+                        this.getSearchResults();
+                    }.bind(this), 800);
+                },
+                suggest: function () {
+                    this.keywords = this.suggests[0];
+                    this.getSearchResults();
                 }
             },
             watch: {
-                //
+                categories: {
+                    handler: function () {
+                        this.getSearchResults();
+                    },
+                    deep: true
+                }
             },
             mounted: function () {
                 //

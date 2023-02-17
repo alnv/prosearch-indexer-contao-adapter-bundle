@@ -266,7 +266,7 @@ class Elasticsearch extends Adapter
                             'query' => $arrKeywords['query'],
                             'fuzziness' => 'AUTO',
                             'analyzer' => 'standard',
-                            'fields' => ['title', 'description', 'text', 'span']
+                            'fields' => ['title', 'description', 'text', 'span', 'h5', 'h6']
                         ]
                     ]
                 ],
@@ -276,7 +276,7 @@ class Elasticsearch extends Adapter
                             'query' => $arrKeywords['query'],
                             'fuzziness' => 'AUTO',
                             'analyzer' => 'standard',
-                            'fields' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                            'fields' => ['h1', 'h2', 'h3', 'h4', 'strong', 'types']
                         ]
                     ]
                 ]
@@ -285,6 +285,10 @@ class Elasticsearch extends Adapter
 
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
             $params['body']['query']['bool']['filter']['terms']['types'] = $arrKeywords['types'];
+        }
+
+        if (empty($params['body']['query'])) {
+            return $arrResults;
         }
 
         $response = $this->getClient()->search($params);
@@ -299,7 +303,10 @@ class Elasticsearch extends Adapter
         foreach ($arrHits as $arrHit) {
 
             $objEntity = new Result();
-            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight']['text'] ?? []), $arrHit['_source']);
+            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight']['text'] ?? []), [
+                'types' => $arrHit['_source']['types'],
+                'score' => $arrHit['_score']
+            ]);
             if ($arrResult = $objEntity->getResult()) {
                 $arrResults['hits'][] = $arrResult;
             }

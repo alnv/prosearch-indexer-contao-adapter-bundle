@@ -33,7 +33,7 @@ $GLOBALS['TL_DCA']['tl_synonyms'] = [
                 'href' => 'act=edit'
             ],
             'copy' => [
-                'href' => 'act=paste&mode=copy',
+                'href' => 'act=copy',
                 'icon' => 'copy.svg'
             ],
             'delete' => [

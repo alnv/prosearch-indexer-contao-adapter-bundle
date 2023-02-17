@@ -40,6 +40,7 @@ class ProsearchModule extends Module
         $this->Template->uniqueId = $this->id;
         $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
+        $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
 
         $this->Template->keyword = StringUtil::specialchars($strKeywords);
         $this->Template->action = $objPage->getFrontendUrl();
