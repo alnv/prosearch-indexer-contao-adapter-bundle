@@ -221,30 +221,7 @@ class Elasticsearch extends Adapter
         $params = [
             'index' => Elasticsearch::INDEX,
             'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            [
-                                'multi_match' => [
-                                    'query' => $arrKeywords['query'],
-                                    'fuzziness' => 'AUTO',
-                                    'analyzer' => 'standard',
-                                    'fields' => ['title', 'description', 'text', 'span']
-                                ]
-                            ]
-                        ],
-                        'should' => [
-                            [
-                                'multi_match' => [
-                                    'query' => $arrKeywords['query'],
-                                    'fuzziness' => 'AUTO',
-                                    'analyzer' => 'standard',
-                                    'fields' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
-                                ]
-                            ]
-                        ]
-                    ]
-                ],
+                'query' => [],
                 'highlight' => [
                     'pre_tags' => '<strong>',
                     'post_tags' => '</strong>',
@@ -280,6 +257,31 @@ class Elasticsearch extends Adapter
                 ]
             ]
         ];
+
+        if (isset($arrKeywords['query']) && $arrKeywords['query']) {
+            $params['body']['query']['bool'] = [
+                'must' => [
+                    [
+                        'multi_match' => [
+                            'query' => $arrKeywords['query'],
+                            'fuzziness' => 'AUTO',
+                            'analyzer' => 'standard',
+                            'fields' => ['title', 'description', 'text', 'span']
+                        ]
+                    ]
+                ],
+                'should' => [
+                    [
+                        'multi_match' => [
+                            'query' => $arrKeywords['query'],
+                            'fuzziness' => 'AUTO',
+                            'analyzer' => 'standard',
+                            'fields' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                        ]
+                    ]
+                ]
+            ];
+        }
 
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
             $params['body']['query']['bool']['filter']['terms']['types'] = $arrKeywords['types'];

@@ -18,16 +18,17 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
 
     /**
      *
-     * @Route("/search/results/{keywords}", methods={"POST", "GET"}, name="get-search-results")
+     * @Route("/search/results", methods={"POST", "GET"}, name="get-search-results")
      */
-    public function getSearchResults($keywords) {
+    public function getSearchResults() {
 
         $this->container->get('contao.framework')->initialize();
 
         $arrCategories = Input::post('categories') ?? [];
+        $query = Input::get('query') ?? '';
 
         $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
-        $arrKeywords = $objKeyword->setKeywords($keywords, ['categories' => $arrCategories]);
+        $arrKeywords = $objKeyword->setKeywords($query, ['categories' => $arrCategories]);
 
         $objCredentials = new Credentials();
         $arrCredentials = $objCredentials->getCredentials();
