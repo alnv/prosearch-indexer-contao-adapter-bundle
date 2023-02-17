@@ -2,10 +2,13 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
+use Contao\Input;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 /**
  *
@@ -15,14 +18,39 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
 
     /**
      *
-     * @Route("/search/results/{keywords}", methods={"POST"}, name="get-search-results")
+     * @Route("/search/results/{keywords}", methods={"POST", "GET"}, name="get-search-results")
      */
     public function getSearchResults($keywords) {
 
         $this->container->get('contao.framework')->initialize();
 
-        //
+        $arrCategories = Input::post('categories') ?? [];
 
-        return new JsonResponse([$keywords]);
+        $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
+        $arrKeywords = $objKeyword->setKeywords($keywords, ['categories' => $arrCategories]);
+
+        $objCredentials = new Credentials();
+        $arrCredentials = $objCredentials->getCredentials();
+
+        $arrResults = [
+            'keywords' => $arrKeywords,
+            'results' => []
+        ];
+
+        switch ($arrCredentials['type']) {
+            case 'elasticsearch':
+            case 'elasticsearch_cloud':
+                $objElasticsearchAdapter = new Elasticsearch();
+                $objElasticsearchAdapter->connect();
+                if ($objElasticsearchAdapter->getClient()) {
+                    $arrResults['results'] = $objElasticsearchAdapter->search($arrKeywords);
+                }
+                break;
+            case 'licence':
+                // todo
+                break;
+        }
+
+        return new JsonResponse($arrResults);
     }
 }

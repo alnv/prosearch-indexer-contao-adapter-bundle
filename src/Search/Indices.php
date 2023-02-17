@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Contao\CoreBundle\Search\Document;
 use Fusonic\OpenGraph\Consumer;
@@ -45,8 +46,7 @@ class Indices
             'h3' => $this->getValuesByTagName('h3'),
             'h4' => $this->getValuesByTagName('h4'),
             'h5' => $this->getValuesByTagName('h5'),
-            'h6' => $this->getValuesByTagName('h6'),
-            // 'links' => $this->getValuesByTagName('a')
+            'h6' => $this->getValuesByTagName('h6')
         ];
 
         $strUrl = $document->getUri()->__toString();
@@ -76,10 +76,10 @@ class Indices
         $objIndicesModel->url = $strUrl;
         $objIndicesModel->state = States::ACTIVE;
         $objIndicesModel->types = $arrSearchTypes;
-        $objIndicesModel->title = $this->tokenize($this->getTitle($objPageObject));
+        $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
         $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
-        $objIndicesModel->description = $this->tokenize($this->getDescription($objPageObject));
+        $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
         $objIndicesModel->save();
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
@@ -130,7 +130,7 @@ class Indices
 
         foreach ($objNodes as $objNode) {
 
-            $strText = $this->tokenize($objNode->textContent);
+            $strText = Text::tokenize($objNode->textContent);
 
             if (!$strText) {
                 continue;
@@ -142,13 +142,6 @@ class Indices
         }
 
         return $arrReturn;
-    }
-
-    protected function tokenize($strString) {
-
-        $strString = str_replace(["\r", "\n"], " ", $strString);
-        $strString = preg_replace('/\s+/', ' ', $strString);
-        return trim($strString);
     }
 
     /**

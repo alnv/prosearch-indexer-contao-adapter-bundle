@@ -24,6 +24,12 @@ array_insert($GLOBALS['BE_MOD'], 3, [
             'tables' => [
                 'tl_search_credentials'
             ]
+        ],
+        'synonyms' => [
+            'name' => 'synonyms',
+            'tables' => [
+                'tl_synonyms'
+            ]
         ]
     ]
 ]);
@@ -38,8 +44,6 @@ array_insert($GLOBALS['FE_MOD'], 3, [
 ]);
 
 // dev
-/*
-if (TL_MODE == 'FE') {
-    (new \Alnv\ProSearchIndexerContaoAdapterBundle\Search\ElasticsearchAdapter())->indexDocuments();exit;
-}
-*/
+//if (TL_MODE == 'FE') {
+    // (new \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch())->indexDocuments();exit;
+//}

@@ -1,7 +1,8 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Search\ElasticsearchAdapter;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Contao\DataContainer;
+use Contao\Message;
 
 $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
@@ -10,7 +11,6 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'onload_callback' => [
             function () {
                 $objEntity = \Database::getInstance()->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')->limit(1)->execute();
-
                 if ($objEntity->numRows) {
                     if (!\Input::get('act') && !\Input::get('id')) {
                         $this->redirect($this->addToUrl('act=edit&id=' . $objEntity->id . '&rt=' . REQUEST_TOKEN));
@@ -24,10 +24,16 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         ],
         'onsubmit_callback' => [function (DataContainer $dataContainer) {
             switch ($dataContainer->activeRecord->type) {
-                case 'licence':
                 case 'elasticsearch':
                 case 'elasticsearch_cloud':
-                    $varConnect = (new ElasticsearchAdapter())->connect();
+                    $objElasticsearchAdapter= new Elasticsearch();
+                    $objElasticsearchAdapter->connect();
+                    if (!$objElasticsearchAdapter->getClient()) {
+                       Message::addError('No connection to the server could be established');
+                    }
+                    break;
+                case 'licence':
+                    // todo
                     break;
             }
         }],
@@ -39,14 +45,12 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     ],
     'list' => [
         'sorting' => [
-            'mode' => 0,
-            'panelLayout' => 'filter;sort,search,limit'
+            'mode' => 0
         ],
         'label' => [
             'fields' => ['type'],
             'showColumns' => true
         ],
-        'global_operations' => [],
         'operations' => [
             'edit' => [
                 'icon' => 'header.svg',
@@ -113,7 +117,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'eval' => [
                 'maxlength' => 128,
                 'tl_class' => 'w50',
-                'mandatory' => true
+                'mandatory' => false
             ],
             'sql' => "varchar(128) NOT NULL default ''"
         ],
@@ -122,7 +126,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'eval' => [
                 'maxlength' => 128,
                 'tl_class' => 'w50',
-                'mandatory' => true,
+                'mandatory' => false,
                 'decodeEntities' => true
             ],
             'sql' => "varchar(128) NOT NULL default ''"

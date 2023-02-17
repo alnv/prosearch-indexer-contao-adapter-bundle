@@ -1,6 +1,6 @@
 <?php
 
-namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
+namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
 class Credentials
 {
