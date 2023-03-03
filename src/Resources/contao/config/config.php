@@ -44,6 +44,8 @@ array_insert($GLOBALS['FE_MOD'], 3, [
 ]);
 
 // dev
-//if (TL_MODE == 'FE') {
-    // (new \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch())->indexDocuments();exit;
-//}
+/*
+if (TL_MODE == 'FE') {
+    (new \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch())->indexDocuments();exit;
+}
+*/

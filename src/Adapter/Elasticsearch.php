@@ -77,6 +77,17 @@ class Elasticsearch extends Adapter
         return $this->objClient;
     }
 
+    public function deleteIndex() {
+
+        $this->connect();
+
+        if (!$this->getClient()) {
+            return;
+        }
+
+        // todo -XDELETE http://localhost:9200/contao_search
+    }
+
     public function getIndex($intLimit = 50)
     {
 
@@ -172,6 +183,7 @@ class Elasticsearch extends Adapter
             'description' => $objIndices->description ?: '',
             'url' => $objIndices->url,
             'domain' => $arrUrlFragments['host'] ?? '',
+            'language' => $objIndices->language
             // 'microdata' => []
         ];
 
@@ -286,6 +298,8 @@ class Elasticsearch extends Adapter
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
             $params['body']['query']['bool']['filter']['terms']['types'] = $arrKeywords['types'];
         }
+
+        $params['body']['query']['bool']['filter']['terms']['language'] = [$GLOBALS['TL_LANGUAGE']];
 
         if (empty($params['body']['query'])) {
             return $arrResults;

@@ -1,16 +1,14 @@
-<div class="search_result">
-    <a href="<?= $this->url ?>">
-        <?php if (!empty($this->images) && is_array($this->images)): ?>
-            <?php $arrImage = $this->images[0] ?? []; ?>
-            <?php if (!empty($arrImage)): ?>
+<a href="<?= $this->url ?>">
+    <?php if (!empty($this->images) && is_array($this->images)): ?>
+        <?php $arrImage = $this->images[0] ?? []; ?>
+        <?php if (!empty($arrImage)): ?>
             <div class="image">
                 <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
             </div>
-            <?php endif; ?>
         <?php endif; ?>
-        <div class="result">
-            <p class="title"><strong><?= $this->title ?></strong></p>
-            <p class="description"><?= (!empty($this->highlights)?implode(' ', $this->highlights):$this->description) ?></p>
-        </div>
-    </a>
-</div>
+    <?php endif; ?>
+    <div class="result">
+        <p class="title"><strong><?= $this->title ?></strong></p>
+        <p class="description"><?= (!empty($this->highlights)?implode(' ', $this->highlights):$this->description) ?></p>
+    </div>
+</a>

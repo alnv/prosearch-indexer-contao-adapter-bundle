@@ -1,0 +1,41 @@
+.mod_prosearch {
+  width: 100%;
+  max-width: 900px;
+  margin: 30px auto;
+  .widget-text {
+    position: relative;
+  }
+  input[type="search"] {
+    max-width: 100%;
+    display: block;
+    width: 100%;
+  }
+  .results {
+    position: absolute;
+    max-height: 400px;
+    overflow-y: scroll;
+    background: #fff;
+    padding: 10px 0;
+  }
+  .hit {
+    border-bottom: 1px solid #ccc;
+    a {
+      text-decoration: none;
+      margin-bottom: 10px;
+      display: block;
+      padding: 10px;
+      color: #000;
+      &:hover,
+      &:focus {
+        background: #000;
+        color: #fff;
+      }
+    }
+    p.title {
+      margin: 0 0 5px 0;
+    }
+    p.description {
+      margin-bottom: 0;
+    }
+  }
+}

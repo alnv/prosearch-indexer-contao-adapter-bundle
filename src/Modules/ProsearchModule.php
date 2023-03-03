@@ -96,5 +96,9 @@ class ProsearchModule extends Module
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/vue-resource.min.js');
 
         $GLOBALS['TL_HEAD']['jsProsearch'] = '<script src="'.$objCombiner->getCombinedFile().'"></script>';
+
+        $objCombiner = new Combiner();
+        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/default.scss');
+        $GLOBALS['TL_CSS']['cssProsearch'] = $objCombiner->getCombinedFile();
     }
 }

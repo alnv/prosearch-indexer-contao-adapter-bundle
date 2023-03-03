@@ -30,6 +30,13 @@ class Indices
      */
     public function __construct(Document $document)
     {
+
+        try {
+            $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
+        } catch (\Exception $e) {
+            $strLanguage = 'en';
+        }
+
         $strHtml = $document->getBody();
         $this->objCrawler = new Crawler($strHtml);
 
@@ -75,10 +82,11 @@ class Indices
         $objIndicesModel->tstamp = time();
         $objIndicesModel->url = $strUrl;
         $objIndicesModel->state = States::ACTIVE;
+        $objIndicesModel->language = $strLanguage;
         $objIndicesModel->types = $arrSearchTypes;
-        $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
         $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
+        $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
         $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
         $objIndicesModel->save();
 

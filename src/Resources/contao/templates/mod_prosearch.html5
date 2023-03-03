@@ -8,7 +8,7 @@
                 <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
                 <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>" @keyup="liveSearch()">
                 <div class="results" v-if="hits.length">
-                    <div v-for="hit in hits" v-html="hit.template"></div>
+                    <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
                 </div>
                 <div class="suggest" v-if="!hits.length && suggests.length">
                     <button @click.stop.prevent="suggest"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?><span>{{ suggests[0] }}</span>?</button>
