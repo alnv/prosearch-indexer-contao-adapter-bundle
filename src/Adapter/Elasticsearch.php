@@ -131,18 +131,19 @@ class Elasticsearch extends Adapter
 
             $arrParams = [
                 'index' => Elasticsearch::INDEX,
+                'id' => $arrDocument['id'],
                 'body' => $arrDocument
             ];
 
             try {
 
-                if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'url' => $arrDocument['url']])->asBool()) {
+                if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $arrDocument['id']])->asBool()) {
                     $this->getClient()->deleteByQuery([
                         'index' => Elasticsearch::INDEX,
                         'body' => [
                             'query' => [
                                 'term' => [
-                                    'url' => $arrDocument['url']
+                                    'id' => $arrDocument['id']
                                 ]
                             ]
                         ]
