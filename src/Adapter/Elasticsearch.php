@@ -85,7 +85,7 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        // todo -XDELETE http://localhost:9200/contao_search
+        // todo XDELETE https://localhost:9200/contao_search
     }
 
     public function getIndex($intLimit = 50)
@@ -136,13 +136,13 @@ class Elasticsearch extends Adapter
 
             try {
 
-                if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $arrDocument['id']])->asBool()) {
+                if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'url' => $arrDocument['url']])->asBool()) {
                     $this->getClient()->deleteByQuery([
                         'index' => Elasticsearch::INDEX,
                         'body' => [
                             'query' => [
                                 'term' => [
-                                    'id' => $arrDocument['id']
+                                    'url' => $arrDocument['url']
                                 ]
                             ]
                         ]
