@@ -2,6 +2,7 @@
   width: 100%;
   max-width: 900px;
   margin: 30px auto;
+  z-index: 1;
   .widget-text {
     position: relative;
   }
@@ -27,8 +28,7 @@
       color: #000;
       &:hover,
       &:focus {
-        background: #000;
-        color: #fff;
+        background: #f1efee;
       }
     }
     p.title {
