@@ -56,7 +56,7 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         foreach (($arrResults['results']['hits']??[]) as $index => $arrResult) {
             $objTemplate = new \FrontendTemplate('ps_search_result');
             $objTemplate->setData($arrResult);
-            $arrResults['results']['hits'][$index]['template'] = $objTemplate->parse();
+            $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
         }
 
         return new JsonResponse($arrResults);
