@@ -5,7 +5,8 @@
             timeout: null,
             keywords: '',
             hits: [],
-            suggests: []
+            suggests: [],
+            buttonClicked: false
         };
         new Vue({
             el: "#<?= $this->elementId ?>",
@@ -27,6 +28,7 @@
                     }.bind(this));
                 },
                 search: function () {
+                    this.buttonClicked = true;
                     this.getSearchResults();
                 },
                 liveSearch: function () {

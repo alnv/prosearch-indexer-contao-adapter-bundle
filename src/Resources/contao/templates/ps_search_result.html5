@@ -1,4 +1,4 @@
-<a href="<?= $this->url ?>">
+<a href="<?= $this->url ?>" title="<?= $this->title ?>">
     <?php if (!empty($this->images) && is_array($this->images)): ?>
         <?php $arrImage = $this->images[0] ?? []; ?>
         <?php if (!empty($arrImage)): ?>

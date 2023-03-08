@@ -328,7 +328,15 @@ class Elasticsearch extends Adapter
         $params = [
             'index' => Elasticsearch::INDEX,
             'body' => [
-                'query' => [],
+                'query' => [
+                    'bool' => [
+                        'filter' => [
+                            'terms' => [
+                                'language' => [$GLOBALS['TL_LANGUAGE']]
+                            ]
+                        ]
+                    ]
+                ],
                 'highlight' => [
                     'pre_tags' => '<strong>',
                     'post_tags' => '</strong>',
@@ -385,7 +393,7 @@ class Elasticsearch extends Adapter
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
                             'analyzer' => $strAnalyzer,
-                            'fields' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                            'fields' => ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                         ]
                     ]
                 ]
@@ -393,10 +401,13 @@ class Elasticsearch extends Adapter
         }
 
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
-            $params['body']['query']['bool']['filter']['terms']['types'] = $arrKeywords['types'];
+            $params['body']['query']['bool']['should'] = $params['body']['query']['bool']['should'] ?? [];
+            $params['body']['query']['bool']['should'][] = [
+                'terms' => [
+                    'types' => $arrKeywords['types']
+                ]
+            ];
         }
-
-        $params['body']['query']['bool']['filter']['terms']['language'] = [$GLOBALS['TL_LANGUAGE']];
 
         if (empty($params['body']['query'])) {
             return $arrResults;

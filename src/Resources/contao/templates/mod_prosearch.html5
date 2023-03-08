@@ -10,12 +10,9 @@
                     <p><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="suggest" href="#"><span>{{ suggests[0] }}</span></a>?</p>
                 </div>
                 <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>" @keyup="liveSearch()">
-                <div class="results" v-if="hits.length">
+                <div class="results" v-if="hits.length && keywords && !buttonClicked">
                     <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
                 </div>
-            </div>
-            <div class="widget widget-submit">
-                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit" @click.stop.prevent="search()"><?= $this->search ?></button>
             </div>
             <?php if (!empty($this->categories)): ?>
                 <div class="widget checkbox-radio">
@@ -30,8 +27,14 @@
                     </fieldset>
                 </div>
             <?php endif; ?>
+            <div class="widget widget-submit">
+                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit" @click.stop.prevent="search()"><?= $this->search ?></button>
+            </div>
         </div>
     </form>
+    <div class="ce_results" v-if="hits.length && buttonClicked">
+        <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
+    </div>
 </div>
 
 <?php if ($this->script): ?>
