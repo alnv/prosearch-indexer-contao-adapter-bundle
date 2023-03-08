@@ -22,13 +22,20 @@
     border-bottom: 1px solid #ccc;
     a {
       text-decoration: none;
-      margin-bottom: 10px;
-      display: block;
       padding: 10px;
       color: #000;
+      display: flex;
       &:hover,
       &:focus {
         background: #f1efee;
+      }
+    }
+    .image {
+      width: 85px;
+      margin-right: 15px;
+      img {
+        width: 100%;
+        object-fit: contain;
       }
     }
     p.title {
