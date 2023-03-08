@@ -18,6 +18,28 @@ class Elasticsearch extends Adapter
 
     public const INDEX = 'contao_search';
 
+    protected array $arrAnalyzer = [
+        "german" => [
+            "type" => "custom",
+            "tokenizer" => "standard",
+            "filter" => ["lowercase", "german_stopwords", "german_stemmer"]
+        ],
+        "english" => [
+            "type" => "custom",
+            "tokenizer" => "standard",
+            "filter" => ["lowercase", "english_stopwords", "english_stemmer"]
+        ]
+    ];
+
+    protected array $AnalyzerLanguageMap = [
+        'en' => 'english',
+        'en-US' => 'english',
+        'de' => 'german',
+        'de-DE' => 'german',
+        'de-CH' => 'german',
+        'de-AT' => 'german'
+    ];
+
     public function connect()
     {
 
@@ -77,7 +99,8 @@ class Elasticsearch extends Adapter
         return $this->objClient;
     }
 
-    public function deleteIndex() {
+    public function deleteIndex()
+    {
 
         $this->connect();
 
@@ -85,7 +108,7 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        // todo XDELETE https://localhost:9200/contao_search
+        // todo "curl -X DELETE http://localhost:9200/contao_search"
     }
 
     public function getIndex($intLimit = 50)
@@ -111,6 +134,55 @@ class Elasticsearch extends Adapter
         return $arrDocuments;
     }
 
+    protected function createMapping()
+    {
+
+        $this->connect();
+
+        if (!$this->getClient()) {
+            return;
+        }
+
+        $arrParams = [
+            "index" => Elasticsearch::INDEX,
+            "body" => [
+                "settings" => [
+                    "analysis" => [
+                        "analyzer" => $this->arrAnalyzer,
+                        "filter" => [
+                            // english filters
+                            "english_stemmer" => [
+                                "type" => "stemmer",
+                                "language" => "english"
+                            ],
+                            "english_stopwords" => [
+                                "type" => "stop",
+                                "stopwords" => ["_english_"]
+                            ],
+                            // german filters
+                            "german_stemmer" => [
+                                "type" => "stemmer",
+                                "language" => "german"
+                            ],
+                            "german_stopwords" => [
+                                "type" => "stop",
+                                "stopwords" => ["_german_"]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $blnExists = $this->getClient()->indices()->exists([
+            "index" => Elasticsearch::INDEX
+        ])->asBool();
+
+        if (!$blnExists) {
+            $this->getClient()->indices()->create($arrParams);
+        }
+    }
+
     public function indexDocuments()
     {
 
@@ -120,6 +192,8 @@ class Elasticsearch extends Adapter
         if (!$this->getClient()) {
             return;
         }
+
+        $this->createMapping();
 
         foreach ($arrDocuments as $arrDocument) {
 
@@ -217,6 +291,24 @@ class Elasticsearch extends Adapter
     }
 
     /**
+     * @param string $strLanguage
+     * @return string
+     */
+    protected function getAnalyzerByLanguage(string $strLanguage = "") : string
+    {
+
+        if (!$strLanguage) {
+            $strLanguage = $GLOBALS['TL_LANGUAGE'] ?: '';
+        }
+
+        if (!$strLanguage) {
+            return 'standard';
+        }
+
+        return $this->getAnalyzerByLanguage[$strLanguage] ?? 'standard';
+    }
+
+    /**
      * @param $arrKeywords
      * @param $arrOptions
      * @return array
@@ -231,6 +323,8 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
+        $strAnalyzer = $this->getAnalyzerByLanguage();
+
         $params = [
             'index' => Elasticsearch::INDEX,
             'body' => [
@@ -243,18 +337,21 @@ class Elasticsearch extends Adapter
                     ],
                     'require_field_match' => true,
                     'type' => 'plain',
-                    'fragment_size' => 300,
-                    'number_of_fragments' => 300,
+                    'fragment_size' => 150,
+                    'number_of_fragments' => 150,
                     'fragmenter' => 'span'
                 ],
                 'suggest' => [
-                    'text' => $arrKeywords['query'],
                     'didYouMean' => [
+                        'text' => $arrKeywords['query'],
                         'phrase' => [
                             'field' => "text",
-                            'size' => 1,
-                            'gram_size' => 3,
-                            'max_errors' => 2,
+                            "size" => 5,
+                            "confidence" => 1,
+                            "max_errors" => 2,
+                            // "gram_size" => 3,
+                            // "max_errors" => 2,
+                            'analyzer' => $strAnalyzer,
                             'direct_generator' => [
                                 [
                                     'field' => 'text',
@@ -277,9 +374,9 @@ class Elasticsearch extends Adapter
                     [
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
-                            'fuzziness' => 'AUTO',
-                            'analyzer' => 'standard',
-                            'fields' => ['title', 'description', 'text', 'span', 'h5', 'h6']
+                            // 'fuzziness' => 'AUTO',
+                            'analyzer' => $strAnalyzer,
+                            'fields' => ['title', 'description', 'text', 'span']
                         ]
                     ]
                 ],
@@ -287,9 +384,9 @@ class Elasticsearch extends Adapter
                     [
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
-                            'fuzziness' => 'AUTO',
-                            'analyzer' => 'standard',
-                            'fields' => ['h1', 'h2', 'h3', 'h4', 'strong', 'types']
+                            // 'fuzziness' => 'AUTO',
+                            'analyzer' => $strAnalyzer,
+                            'fields' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                         ]
                     ]
                 ]
@@ -312,7 +409,11 @@ class Elasticsearch extends Adapter
         $arrSuggests = $response['suggest']['didYouMean'] ?? [];
 
         foreach ($arrSuggests as $arrSuggest) {
-            $arrResults['didYouMean'][] = $arrSuggest['text'];
+            if (isset($arrSuggest['options']) && is_array($arrSuggest['options'])) {
+                foreach ($arrSuggest['options'] as $arrOption) {
+                    $arrResults['didYouMean'][] = $arrOption['text'];
+                }
+            }
         }
 
         foreach ($arrHits as $arrHit) {

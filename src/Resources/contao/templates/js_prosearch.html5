@@ -33,7 +33,7 @@
                     clearTimeout(this.timeout);
                     this.timeout = setTimeout(function () {
                         this.getSearchResults();
-                    }.bind(this), 800);
+                    }.bind(this), 600);
                 },
                 suggest: function () {
                     this.keywords = this.suggests[0];

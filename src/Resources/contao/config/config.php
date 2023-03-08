@@ -44,9 +44,5 @@ array_insert($GLOBALS['FE_MOD'], 3, [
 ]);
 
 // dev
+// (new \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch())->indexDocuments();exit;
 $GLOBALS['TL_CRON']['minutely'][] = [\Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch::class, 'indexDocuments'];
-/*
-if (TL_MODE == 'FE') {
-    (new \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch())->indexDocuments();exit;
-}
-*/
