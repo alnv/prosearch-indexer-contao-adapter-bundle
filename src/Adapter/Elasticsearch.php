@@ -59,7 +59,7 @@ class Elasticsearch extends Adapter
                 try {
                     $this->objClient = ClientBuilder::create()
                         ->setHosts([$arrCredentials['host'] . ($arrCredentials['port'] ? ':' . $arrCredentials['port'] : '')])
-                        ->setBasicAuthentication($arrCredentials['host'], $arrCredentials['password'])
+                        ->setBasicAuthentication($arrCredentials['username'], $arrCredentials['password'])
                         ->setCABundle($arrCredentials['cert'])
                         ->build();
                 } catch (\Exception $objError) {
