@@ -25,6 +25,7 @@
                     ).then(function (res) {
                         this.suggests = res.body['results']['didYouMean']
                         this.hits = res.body['results']['hits'];
+                        this.buttonClicked = false;
                     }.bind(this));
                 },
                 search: function () {
