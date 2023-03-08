@@ -337,8 +337,8 @@ class Elasticsearch extends Adapter
                     ],
                     'require_field_match' => true,
                     'type' => 'plain',
-                    'fragment_size' => 150,
-                    'number_of_fragments' => 150,
+                    'fragment_size' => 120,
+                    'number_of_fragments' => 120,
                     'fragmenter' => 'span'
                 ],
                 'suggest' => [
@@ -374,7 +374,7 @@ class Elasticsearch extends Adapter
                     [
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
-                            // 'fuzziness' => 'AUTO',
+                            'fuzziness' => 'AUTO',
                             'analyzer' => $strAnalyzer,
                             'fields' => ['title', 'description', 'text', 'span']
                         ]
@@ -384,7 +384,6 @@ class Elasticsearch extends Adapter
                     [
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
-                            // 'fuzziness' => 'AUTO',
                             'analyzer' => $strAnalyzer,
                             'fields' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                         ]

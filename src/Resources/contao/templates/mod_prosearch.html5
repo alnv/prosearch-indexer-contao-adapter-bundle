@@ -7,7 +7,7 @@
             <div class="widget widget-text">
                 <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
                 <div class="suggest" v-if="suggests.length && suggests[0] !== keywords">
-                    <p><a @click.stop.prevent="suggest" href="#"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?><span>{{ suggests[0] }}</span>?</a></p>
+                    <p><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="suggest" href="#"><span>{{ suggests[0] }}</span></a>?</p>
                 </div>
                 <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>" @keyup="liveSearch()">
                 <div class="results" v-if="hits.length">
