@@ -26,6 +26,7 @@ class Keyword {
         $strSynonym = $this->objSynonyms->predict($strToken);
         $strQuery = $strSynonym;
 
+        /*
         foreach ((new Categories())->getCategories() as $strCategory) {
 
             $strCategory = strtolower($strCategory);
@@ -38,6 +39,7 @@ class Keyword {
                 $arrTypes[] = $strCategory;
             }
         }
+        */
 
         $arrTypes = array_unique($arrTypes);
         $arrTypes = array_filter($arrTypes);

@@ -14,21 +14,8 @@
                     <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
                 </div>
             </div>
-            <?php if (!empty($this->categories)): ?>
-                <div class="widget checkbox-radio">
-                    <fieldset class="checkbox_container">
-                        <legend class="invisible"><?= $this->optionsLabel ?></legend>
-                        <?php foreach ($this->categories as $index => $strCategory): ?>
-                            <span>
-                                <input type="checkbox" name="categories[]" v-model="categories" id="id_category_<?= $index ?>" class="checkbox" value="<?= $strCategory['value'] ?>"<?= (in_array($strCategory['value'], $this->checkedCategories)?' checked':'') ?>>
-                                <label for="id_category_<?= $index ?>"><?= $strCategory['label'] ?></label>
-                            </span>
-                        <?php endforeach; ?>
-                    </fieldset>
-                </div>
-            <?php endif; ?>
             <div class="widget widget-submit">
-                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit" @click.stop.prevent="search()"><?= $this->search ?></button>
+                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit" <?= $this->searchButtonAttributes ?>><?= $this->search ?></button>
             </div>
         </div>
     </form>

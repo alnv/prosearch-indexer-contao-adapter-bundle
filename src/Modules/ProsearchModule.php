@@ -33,8 +33,6 @@ class ProsearchModule extends Module
     protected function compile()
     {
 
-        global $objPage;
-
         $strKeywords = trim(Input::get('keywords'));
 
         $this->Template->uniqueId = $this->id;
@@ -43,35 +41,34 @@ class ProsearchModule extends Module
         $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
 
         $this->Template->keyword = StringUtil::specialchars($strKeywords);
-        $this->Template->action = $objPage->getFrontendUrl();
+        $this->Template->action = $this->getActionUrl();
+        $this->Template->searchButtonAttributes = $this->getSearchButtonAttributes();
 
-        $this->Template->categories = $this->getCategories();
-        $this->Template->checkedCategories = \Input::get('categories') ?? [];
+        $this->Template->categories = \StringUtil::deserialize($this->psSearchCategories, true);
         $this->Template->elementId = $this->getElementId();
 
         $this->getJsScript();
     }
 
-    protected function getCategories() {
+    protected function getActionUrl() {
 
-        $arrCategories = [];
-
-        if (!$this->psEnableSearchCategories) {
-            return $arrCategories;
+        if ($objJump = \PageModel::findByPk($this->jumpTo)) {
+            return $objJump->getFrontendUrl();
         }
 
-        $arrOptions = \StringUtil::deserialize($this->psSearchCategoriesOptions, true);
+        global $objPage;
+        return $objPage->getFrontendUrl();
+    }
 
-        foreach ($arrOptions as $arrOption) {
+    protected function getSearchButtonAttributes() {
 
-            $arrCategories[] = [
-                'label' => $arrOption['name'],
-                'value' => implode(',', $arrOption['types']),
-                'asArray' => $arrOption['types']
-            ];
+        $strAttributes = '';
+
+        if (!$this->jumpTo) {
+            $strAttributes = '@click.stop.prevent="search()"';
         }
 
-        return $arrCategories;
+        return $strAttributes;
     }
 
     protected function getJsScript() {

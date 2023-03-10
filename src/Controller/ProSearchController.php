@@ -25,6 +25,7 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         $this->container->get('contao.framework')->initialize();
 
         $arrCategories = Input::post('categories') ?? [];
+        $strModuleId = Input::post('module') ?? [];
         $query = Input::get('query') ?? '';
 
         $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
@@ -41,7 +42,7 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
-                $objElasticsearchAdapter = new Elasticsearch();
+                $objElasticsearchAdapter = new Elasticsearch($strModuleId);
                 $objElasticsearchAdapter->connect();
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->search($arrKeywords);
@@ -60,5 +61,44 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         }
 
         return new JsonResponse($arrResults);
+    }
+
+    /**
+     *
+     * @Route("/search/autocompletion", methods={"POST", "GET"}, name="get-search-autocompletion")
+     */
+    public function getAutoCompletion() {
+
+        $this->container->get('contao.framework')->initialize();
+
+        $arrReturn = [
+            'autocomplete' => []
+        ];
+
+        $arrCategories = Input::post('categories') ?? [];
+        $strModuleId = Input::post('module') ?? [];
+        $query = Input::get('query') ?? '';
+
+        $objCredentials = new Credentials();
+        $arrCredentials = $objCredentials->getCredentials();
+
+        $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
+        $arrKeywords = $objKeyword->setKeywords($query, ['categories' => $arrCategories]);
+
+        switch ($arrCredentials['type']) {
+            case 'elasticsearch':
+            case 'elasticsearch_cloud':
+                $objElasticsearchAdapter = new Elasticsearch($strModuleId);
+                $objElasticsearchAdapter->connect();
+                if ($objElasticsearchAdapter->getClient()) {
+                    $arrReturn['autocomplete'] = $objElasticsearchAdapter->autocompltion($arrKeywords)['autocomplete'];
+                }
+                break;
+            case 'licence':
+                // todo
+                break;
+        }
+
+        return new JsonResponse($arrReturn);
     }
 }

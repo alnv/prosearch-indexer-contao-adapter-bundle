@@ -1,7 +1,7 @@
 <script>
     (function () {
         let objState = {
-            categories: [],
+            categories: <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>,
             timeout: null,
             keywords: '',
             hits: [],
@@ -17,7 +17,7 @@
                 getSearchResults: function () {
                     this.hits = [];
                     this.suggests = [];
-                    this.$http.post('/ps/search/results?query=' + this.keywords, {categories: this.categories},
+                    this.$http.post('/ps/search/results?query=' + this.keywords, {categories: this.categories, module:"<?= $this->id ?>"},
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'

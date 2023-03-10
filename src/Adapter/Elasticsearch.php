@@ -31,7 +31,7 @@ class Elasticsearch extends Adapter
         ]
     ];
 
-    protected array $AnalyzerLanguageMap = [
+    protected array $arrAnalyzerLanguageMap = [
         'en' => 'english',
         'en-US' => 'english',
         'de' => 'german',
@@ -143,14 +143,27 @@ class Elasticsearch extends Adapter
             return;
         }
 
+        $arrAnalyzer = $this->arrAnalyzer;
+
+        $arrAnalyzer['autocomplete'] = [
+            "filter" => ["lowercase", "autocomplete"],
+            "char_filter" => ["html_strip"],
+            "type" => "custom",
+            "tokenizer" => "standard"
+        ];
+
         $arrParams = [
             "index" => Elasticsearch::INDEX,
             "body" => [
                 "settings" => [
                     "analysis" => [
-                        "analyzer" => $this->arrAnalyzer,
+                        "analyzer" => $arrAnalyzer,
                         "filter" => [
-                            // english filters
+                            "autocomplete" => [
+                                "max_shingle_size" => "3",
+                                "min_shingle_size" => "2",
+                                "type" => "shingle"
+                            ],
                             "english_stemmer" => [
                                 "type" => "stemmer",
                                 "language" => "english"
@@ -159,7 +172,6 @@ class Elasticsearch extends Adapter
                                 "type" => "stop",
                                 "stopwords" => ["_english_"]
                             ],
-                            // german filters
                             "german_stemmer" => [
                                 "type" => "stemmer",
                                 "language" => "german"
@@ -167,6 +179,27 @@ class Elasticsearch extends Adapter
                             "german_stopwords" => [
                                 "type" => "stop",
                                 "stopwords" => ["_german_"]
+                            ]
+                        ]
+                    ]
+                ],
+                "mappings" => [
+                    "properties" => [
+                        "autocomplete" => [
+                            "type" => "text",
+                            "fielddata" => true,
+                            "analyzer" => "autocomplete"
+                        ],
+                        "text" => [
+                            "type" => "text",
+                            "copy_to" => [
+                                "autocomplete"
+                            ]
+                        ],
+                        "title" => [
+                            "type" => "text",
+                            "copy_to" => [
+                                "autocomplete"
                             ]
                         ]
                     ]
@@ -294,7 +327,7 @@ class Elasticsearch extends Adapter
      * @param string $strLanguage
      * @return string
      */
-    protected function getAnalyzerByLanguage(string $strLanguage = "") : string
+    protected function getAnalyzerByLanguage(string $strLanguage = ""): string
     {
 
         if (!$strLanguage) {
@@ -305,7 +338,56 @@ class Elasticsearch extends Adapter
             return 'standard';
         }
 
-        return $this->getAnalyzerByLanguage[$strLanguage] ?? 'standard';
+        return $this->arrAnalyzerLanguageMap[$strLanguage] ?? 'standard';
+    }
+
+    /**
+     * @param $arrKeywords
+     * @param $arrOptions
+     * @return array
+     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
+     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
+     */
+    public function autocompltion($arrKeywords, $arrOptions = [])
+    {
+
+        $arrResults = [
+            'autocomplete' => []
+        ];
+
+        $params = [
+            "index" => Elasticsearch::INDEX,
+            "body" => [
+                "size" => 0,
+                "aggs" => [
+                    "autocomplete" => [
+                        "terms" => [
+                            "field" => "autocomplete",
+                            "order" => [
+                                "_count" => "desc"
+                            ],
+                            "include" => $arrKeywords['query'] . ".*"
+                        ]
+                    ]
+                ],
+                "query" => [
+                    "prefix" => [
+                        "autocomplete" => [
+                            "value" => $arrKeywords['query']
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $response = $this->getClient()->search($params);
+        $arrBuckets = $response['aggregations']['autocomplete']['buckets'] ?? [];
+
+        foreach ($arrBuckets as $arrBucket) {
+            $arrResults['autocomplete'][] = $arrBucket['key'];
+        }
+
+        return $arrResults;
     }
 
     /**
@@ -328,6 +410,7 @@ class Elasticsearch extends Adapter
         $params = [
             'index' => Elasticsearch::INDEX,
             'body' => [
+                "size" => 100,
                 'query' => [
                     'bool' => [
                         'filter' => [
@@ -357,8 +440,6 @@ class Elasticsearch extends Adapter
                             "size" => 5,
                             "confidence" => 1,
                             "max_errors" => 2,
-                            // "gram_size" => 3,
-                            // "max_errors" => 2,
                             'analyzer' => $strAnalyzer,
                             'direct_generator' => [
                                 [
@@ -411,6 +492,10 @@ class Elasticsearch extends Adapter
 
         if (empty($params['body']['query'])) {
             return $arrResults;
+        }
+
+        if ($this->objModule) {
+            $params['body']['size'] = $this->objModule->perPage ?: 100;
         }
 
         $response = $this->getClient()->search($params);
