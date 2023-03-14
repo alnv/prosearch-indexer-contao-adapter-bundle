@@ -18,7 +18,7 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
         ],
         'category' => [
-            'sql' => "varchar(255) NOT NULL default ''"
+            'sql' => "varchar(128) NOT NULL default ''"
         ],
         'exist' => [
             'sql' => "char(1) NOT NULL default ''"

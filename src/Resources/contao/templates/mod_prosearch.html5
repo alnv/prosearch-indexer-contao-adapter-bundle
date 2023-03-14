@@ -3,26 +3,29 @@
 
 <div id="<?= $this->elementId ?>" class="search-container">
     <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET">
+        <div class="suggest" v-if="didYouMean.length && didYouMean[0] !== keywords">
+            <p><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
+        </div>
         <div class="formbody">
             <div class="widget widget-text">
                 <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
-                <div class="suggest" v-if="suggests.length && suggests[0] !== keywords">
-                    <p><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="suggest" href="#"><span>{{ suggests[0] }}</span></a>?</p>
-                </div>
                 <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>" @keyup="liveSearch()">
-                <div class="results" v-if="hits.length && keywords && !buttonClicked">
-                    <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
-                </div>
             </div>
             <div class="widget widget-submit">
-                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit" <?= $this->searchButtonAttributes ?>><?= $this->search ?></button>
+                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit"><img src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>"></button>
             </div>
         </div>
+        <div class="hits" v-if="hits.length && keywords">
+            <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
+        </div>
     </form>
-    <div class="ce_results" v-if="hits.length && buttonClicked">
-        <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
-    </div>
+    <?php if ($this->keyword): ?>
+        <div class="ce_results" v-if="hits.length && keywords">
+            <div v-for="hit in hits" v-html="hit.template" class="result"></div>
+        </div>
+    <?php endif; ?>
 </div>
+
 
 <?php if ($this->script): ?>
     <?= $this->script ?>

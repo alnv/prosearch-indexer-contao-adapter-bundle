@@ -111,14 +111,27 @@ class Elasticsearch extends Adapter
         // todo "curl -X DELETE http://localhost:9200/contao_search"
     }
 
-    public function getIndex($intLimit = 50)
+    /**
+     * @param $strIndicesId
+     * @param int $intLimit
+     * @return array
+     */
+    public function getIndex($strIndicesId = null, int $intLimit = 25) : array
     {
 
+        $arrColumn = ['state=?'];
+        $arrValue = [States::ACTIVE];
+
+        if ($strIndicesId) {
+            $arrValue[] = $strIndicesId;
+            $arrColumn[] = 'id=?';
+        }
+
         $objIndices = IndicesModel::findAll([
-            'column' => ['state=?'],
-            'value' => [States::ACTIVE],
-            'order' => 'last_indexed ASC',
-            'limit' => $intLimit
+            'column' => $arrColumn,
+            'value' => $arrValue,
+            'limit' => $intLimit,
+            'order' => 'last_indexed ASC'
         ]);
 
         if (!$objIndices) {
@@ -134,6 +147,12 @@ class Elasticsearch extends Adapter
         return $arrDocuments;
     }
 
+    /**
+     * @return void
+     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
+     * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
+     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
+     */
     protected function createMapping()
     {
 
@@ -216,11 +235,64 @@ class Elasticsearch extends Adapter
         }
     }
 
-    public function indexDocuments()
+    public function indexByDocument($arrDocument)
+    {
+
+        $objIndicesModel = IndicesModel::findByPk($arrDocument['id']);
+
+        if (!$objIndicesModel) {
+            return;
+        }
+
+        $arrParams = [
+            'index' => Elasticsearch::INDEX,
+            'id' => $arrDocument['id'],
+            'body' => $arrDocument
+        ];
+
+        try {
+
+            if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $arrDocument['id']])->asBool()) {
+                $this->getClient()->deleteByQuery([
+                    'index' => Elasticsearch::INDEX,
+                    'body' => [
+                        'query' => [
+                            'term' => [
+                                'id' => $arrDocument['id']
+                            ]
+                        ]
+                    ]
+                ]);
+            }
+
+            $this->getClient()->index($arrParams);
+
+        } catch (\Exception $e) {
+
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::ERROR, $e->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+
+            return;
+        }
+
+        $objIndicesModel->last_indexed = time();
+        $objIndicesModel->save();
+
+        System::getContainer()
+            ->get('monolog.logger.contao')
+            ->log(LogLevel::DEBUG, 'Index document with ID ' . $arrDocument['id'], ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+    }
+
+    /**
+     * @param $strIndicesId
+     * @return void
+     */
+    public function indexDocuments($strIndicesId = null)
     {
 
         $this->connect();
-        $arrDocuments = $this->getIndex();
+        $arrDocuments = $this->getIndex($strIndicesId);
 
         if (!$this->getClient()) {
             return;
@@ -230,46 +302,7 @@ class Elasticsearch extends Adapter
 
         foreach ($arrDocuments as $arrDocument) {
 
-            $objIndicesModel = IndicesModel::findByPk($arrDocument['id']);
-
-            if (!$objIndicesModel) {
-                continue;
-            }
-
-            $arrParams = [
-                'index' => Elasticsearch::INDEX,
-                'id' => $arrDocument['id'],
-                'body' => $arrDocument
-            ];
-
-            try {
-
-                if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $arrDocument['id']])->asBool()) {
-                    $this->getClient()->deleteByQuery([
-                        'index' => Elasticsearch::INDEX,
-                        'body' => [
-                            'query' => [
-                                'term' => [
-                                    'id' => $arrDocument['id']
-                                ]
-                            ]
-                        ]
-                    ]);
-                }
-
-                $this->getClient()->index($arrParams);
-
-            } catch (\Exception $e) {
-
-                System::getContainer()
-                    ->get('monolog.logger.contao')
-                    ->log(LogLevel::ERROR, $e->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
-
-                continue;
-            }
-
-            $objIndicesModel->last_indexed = time();
-            $objIndicesModel->save();
+            $this->indexByDocument($arrDocument);
         }
     }
 

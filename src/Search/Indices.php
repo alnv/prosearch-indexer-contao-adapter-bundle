@@ -8,6 +8,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Contao\CoreBundle\Search\Document;
 use Fusonic\OpenGraph\Consumer;
 use Symfony\Component\DomCrawler\Crawler;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 /**
  *
@@ -91,6 +92,9 @@ class Indices
         $objIndicesModel->save();
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
+
+        // todo event service for indexer
+        (new Elasticsearch())->indexDocuments($objIndicesModel->id);
     }
 
     protected function getDescription($objPageObject) {

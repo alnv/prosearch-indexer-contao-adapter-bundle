@@ -2,15 +2,43 @@
   width: 100%;
   max-width: 900px;
   margin: 30px auto;
-  .widget-text {
-    position: relative;
+  overflow: visible;
+  position: relative;
+  .formbody {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .widget {
+    margin: 0;
+    &.widget-submit {
+      width: 15%;
+    }
+    &.widget-text {
+      width: 85%;
+    }
   }
   input[type="search"] {
     max-width: 100%;
     display: block;
     width: 100%;
+    margin: 0;
+    padding: 0 10px;
+    line-height: 42px;
+    height: 42px;
   }
-  .results {
+  button {
+    margin: 0;
+    padding: 0 10px;
+    line-height: 42px;
+    height: 42px;
+    img {
+      height: 32px;
+      width: 32px;
+    }
+  }
+  .hits {
     position: absolute;
     max-height: 500px;
     overflow-y: scroll;

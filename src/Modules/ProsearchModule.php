@@ -42,7 +42,6 @@ class ProsearchModule extends Module
 
         $this->Template->keyword = StringUtil::specialchars($strKeywords);
         $this->Template->action = $this->getActionUrl();
-        $this->Template->searchButtonAttributes = $this->getSearchButtonAttributes();
 
         $this->Template->categories = \StringUtil::deserialize($this->psSearchCategories, true);
         $this->Template->elementId = $this->getElementId();
@@ -58,17 +57,6 @@ class ProsearchModule extends Module
 
         global $objPage;
         return $objPage->getFrontendUrl();
-    }
-
-    protected function getSearchButtonAttributes() {
-
-        $strAttributes = '';
-
-        if (!$this->jumpTo) {
-            $strAttributes = '@click.stop.prevent="search()"';
-        }
-
-        return $strAttributes;
     }
 
     protected function getJsScript() {
@@ -96,6 +84,6 @@ class ProsearchModule extends Module
 
         $objCombiner = new Combiner();
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/default.scss');
-        $GLOBALS['TL_CSS']['cssProsearch'] = $objCombiner->getCombinedFile();
+        $GLOBALS['TL_HEAD']['cssProsearch'] = '<link href="'.$objCombiner->getCombinedFile().'" rel="stylesheet">';
     }
 }
