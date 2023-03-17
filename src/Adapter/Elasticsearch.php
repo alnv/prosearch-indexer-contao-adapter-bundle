@@ -278,15 +278,20 @@ class Elasticsearch extends Adapter
 
         $objIndicesModel->last_indexed = time();
         $objIndicesModel->save();
-
+        
+        /*
         System::getContainer()
             ->get('monolog.logger.contao')
             ->log(LogLevel::DEBUG, 'Index document with ID ' . $arrDocument['id'], ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+        */
     }
 
     /**
      * @param $strIndicesId
      * @return void
+     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
+     * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
+     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
     public function indexDocuments($strIndicesId = null)
     {
@@ -316,16 +321,14 @@ class Elasticsearch extends Adapter
         }
 
         $arrDomDocument = \StringUtil::deserialize($objIndices->document, true);
-        $arrUrlFragments = parse_url($objIndices->url);
 
         $arrDocument = [
             'id' => $strIndicesId,
             'title' => $objIndices->title ?: '',
             'description' => $objIndices->description ?: '',
             'url' => $objIndices->url,
-            'domain' => $arrUrlFragments['host'] ?? '',
+            'domain' => $objIndices->domain,
             'language' => $objIndices->language
-            // 'microdata' => []
         ];
 
         $arrTypes = \StringUtil::deserialize($objIndices->types, true);
@@ -335,12 +338,6 @@ class Elasticsearch extends Adapter
             while ($objMicroData->next()) {
                 if ($objMicroData->type && !in_array($objMicroData->type, $arrTypes)) {
                     $arrTypes[] = $objMicroData->type;
-                    /*
-                    $arrData = \StringUtil::deserialize($objMicroData->data, true);
-                    switch ($objMicroData->type) {
-                        // todo get data from micordata and add it to document
-                    }
-                    */
                 }
             }
         }
@@ -360,8 +357,14 @@ class Elasticsearch extends Adapter
      * @param string $strLanguage
      * @return string
      */
-    protected function getAnalyzerByLanguage(string $strLanguage = ""): string
+    protected function getQueryAnalyzer(string $strLanguage = ""): string
     {
+
+        if ($this->objModule) {
+            if ($this->objModule->psAnalyzer) {
+                return $this->objModule->psAnalyzer;
+            }
+        }
 
         if (!$strLanguage) {
             $strLanguage = $GLOBALS['TL_LANGUAGE'] ?: '';
@@ -377,16 +380,19 @@ class Elasticsearch extends Adapter
     /**
      * @param $arrKeywords
      * @param $arrOptions
-     * @return array
+     * @return array|array[]
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function autocompltion($arrKeywords, $arrOptions = [])
+    public function autocompltion($arrKeywords) : array
     {
 
         $arrResults = [
-            'autocomplete' => []
+            'hits' => [],
+            'didYouMean' => []
         ];
+
+        $strAnalyzer = $this->getQueryAnalyzer();
 
         $params = [
             "index" => Elasticsearch::INDEX,
@@ -409,15 +415,49 @@ class Elasticsearch extends Adapter
                             "value" => $arrKeywords['query']
                         ]
                     ]
+                ],
+                'suggest' => [
+                    'didYouMean' => [
+                        'text' => $arrKeywords['query'],
+                        'phrase' => [
+                            'field' => "text",
+                            "size" => 5,
+                            "confidence" => 1,
+                            "max_errors" => 2,
+                            'analyzer' => $strAnalyzer,
+                            'direct_generator' => [
+                                [
+                                    'field' => 'text',
+                                    'suggest_mode' => 'always'
+                                ]
+                            ],
+                            'highlight' => [
+                                'pre_tag' => '<em>',
+                                'post_tag' => '</em>'
+                            ]
+                        ]
+                    ]
                 ]
             ]
         ];
 
         $response = $this->getClient()->search($params);
-        $arrBuckets = $response['aggregations']['autocomplete']['buckets'] ?? [];
 
+        $arrBuckets = $response['aggregations']['autocomplete']['buckets'] ?? [];
         foreach ($arrBuckets as $arrBucket) {
-            $arrResults['autocomplete'][] = $arrBucket['key'];
+            $arrResults['hits'][] = [
+                'term' => $arrBucket['key'],
+                'template' => '<a href="#" data-suggest="'.$arrBucket['key'].'">'.$arrBucket['key'].'</a>'
+            ];
+        }
+
+        $arrSuggests = $response['suggest']['didYouMean'] ?? [];
+        foreach ($arrSuggests as $arrSuggest) {
+            if (isset($arrSuggest['options']) && is_array($arrSuggest['options'])) {
+                foreach ($arrSuggest['options'] as $arrOption) {
+                    $arrResults['didYouMean'][] = $arrOption['text'];
+                }
+            }
         }
 
         return $arrResults;
@@ -438,17 +478,18 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
-        $strAnalyzer = $this->getAnalyzerByLanguage();
+        $strAnalyzer = $this->getQueryAnalyzer();
 
         $params = [
             'index' => Elasticsearch::INDEX,
             'body' => [
-                "size" => 100,
+                "size" => $this->getSizeValue(),
                 'query' => [
                     'bool' => [
                         'filter' => [
                             'terms' => [
-                                'language' => [$GLOBALS['TL_LANGUAGE']]
+                                'language' => [$GLOBALS['TL_LANGUAGE']],
+                                'domain' => [\Environment::get('host')]
                             ]
                         ]
                     ]
@@ -496,9 +537,9 @@ class Elasticsearch extends Adapter
                     [
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
-                            'fuzziness' => 'AUTO',
+                            // 'fuzziness' => 'AUTO',
                             'analyzer' => $strAnalyzer,
-                            'fields' => ['title', 'description', 'text', 'span']
+                            'fields' => ['title', 'description', 'text']
                         ]
                     ]
                 ],
@@ -527,10 +568,6 @@ class Elasticsearch extends Adapter
             return $arrResults;
         }
 
-        if ($this->objModule) {
-            $params['body']['size'] = $this->objModule->perPage ?: 100;
-        }
-
         $response = $this->getClient()->search($params);
 
         $arrHits = $response['hits']['hits'] ?? [];
@@ -545,7 +582,6 @@ class Elasticsearch extends Adapter
         }
 
         foreach ($arrHits as $arrHit) {
-
             $objEntity = new Result();
             $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight']['text'] ?? []), [
                 'types' => $arrHit['_source']['types'],
@@ -556,6 +592,27 @@ class Elasticsearch extends Adapter
             }
         }
 
+        if (empty($arrResults['hits'])) {
+            // repeat
+        }
+
         return $arrResults;
+    }
+
+    /**
+     * @return array|array[]
+     */
+    public function getAnalyzer() :array {
+
+        return $this->arrAnalyzer;
+    }
+
+    protected function getSizeValue() {
+
+        if (!$this->objModule) {
+            return 50;
+        }
+
+        return $this->objModule->perPage ?: 50;
     }
 }

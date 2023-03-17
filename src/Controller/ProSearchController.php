@@ -71,10 +71,6 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
 
         $this->container->get('contao.framework')->initialize();
 
-        $arrReturn = [
-            'autocomplete' => []
-        ];
-
         $arrCategories = Input::post('categories') ?? [];
         $strModuleId = Input::post('module') ?? [];
         $query = Input::get('query') ?? '';
@@ -85,13 +81,18 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
         $arrKeywords = $objKeyword->setKeywords($query, ['categories' => $arrCategories]);
 
+        $arrResults = [
+            'keywords' => $arrKeywords,
+            'results' => []
+        ];
+
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
                 $objElasticsearchAdapter = new Elasticsearch($strModuleId);
                 $objElasticsearchAdapter->connect();
                 if ($objElasticsearchAdapter->getClient()) {
-                    $arrReturn['autocomplete'] = $objElasticsearchAdapter->autocompltion($arrKeywords)['autocomplete'];
+                    $arrResults['results'] = $objElasticsearchAdapter->autocompltion($arrKeywords);
                 }
                 break;
             case 'licence':
@@ -99,6 +100,6 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
                 break;
         }
 
-        return new JsonResponse($arrReturn);
+        return new JsonResponse($arrResults);
     }
 }

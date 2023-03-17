@@ -2,10 +2,12 @@
     (function () {
         let objState = {
             categories: <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>,
-            timeout: null,
             keywords: '<?= $this->keyword ?>',
+            autoComplete: null,
+            didYouMean: [],
+            timeout: null,
             hits: [],
-            didYouMean: []
+            results: []
         };
         new Vue({
             el: "#<?= $this->elementId ?>",
@@ -13,24 +15,48 @@
                 return objState
             },
             methods: {
-                getSearchResults: function () {
+                getSearchResults: function (origin) {
                     this.hits = [];
                     this.didYouMean = [];
-                    this.$http.post('/ps/search/results?query=' + this.keywords, {categories: this.categories, module:"<?= $this->id ?>"},
+                    let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
+                    if (origin === 'results') {
+                        type = 'results';
+                    }
+                    let source = '/ps/search/'+type+'?query=' + this.keywords;
+                    this.$http.post(source, {categories: this.categories, module:"<?= $this->id ?>"},
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     ).then(function (res) {
+                        this[origin] = res.body['results']['hits'];
                         this.didYouMean = res.body['results']['didYouMean']
-                        this.hits = res.body['results']['hits'];
+                        if (type === 'autocompletion') {
+                            setTimeout(function () {
+                                this.setSuggestHandler();
+                            }.bind(this), 200)
+                        }
                     }.bind(this));
+                },
+                setSuggestHandler: function () {
+                    let self = this;
+                    let results = document.querySelector('#<?= $this->elementId ?>');
+                    let form = results.querySelector('form');
+                    let links = results.querySelectorAll('a[data-suggest]');
+                    for (let i=0;i<links.length;i++) {
+                        let objLink = links[i];
+                        objLink.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            self.keywords = this.dataset.suggest;
+                            form.submit();
+                        });
+                    }
                 },
                 liveSearch: function () {
                     clearTimeout(this.timeout);
                     this.timeout = setTimeout(function () {
-                        this.getSearchResults();
-                    }.bind(this), 600);
+                        this.getSearchResults('hits');
+                    }.bind(this), 800);
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.didYouMean[0];
@@ -38,15 +64,12 @@
                 }
             },
             watch: {
-                categories: {
-                    handler: function () {
-                        this.getSearchResults();
-                    },
-                    deep: true
-                }
+                //
             },
             mounted: function () {
-                //
+                <?php if ($this->keyword): ?>
+                this.getSearchResults('results');
+                <?php endif; ?>
             }
         })
     })();

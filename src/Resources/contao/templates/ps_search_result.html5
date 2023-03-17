@@ -1,4 +1,4 @@
-<a href="<?= $this->url ?>" title="<?= $this->title ?>">
+<div data-url="<?= $this->url ?>" class="hit">
     <?php if (!empty($this->images) && is_array($this->images)): ?>
         <?php $arrImage = $this->images[0] ?? []; ?>
         <?php if (!empty($arrImage)): ?>
@@ -7,8 +7,8 @@
             </div>
         <?php endif; ?>
     <?php endif; ?>
-    <div class="result">
+    <div class="text">
         <p class="title"><strong><?= $this->title ?></strong></p>
         <p class="description"><?= (!empty($this->highlights)?implode(' ', $this->highlights):$this->description) ?></p>
     </div>
-</a>
+</div>

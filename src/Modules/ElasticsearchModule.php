@@ -7,10 +7,10 @@ use Contao\Module;
 use Contao\Combiner;
 use Contao\StringUtil;
 
-class ProsearchModule extends Module
+class ElasticsearchModule extends Module
 {
 
-    protected $strTemplate = 'mod_prosearch';
+    protected $strTemplate = 'mod_elasticsearch';
 
     public function generate()
     {
@@ -84,6 +84,7 @@ class ProsearchModule extends Module
 
         $objCombiner = new Combiner();
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/default.scss');
+
         $GLOBALS['TL_HEAD']['cssProsearch'] = '<link href="'.$objCombiner->getCombinedFile().'" rel="stylesheet">';
     }
 }

@@ -20,12 +20,11 @@
         </div>
     </form>
     <?php if ($this->keyword): ?>
-        <div class="ce_results" v-if="hits.length && keywords">
-            <div v-for="hit in hits" v-html="hit.template" class="result"></div>
+        <div class="ce_results" v-if="results.length && keywords">
+            <div v-for="result in results" v-html="result.template" class="result"></div>
         </div>
     <?php endif; ?>
 </div>
-
 
 <?php if ($this->script): ?>
     <?= $this->script ?>

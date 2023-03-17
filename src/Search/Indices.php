@@ -46,8 +46,6 @@ class Indices
 
         $arrDocument = [
             'text' => $this->getValuesByTagName('main p'),
-            'list' => $this->getValuesByTagName('main li'),
-            'span' => $this->getValuesByTagName('main span'),
             'strong' => $this->getValuesByTagName('main strong'),
             'h1' => $this->getValuesByTagName('h1'),
             'h2' => $this->getValuesByTagName('h2'),
@@ -87,6 +85,7 @@ class Indices
         $objIndicesModel->types = $arrSearchTypes;
         $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
+        $objIndicesModel->domain = $document->getUri()->getHost();
         $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
         $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
         $objIndicesModel->save();

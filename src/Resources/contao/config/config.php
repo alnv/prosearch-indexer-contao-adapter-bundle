@@ -3,7 +3,7 @@
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\DocumentsModels;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ProsearchModule;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
 
 /**
  * Models
@@ -39,7 +39,7 @@ array_insert($GLOBALS['BE_MOD'], 3, [
  */
 array_insert($GLOBALS['FE_MOD'], 3, [
     'prosearch-modules' => [
-        'prosearch' => ProsearchModule::class
+        'elasticsearch' => ElasticsearchModule::class
     ]
 ]);
 

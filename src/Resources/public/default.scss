@@ -1,4 +1,4 @@
-.mod_prosearch {
+.mod_elasticsearch {
   width: 100%;
   max-width: 900px;
   margin: 30px auto;
@@ -29,6 +29,7 @@
     height: 42px;
   }
   button {
+    width: 100%;
     margin: 0;
     padding: 0 10px;
     line-height: 42px;
@@ -39,6 +40,7 @@
     }
   }
   .hits {
+    width: 100%;
     position: absolute;
     max-height: 500px;
     overflow-y: scroll;
@@ -53,6 +55,7 @@
       padding: 10px;
       color: #000;
       display: flex;
+      width: 100%;
       &:hover,
       &:focus {
         background: #f1efee;

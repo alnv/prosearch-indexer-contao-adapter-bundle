@@ -28,6 +28,9 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         'url' => [
             'sql' => "text NULL"
         ],
+        'domain' => [
+            'sql' => "varchar(255) NOT NULL default ''"
+        ],
         'images' => [
             'sql' => "blob NULL"
         ],
