@@ -1,4 +1,4 @@
-<div data-url="<?= $this->url ?>" class="hit">
+<div href="<?= $this->url ?>" class="hit">
     <?php if (!empty($this->images) && is_array($this->images)): ?>
         <?php $arrImage = $this->images[0] ?? []; ?>
         <?php if (!empty($arrImage)): ?>
