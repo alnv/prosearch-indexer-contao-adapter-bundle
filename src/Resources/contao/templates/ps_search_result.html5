@@ -1,4 +1,4 @@
-<div href="<?= $this->url ?>" class="hit">
+<a href="<?= $this->url ?>" class="hit">
     <?php if (!empty($this->images) && is_array($this->images)): ?>
         <?php $arrImage = $this->images[0] ?? []; ?>
         <?php if (!empty($arrImage)): ?>
@@ -11,4 +11,4 @@
         <p class="title"><strong><?= $this->title ?></strong></p>
         <p class="description"><?= (!empty($this->highlights)?implode(' ', $this->highlights):$this->description) ?></p>
     </div>
-</div>
+</a>
