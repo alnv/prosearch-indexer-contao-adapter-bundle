@@ -17,6 +17,7 @@
             methods: {
                 getSearchResults: function (origin) {
                     this.hits = [];
+                    this.results = [];
                     this.didYouMean = [];
                     let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
                     if (origin === 'results') {
@@ -47,7 +48,7 @@
                         let objLink = links[i];
                         objLink.addEventListener('click', function (e) {
                             e.preventDefault();
-                            self.keywords = this.dataset.suggest;
+                            self.keywords = this.dataset['suggest'];
                             form.submit();
                         });
                     }
