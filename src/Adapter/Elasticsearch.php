@@ -220,6 +220,15 @@ class Elasticsearch extends Adapter
                             "copy_to" => [
                                 "autocomplete"
                             ]
+                        ],
+                        "language" => [
+                            "type" => "keyword"
+                        ],
+                        "domain" => [
+                            "type" => "keyword"
+                        ],
+                        "url" => [
+                            "type" => "keyword"
                         ]
                     ]
                 ]
@@ -470,7 +479,7 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function search($arrKeywords, $arrOptions = []): array
+    public function search($arrKeywords, $arrOptions = [], $blnTryItAgain=true): array
     {
 
         $arrResults = [
@@ -478,21 +487,14 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
-        $strAnalyzer = $this->getQueryAnalyzer();
+        $strAnalyzer = $arrOptions['analyzer'] ?? $this->getQueryAnalyzer();
 
         $params = [
             'index' => Elasticsearch::INDEX,
             'body' => [
                 "size" => $this->getSizeValue(),
                 'query' => [
-                    'bool' => [
-                        'filter' => [
-                            'terms' => [
-                                'language' => [$GLOBALS['TL_LANGUAGE']],
-                                'domain' => [\Environment::get('host')]
-                            ]
-                        ]
-                    ]
+                    'bool' => []
                 ],
                 'highlight' => [
                     'pre_tags' => '<strong>',
@@ -537,7 +539,7 @@ class Elasticsearch extends Adapter
                     [
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
-                            // 'fuzziness' => 'AUTO',
+                            'fuzziness' => 'AUTO',
                             'analyzer' => $strAnalyzer,
                             'fields' => ['title', 'description', 'text']
                         ]
@@ -548,13 +550,36 @@ class Elasticsearch extends Adapter
                         'multi_match' => [
                             'query' => $arrKeywords['query'],
                             'analyzer' => $strAnalyzer,
-                            'fields' => ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                            'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^5', 'h3^2', 'h4', 'h5', 'h6']
                         ]
                     ]
                 ]
             ];
         }
 
+        $params['body']['query']['bool']['filter'][] = [
+            'term' => [
+                'language' => $GLOBALS['TL_LANGUAGE'],
+            ]
+        ];
+
+        $params['body']['query']['bool']['filter'][] = [
+            'term' => [
+                'domain' => \Environment::get('host')
+            ]
+        ];
+
+        if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
+            foreach ($arrKeywords['types'] as $strType) {
+                $params['body']['query']['bool']['filter'][] = [
+                    'term' => [
+                        'types' => $strType
+                    ]
+                ];
+            }
+        }
+
+        /*
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
             $params['body']['query']['bool']['should'] = $params['body']['query']['bool']['should'] ?? [];
             $params['body']['query']['bool']['should'][] = [
@@ -563,6 +588,7 @@ class Elasticsearch extends Adapter
                 ]
             ];
         }
+        */
 
         if (empty($params['body']['query'])) {
             return $arrResults;
@@ -592,8 +618,10 @@ class Elasticsearch extends Adapter
             }
         }
 
-        if (empty($arrResults['hits'])) {
-            // repeat
+        if (empty($arrResults['hits']) && $blnTryItAgain) {
+            return $this->search($arrKeywords, [
+                'analyzer' => 'standard'
+            ], false);
         }
 
         return $arrResults;

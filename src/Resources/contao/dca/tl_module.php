@@ -30,7 +30,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psAutoCompletionType'] = [
         'tl_class' => 'clr'
     ],
     'default' => 'advanced',
-    'reference' => &$GLOBALS['TL_LANG']['tl_module'],
+    'reference' => &$GLOBALS['TL_LANG']['tl_module']['psReference'],
     'options' => ['simple', 'advanced'],
     'sql' => "varchar(32) NOT NULL default 'advanced'"
 ];

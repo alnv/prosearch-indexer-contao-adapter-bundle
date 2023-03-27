@@ -1,3 +1,7 @@
+<?php
+    $strDescription = (!empty($this->highlights)?implode(' ', $this->highlights):$this->description);
+    $strDescription = \StringUtil::substrHtml($strDescription, 250);
+?>
 <a href="<?= $this->url ?>" class="hit">
     <?php if (!empty($this->images) && is_array($this->images)): ?>
         <?php $arrImage = $this->images[0] ?? []; ?>
@@ -9,6 +13,7 @@
     <?php endif; ?>
     <div class="text">
         <p class="title"><strong><?= $this->title ?></strong></p>
-        <p class="description"><?= (!empty($this->highlights)?implode(' ', $this->highlights):$this->description) ?></p>
+        <p class="description"><?= $strDescription ?></p>
+        <p class="url"><?= $this->url ?></p>
     </div>
 </a>

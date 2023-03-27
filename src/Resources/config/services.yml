@@ -2,6 +2,8 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
+  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ProSearchController:
+    public: true
   Alnv\ProSearchIndexerContaoAdapterBundle\Search\ProSearchIndexer:
     tags:
       - { name: 'contao.search_indexer' }
