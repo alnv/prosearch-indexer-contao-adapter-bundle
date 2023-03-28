@@ -456,7 +456,7 @@ class Elasticsearch extends Adapter
         foreach ($arrBuckets as $arrBucket) {
             $arrResults['hits'][] = [
                 'term' => $arrBucket['key'],
-                'template' => '<a href="#" data-suggest="'.$arrBucket['key'].'">'.$arrBucket['key'].'</a>'
+                'template' => $arrBucket['key']
             ];
         }
 

@@ -39,6 +39,36 @@
       width: 32px;
     }
   }
+  a.hit {
+    text-decoration: none;
+    padding: 10px;
+    color: #000;
+    display: flex;
+    width: 100%;
+    &:hover,
+    &:focus {
+      background: #f1efee;
+    }
+    .image {
+      width: 85px;
+      min-width: 85px;
+      margin-right: 15px;
+      img {
+        width: 100%;
+        object-fit: contain;
+      }
+    }
+    p.title {
+      margin: 0 0 5px 0;
+    }
+    p.description {
+      margin-bottom: 0;
+    }
+  }
+  .autoComplete_wrapper {
+    width: 100%;
+  }
+  /*
   .hits {
     width: 100%;
     position: absolute;
@@ -77,4 +107,5 @@
       margin-bottom: 0;
     }
   }
+  */
 }

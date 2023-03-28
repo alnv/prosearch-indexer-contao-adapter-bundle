@@ -2,21 +2,18 @@
 <?php $this->block('content'); ?>
 
 <div id="<?= $this->elementId ?>" class="search-container">
-    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET">
+    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
         <div class="suggest" v-if="didYouMean.length && didYouMean[0] !== keywords">
             <p><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
         </div>
         <div class="formbody">
             <div class="widget widget-text">
                 <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
-                <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>" @keyup="liveSearch()">
+                <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>">
             </div>
             <div class="widget widget-submit">
                 <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit"><img src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>"></button>
             </div>
-        </div>
-        <div class="hits" v-if="hits.length && keywords">
-            <div v-for="hit in hits" v-html="hit.template" class="hit"></div>
         </div>
     </form>
     <?php if ($this->keyword): ?>

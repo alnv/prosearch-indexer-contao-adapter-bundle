@@ -3,11 +3,9 @@
         let objState = {
             categories: <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>,
             keywords: '<?= $this->keyword ?>',
-            autoComplete: null,
             didYouMean: [],
-            timeout: null,
-            hits: [],
-            results: []
+            results: [],
+            autoCompleteJS: null
         };
         new Vue({
             el: "#<?= $this->elementId ?>",
@@ -15,61 +13,86 @@
                 return objState
             },
             methods: {
-                getSearchResults: function (origin) {
-                    this.hits = [];
+                setAutoComplete: function () {
+                    if (this.autoCompleteJS) {
+                        return;
+                    }
+                    let self = this;
+                    let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
+                    let fetchUrl = '/ps/search/'+type+'?query=';
+                    this.autoCompleteJS = new autoComplete({
+                        selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
+                        placeHolder: "<?= $this->keywordLabel ?>",
+                        data: {
+                            src: async (query) => {
+                                self.didYouMean = [];
+                                try {
+                                    const source = await fetch(fetchUrl+query, {
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            categories: self.categories,
+                                            module: "<?= $this->id ?>"
+                                        })
+                                    });
+                                    const data = await source.json();
+                                    self.didYouMean = data['results']['didYouMean']
+                                    let suggests = [];
+                                    for (let i=0;i<data['results']['hits'].length;i++) {
+                                        let suggest = data['results']['hits'][i];
+                                        suggests.push(suggest.template);
+                                    }
+                                    return suggests;
+                                } catch (error) {
+                                    return error;
+                                }
+                            }
+                        },
+                        threshold: 2,
+                        resultsList: {
+                            maxResults: 15,
+                            tabSelect: true,
+                            noResults: false
+                        },
+                        resultItem: {
+                            highlight: false
+                        }
+                        <?php if ($this->psAutoCompletionType == 'simple'): ?>
+                        ,events: {
+                            input: {
+                                selection: (event) => {
+                                    objState.autoCompleteJS.input.value = event.detail.selection.value;
+                                    let results = document.querySelector('#<?= $this->elementId ?>');
+                                    let form = results.querySelector('form');
+                                    form.submit();
+                                }
+                            }
+                        }
+                        <?php endif; ?>
+                    });
+                },
+                getSearchResults: function () {
                     this.results = [];
                     this.didYouMean = [];
-                    let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
-                    if (origin === 'results') {
-                        type = 'results';
-                    }
-                    let source = '/ps/search/'+type+'?query=' + this.keywords;
-                    this.$http.post(source, {categories: this.categories, module:"<?= $this->id ?>"},
+                    let fetchUrl = '/ps/search/results?query=' + this.keywords;
+                    this.$http.post(fetchUrl, {categories: this.categories, module:"<?= $this->id ?>"},
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     ).then(function (res) {
-                        this[origin] = res.body['results']['hits'];
+                        this.results = res.body['results']['hits'];
                         this.didYouMean = res.body['results']['didYouMean']
-                        if (type === 'autocompletion') {
-                            setTimeout(function () {
-                                this.setSuggestHandler();
-                            }.bind(this), 200)
-                        }
                     }.bind(this));
-                },
-                setSuggestHandler: function () {
-                    let self = this;
-                    let results = document.querySelector('#<?= $this->elementId ?>');
-                    let form = results.querySelector('form');
-                    let links = results.querySelectorAll('a[data-suggest]');
-                    for (let i=0;i<links.length;i++) {
-                        let objLink = links[i];
-                        objLink.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            self.keywords = this.dataset['suggest'];
-                            form.submit();
-                        });
-                    }
-                },
-                liveSearch: function () {
-                    clearTimeout(this.timeout);
-                    this.timeout = setTimeout(function () {
-                        this.getSearchResults('hits');
-                    }.bind(this), 800);
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.didYouMean[0];
-                    this.getSearchResults();
+                    this.autoCompleteJS.start(this.keyword);
                 }
             },
-            watch: {
-                //
-            },
             mounted: function () {
+                this.setAutoComplete();
                 <?php if ($this->keyword): ?>
-                this.getSearchResults('results');
+                this.getSearchResults();
                 <?php endif; ?>
             }
         })

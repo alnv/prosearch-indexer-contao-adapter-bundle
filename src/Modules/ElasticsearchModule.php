@@ -79,11 +79,13 @@ class ElasticsearchModule extends Module
         $objCombiner = new Combiner();
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/vue.min.js');
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/vue-resource.min.js');
+        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/autoComplete.min.js');
 
         $GLOBALS['TL_HEAD']['jsProsearch'] = '<script src="'.$objCombiner->getCombinedFile().'"></script>';
 
         $objCombiner = new Combiner();
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/default.scss');
+        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/autoComplete.scss');
 
         $GLOBALS['TL_HEAD']['cssProsearch'] = '<link href="'.$objCombiner->getCombinedFile().'" rel="stylesheet">';
     }

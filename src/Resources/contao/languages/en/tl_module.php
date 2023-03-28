@@ -8,5 +8,5 @@ $GLOBALS['TL_LANG']['tl_module']['psAutoCompletionTemplate'] = ['Template', ''];
 $GLOBALS['TL_LANG']['tl_module']['psAnalyzer'] = ['Analyzer', ''];
 
 $GLOBALS['TL_LANG']['tl_module']['psReference'] = [];
-$GLOBALS['TL_LANG']['tl_module']['psReference']['simple'] = ['einfache Autovervollständigung', ''];
-$GLOBALS['TL_LANG']['tl_module']['psReference']['advanced'] = ['Suchergebnisse anzeigen', ''];
+$GLOBALS['TL_LANG']['tl_module']['psReference']['simple'] = ['Autovervollständigung', ''];
+$GLOBALS['TL_LANG']['tl_module']['psReference']['advanced'] = ['Suchergebnisse', ''];
