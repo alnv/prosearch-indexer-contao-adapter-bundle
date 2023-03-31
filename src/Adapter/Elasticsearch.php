@@ -435,7 +435,7 @@ class Elasticsearch extends Adapter
                             'analyzer' => $strAnalyzer,
                             'direct_generator' => [
                                 [
-                                    'field' => 'text',
+                                    'field' => 'autocomplete',
                                     'suggest_mode' => 'always'
                                 ]
                             ],
@@ -517,7 +517,7 @@ class Elasticsearch extends Adapter
                             "analyzer" => $strAnalyzer,
                             "direct_generator" => [
                                 [
-                                    "field" => "text",
+                                    "field" => "autocomplete",
                                     "suggest_mode" => "always"
                                 ]
                             ],
