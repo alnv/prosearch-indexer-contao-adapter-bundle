@@ -514,16 +514,16 @@ class Elasticsearch extends Adapter
                             'field' => "autocomplete",
                             "size" => 1,
                             "gram_size" => 3,
-                            'analyzer' => $strAnalyzer,
-                            'direct_generator' => [
+                            "analyzer" => $strAnalyzer,
+                            "direct_generator" => [
                                 [
-                                    'field' => 'text',
-                                    'suggest_mode' => 'always'
+                                    "field" => "text",
+                                    "suggest_mode" => "always"
                                 ]
                             ],
-                            'highlight' => [
-                                'pre_tag' => '<em>',
-                                'post_tag' => '</em>'
+                            "highlight" => [
+                                "pre_tag" => '<em>',
+                                "post_tag" => '</em>'
                             ]
                         ]
                     ]
