@@ -40,9 +40,7 @@
                                         let suggest = data['results']['hits'][i];
                                         suggests.push(suggest.template);
                                     }
-                                    if (!suggests.length) {
-                                        self.didYouMean = data['results']['didYouMean']
-                                    }
+                                    self.didYouMean = data['results']['didYouMean'];
                                     return suggests;
                                 } catch (error) {
                                     return error;
@@ -50,10 +48,13 @@
                             }
                         },
                         threshold: 2,
+                        searchEngine: function (query, record) {
+                            return record;
+                        },
                         resultsList: {
-                            maxResults: 15,
+                            maxResults: 30,
                             tabSelect: true,
-                            noResults: false
+                            noResults: true
                         },
                         resultItem: {
                             highlight: false

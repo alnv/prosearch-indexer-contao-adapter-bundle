@@ -68,44 +68,10 @@
   .autoComplete_wrapper {
     width: 100%;
   }
-  /*
-  .hits {
-    width: 100%;
-    position: absolute;
-    max-height: 500px;
-    overflow-y: scroll;
-    background: #fff;
-    padding: 10px 0;
-    z-index: 1;
-  }
-  .hit {
-    border-bottom: 1px solid #ccc;
-    a {
-      text-decoration: none;
-      padding: 10px;
-      color: #000;
-      display: flex;
-      width: 100%;
-      &:hover,
-      &:focus {
-        background: #f1efee;
-      }
-    }
-    .image {
-      width: 85px;
-      min-width: 85px;
-      margin-right: 15px;
-      img {
-        width: 100%;
-        object-fit: contain;
-      }
-    }
-    p.title {
-      margin: 0 0 5px 0;
-    }
-    p.description {
-      margin-bottom: 0;
+  .suggest {
+    min-height: 30px;
+    p {
+      margin: 0;
     }
   }
-  */
 }

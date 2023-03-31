@@ -3,8 +3,8 @@
 
 <div id="<?= $this->elementId ?>" class="search-container">
     <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
-        <div class="suggest" v-if="didYouMean.length && didYouMean[0] !== keywords">
-            <p><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
+        <div class="suggest">
+            <p v-if="didYouMean.length && didYouMean[0] !== keywords"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
         </div>
         <div class="formbody">
             <div class="widget widget-text">
