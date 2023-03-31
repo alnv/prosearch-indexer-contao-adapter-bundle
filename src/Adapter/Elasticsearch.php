@@ -179,7 +179,7 @@ class Elasticsearch extends Adapter
                         "analyzer" => $arrAnalyzer,
                         "filter" => [
                             "autocomplete" => [
-                                "max_shingle_size" => 3,
+                                "max_shingle_size" => 4,
                                 "min_shingle_size" => 2,
                                 "type" => "shingle"
                             ],
