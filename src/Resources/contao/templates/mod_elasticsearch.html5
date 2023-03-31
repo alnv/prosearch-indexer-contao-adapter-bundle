@@ -9,7 +9,7 @@
         <div class="formbody">
             <div class="widget widget-text">
                 <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
-                <input type="search" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>">
+                <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>">
             </div>
             <div class="widget widget-submit">
                 <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit"><img src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>"></button>

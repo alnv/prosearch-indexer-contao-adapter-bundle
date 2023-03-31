@@ -35,11 +35,13 @@
                                         })
                                     });
                                     const data = await source.json();
-                                    self.didYouMean = data['results']['didYouMean']
                                     let suggests = [];
                                     for (let i=0;i<data['results']['hits'].length;i++) {
                                         let suggest = data['results']['hits'][i];
                                         suggests.push(suggest.template);
+                                    }
+                                    if (!suggests.length) {
+                                        self.didYouMean = data['results']['didYouMean']
                                     }
                                     return suggests;
                                 } catch (error) {

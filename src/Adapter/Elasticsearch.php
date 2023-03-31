@@ -179,8 +179,8 @@ class Elasticsearch extends Adapter
                         "analyzer" => $arrAnalyzer,
                         "filter" => [
                             "autocomplete" => [
-                                "max_shingle_size" => "3",
-                                "min_shingle_size" => "2",
+                                "max_shingle_size" => 3,
+                                "min_shingle_size" => 2,
                                 "type" => "shingle"
                             ],
                             "english_stemmer" => [
@@ -429,10 +429,9 @@ class Elasticsearch extends Adapter
                     'didYouMean' => [
                         'text' => $arrKeywords['query'],
                         'phrase' => [
-                            'field' => "text",
-                            "size" => 5,
-                            "confidence" => 1,
-                            "max_errors" => 2,
+                            'field' => "autocomplete",
+                            "size" => 1,
+                            "gram_size" => 3,
                             'analyzer' => $strAnalyzer,
                             'direct_generator' => [
                                 [
@@ -512,10 +511,9 @@ class Elasticsearch extends Adapter
                     'didYouMean' => [
                         'text' => $arrKeywords['query'],
                         'phrase' => [
-                            'field' => "text",
-                            "size" => 5,
-                            "confidence" => 1,
-                            "max_errors" => 2,
+                            'field' => "autocomplete",
+                            "size" => 1,
+                            "gram_size" => 3,
                             'analyzer' => $strAnalyzer,
                             'direct_generator' => [
                                 [
@@ -534,15 +532,21 @@ class Elasticsearch extends Adapter
         ];
 
         if (isset($arrKeywords['query']) && $arrKeywords['query']) {
+
+            $arrMustMatch = [
+                'query' => $arrKeywords['query'],
+                'analyzer' => $strAnalyzer,
+                'fields' => ['title', 'description', 'text']
+            ];
+
+            if (isset($arrOptions['fuzziness'])) {
+                $arrMustMatch['fuzziness'] = 'AUTO';
+            }
+
             $params['body']['query']['bool'] = [
                 'must' => [
                     [
-                        'multi_match' => [
-                            'query' => $arrKeywords['query'],
-                            'fuzziness' => 'AUTO',
-                            'analyzer' => $strAnalyzer,
-                            'fields' => ['title', 'description', 'text']
-                        ]
+                        'multi_match' => $arrMustMatch
                     ]
                 ],
                 'should' => [
@@ -579,17 +583,6 @@ class Elasticsearch extends Adapter
             }
         }
 
-        /*
-        if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
-            $params['body']['query']['bool']['should'] = $params['body']['query']['bool']['should'] ?? [];
-            $params['body']['query']['bool']['should'][] = [
-                'terms' => [
-                    'types' => $arrKeywords['types']
-                ]
-            ];
-        }
-        */
-
         if (empty($params['body']['query'])) {
             return $arrResults;
         }
@@ -620,7 +613,8 @@ class Elasticsearch extends Adapter
 
         if (empty($arrResults['hits']) && $blnTryItAgain) {
             return $this->search($arrKeywords, [
-                'analyzer' => 'standard'
+                'analyzer' => 'standard',
+                'fuzziness' => 'AUTO'
             ], false);
         }
 
