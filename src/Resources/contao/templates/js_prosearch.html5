@@ -23,6 +23,8 @@
                     this.autoCompleteJS = new autoComplete({
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
+                        threshold: 2,
+                        debounce: 800,
                         data: {
                             src: async (query) => {
                                 self.didYouMean = [];
@@ -54,12 +56,11 @@
                                 }
                             }
                         },
-                        threshold: 2,
                         searchEngine: function (query, record) {
                             return record;
                         },
                         resultsList: {
-                            maxResults: 30,
+                            maxResults: 35,
                             tabSelect: true,
                             noResults: true
                         },
