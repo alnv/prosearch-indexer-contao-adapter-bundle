@@ -45,6 +45,12 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ],
         'language' => [
             'sql' => "varchar(6) NOT NULL default ''"
+        ],
+        'doc_type' => [
+            'sql' => "varchar(32) NOT NULL default ''"
+        ],
+        'origin_url' => [
+            'sql' => "text NULL"
         ]
     ]
 ];

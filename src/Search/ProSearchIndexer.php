@@ -15,6 +15,7 @@ class ProSearchIndexer implements IndexerInterface
     public function index(Document $document): void
     {
         new Indices($document);
+        new PDFIndices($document);
     }
 
     public function delete(Document $document): void

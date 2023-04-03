@@ -13,21 +13,14 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 /**
  *
  */
-class Indices
+class Indices extends Searcher
 {
 
     /**
-     * @var int
-     */
-    protected int $indicesId = 0;
-
-    /**
-     * @var Crawler
-     */
-    protected Crawler $objCrawler;
-
-    /**
      * @param Document $document
+     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
+     * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
+     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
     public function __construct(Document $document)
     {
@@ -88,6 +81,8 @@ class Indices
         $objIndicesModel->domain = $document->getUri()->getHost();
         $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
         $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
+        $objIndicesModel->doc_type = 'page';
+        $objIndicesModel->origin_url = '';
         $objIndicesModel->save();
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
@@ -112,16 +107,18 @@ class Indices
 
     protected function getTitle($objPageObject) {
 
-        if ($objPageObject->title) {
-            return $objPageObject->title;
-        }
-
         $strTitle = $this->objCrawler->filter('title')->text();
+
         if ($strTitle) {
             return $strTitle;
         }
 
+        if ($objPageObject->title) {
+            return $objPageObject->title;
+        }
+
         $arrH1 = $this->getValuesByTagName('h1');
+
         if (empty($arrH1)) {
             return '';
         }
@@ -153,13 +150,5 @@ class Indices
         }
 
         return $arrReturn;
-    }
-
-    /**
-     * @return int
-     */
-    public function getIndicesId(): int
-    {
-        return $this->indicesId;
     }
 }
