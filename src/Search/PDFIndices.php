@@ -68,26 +68,27 @@ class PDFIndices extends Searcher
                 continue;
             }
 
+            $strContent = Text::tokenize($objLink->textContent);
             $arrMeta = Frontend::getMetaData(\StringUtil::deserialize($objFile->meta), $strLanguage);
             $strDescription = $arrMeta['caption'] ?? '';
 
             if (!$strTitle) {
 
                 if ($arrMeta['title'] == '') {
-                    $arrMeta['title'] = StringUtil::specialchars($objFile->basename);
+                    $arrMeta['title'] = $strContent;
                 }
 
-                $strTitle = $arrMeta['title'] ?? '';
+                $strTitle = $arrMeta['title'] ?: StringUtil::specialchars($_File->basename);
             }
 
             try {
 
-                $objParser = new Parser([], $objConfig);
+                $objParser = new Parser();
                 $objPdf = $objParser->parseFile(TL_ROOT . '/' . $objFile->path);
 
                 $arrDocument = [
-                    'text' => Text::tokenize(strip_tags($objPdf->getText())),
-                    'strong' => [Text::tokenize($objLink->textContent)],
+                    'text' => Text::tokenize($objPdf->getText()),
+                    'strong' => [$strContent],
                     'h1' => [$strTitle],
                     'h2' => [],
                     'h3' => [],

@@ -99,8 +99,10 @@ class Elasticsearch extends Adapter
         return $this->objClient;
     }
 
-    public function deleteIndex()
+    public function deleteIndex($strIndicesId): void
     {
+
+        // todo "curl -X DELETE http://localhost:9200/contao_search"
 
         $this->connect();
 
@@ -108,7 +110,30 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        // todo "curl -X DELETE http://localhost:9200/contao_search"
+        $objIndicesModel = IndicesModel::findByPk($strIndicesId);
+
+        if (!$objIndicesModel) {
+            return;
+        }
+
+        if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $strIndicesId])->asBool()) {
+            $this->getClient()->deleteByQuery([
+                'index' => Elasticsearch::INDEX,
+                'body' => [
+                    'query' => [
+                        'term' => [
+                            'id' => $strIndicesId
+                        ]
+                    ]
+                ]
+            ]);
+
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::DEBUG, 'Index document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+        }
+
+        $objIndicesModel->delete();
     }
 
     /**
@@ -116,7 +141,7 @@ class Elasticsearch extends Adapter
      * @param int $intLimit
      * @return array
      */
-    public function getIndex($strIndicesId = null, int $intLimit = 25) : array
+    public function getIndex($strIndicesId = null, int $intLimit = 25): array
     {
 
         $arrColumn = ['state=?'];
@@ -287,7 +312,7 @@ class Elasticsearch extends Adapter
 
         $objIndicesModel->last_indexed = time();
         $objIndicesModel->save();
-        
+
         /*
         System::getContainer()
             ->get('monolog.logger.contao')
@@ -393,7 +418,7 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function autocompltion($arrKeywords) : array
+    public function autocompltion($arrKeywords): array
     {
 
         $arrResults = [
@@ -478,7 +503,7 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function search($arrKeywords, $arrOptions = [], $blnTryItAgain=true): array
+    public function search($arrKeywords, $arrOptions = [], $blnTryItAgain = true): array
     {
 
         $arrResults = [
@@ -624,12 +649,14 @@ class Elasticsearch extends Adapter
     /**
      * @return array|array[]
      */
-    public function getAnalyzer() :array {
+    public function getAnalyzer(): array
+    {
 
         return $this->arrAnalyzer;
     }
 
-    protected function getSizeValue() {
+    protected function getSizeValue()
+    {
 
         if (!$this->objModule) {
             return 50;

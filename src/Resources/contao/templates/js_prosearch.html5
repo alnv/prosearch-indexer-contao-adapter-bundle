@@ -28,10 +28,17 @@
                                 self.didYouMean = [];
                                 try {
                                     const source = await fetch(fetchUrl+query, {
-                                        method: 'POST',
+                                        method: "POST",
+                                        cache: "no-cache",
+                                        redirect: "follow",
+                                        referrerPolicy: "no-referrer",
+                                        credentials: "same-origin",
                                         body: JSON.stringify({
                                             categories: self.categories,
                                             module: "<?= $this->id ?>"
+                                        }),
+                                        headers: new Headers({
+                                            "Content-Type": "application/json; charset=UTF-8"
                                         })
                                     });
                                     const data = await source.json();

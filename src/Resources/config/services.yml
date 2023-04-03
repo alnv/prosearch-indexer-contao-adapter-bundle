@@ -2,6 +2,9 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
+  Alnv\ProSearchIndexerContaoAdapterBundle\Cron\DeleteIndices:
+    tags:
+      - { name: contao.cron, interval: minutely }
   Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ProSearchController:
     public: true
   Alnv\ProSearchIndexerContaoAdapterBundle\Search\ProSearchIndexer:

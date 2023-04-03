@@ -47,4 +47,10 @@ abstract class Adapter
      * @return array
      */
     abstract public function search(array $arrKeywords, array $arrOptions=[]) : array;
+
+    /**
+     * @param $strIndicesId
+     * @return void
+     */
+    abstract public function deleteIndex($strIndicesId) : void;
 }
