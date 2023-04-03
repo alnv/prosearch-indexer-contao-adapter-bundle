@@ -47,8 +47,15 @@ class Result
         }
 
         $arrImages = [];
-        foreach (\StringUtil::deserialize($objDocument->images, true) as $strUuid) {
-            if ($objFile = \FilesModel::findByUuid($strUuid)) {
+        foreach (\StringUtil::deserialize($objDocument->images, true) as $strFileId) {
+
+            if (\Validator::isBinaryUuid($strFileId) || \Validator::isStringUuid($strFileId)) {
+                $objFile = \FilesModel::findByUuid($strFileId);
+            } else {
+                $objFile = \FilesModel::findByPath($strFileId);
+            }
+
+            if ($objFile) {
                 $arrImage = $objFile->row();
                 $arrImage['pid'] = \StringUtil::binToUuid($arrImage['pid']);
                 $arrImage['uuid'] = \StringUtil::binToUuid($arrImage['uuid']);

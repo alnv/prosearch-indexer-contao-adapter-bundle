@@ -31,10 +31,6 @@ class PDFIndices extends Searcher
             $strLanguage = 'en';
         }
 
-        $objConfig = new Config();
-        $objConfig->setRetainImageContent(false);
-        $objConfig->setDecodeMemoryLimit(128);
-
         $_strUrl = $document->getUri()->__toString();
         $arrDomain = parse_url($_strUrl);
         $strDomain = ($arrDomain['scheme']??'')
@@ -49,7 +45,6 @@ class PDFIndices extends Searcher
         foreach ($objLinks as $objLink) {
 
             $strHref = $objLink->getAttribute('href');
-            $strTitle = $objLink->getAttribute('title');
 
             if (!$strHref || strpos($strHref, '.pdf') === false) {
                 continue;
@@ -68,18 +63,17 @@ class PDFIndices extends Searcher
                 continue;
             }
 
-            $strContent = Text::tokenize($objLink->textContent);
             $arrMeta = Frontend::getMetaData(\StringUtil::deserialize($objFile->meta), $strLanguage);
-            $strDescription = $arrMeta['caption'] ?? '';
 
-            if (!$strTitle) {
+            $strNodeContent = Text::tokenize($objLink->textContent);
+            $strTitleAttr = $objLink->getAttribute('title');
+            $strMetaDescription = $arrMeta['caption'] ?? '';
+            $strMetaTitle = $arrMeta['title'] ?? '';
+            $strMetaAlt = $arrMeta['alt'] ?? '';
+            $strFilename = StringUtil::specialchars($_File->basename);
 
-                if ($arrMeta['title'] == '') {
-                    $arrMeta['title'] = $strContent;
-                }
-
-                $strTitle = $arrMeta['title'] ?: StringUtil::specialchars($_File->basename);
-            }
+            $arrStrong = [$strNodeContent, $strTitleAttr, $strMetaDescription, $strMetaTitle, $strMetaAlt, $strFilename];
+            $arrStrong = array_filter($arrStrong);
 
             try {
 
@@ -88,8 +82,8 @@ class PDFIndices extends Searcher
 
                 $arrDocument = [
                     'text' => Text::tokenize($objPdf->getText()),
-                    'strong' => [$strContent],
-                    'h1' => [$strTitle],
+                    'strong' => $arrStrong,
+                    'h1' => [],
                     'h2' => [],
                     'h3' => [],
                     'h4' => [],
@@ -113,8 +107,8 @@ class PDFIndices extends Searcher
                 $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
                 $objIndicesModel->document = serialize($arrDocument);
                 $objIndicesModel->domain = $document->getUri()->getHost();
-                $objIndicesModel->title = $strTitle;
-                $objIndicesModel->description = Text::tokenize($strDescription);
+                $objIndicesModel->title = (($strMetaTitle?:$strNodeContent) ?: $strFilename);
+                $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
 
