@@ -103,7 +103,6 @@ class Elasticsearch extends Adapter
     {
 
         // todo "curl -X DELETE http://localhost:9200/contao_search"
-
         $this->connect();
 
         if (!$this->getClient()) {

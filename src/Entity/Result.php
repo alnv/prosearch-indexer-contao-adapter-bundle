@@ -36,6 +36,7 @@ class Result
      */
     public function getResult() {
 
+        $arrImages = [];
         $objDocument = IndicesModel::findByPk($this->arrHit['id']);
 
         if (!$objDocument) {
@@ -46,21 +47,32 @@ class Result
             return;
         }
 
-        $arrImages = [];
         foreach (\StringUtil::deserialize($objDocument->images, true) as $strFileId) {
+
+            $blnPath = false;
 
             if (\Validator::isBinaryUuid($strFileId) || \Validator::isStringUuid($strFileId)) {
                 $objFile = \FilesModel::findByUuid($strFileId);
             } else {
                 $objFile = \FilesModel::findByPath($strFileId);
+                $blnPath = true;
             }
 
             if ($objFile) {
                 $arrImage = $objFile->row();
+                $arrImage['icon'] = false;
                 $arrImage['pid'] = \StringUtil::binToUuid($arrImage['pid']);
                 $arrImage['uuid'] = \StringUtil::binToUuid($arrImage['uuid']);
                 $arrImage['meta'] = \StringUtil::deserialize($arrImage['meta'], true);
                 $arrImages[] = $arrImage;
+            }
+
+            if ($blnPath && !$objFile) {
+                $arrImages[] = [
+                    'meta' => [],
+                    'icon' => true,
+                    'path' => $strFileId
+                ];
             }
         }
 

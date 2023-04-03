@@ -4,16 +4,23 @@
 ?>
 <a href="<?= $this->url ?>" class="hit">
     <?php if (!empty($this->images) && is_array($this->images)): ?>
-        <?php $arrImage = $this->images[0] ?? []; ?>
+        <?php
+            $arrImage = $this->images[0] ?? [];
+        ?>
         <?php if (!empty($arrImage)): ?>
-            <div class="image">
-                <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
-            </div>
+            <?php if (!$arrImage['icon']): ?>
+                <div class="image">
+                    <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
+                </div>
+            <?php else: ?>
+                <div class="image">
+                    <figure><img src="<?= $arrImage['path'] ?>" alt=""></figure>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     <?php endif; ?>
     <div class="text">
         <p class="title"><strong><?= $this->title ?></strong></p>
         <p class="description"><?= $strDescription ?></p>
-        <p class="url"><?= $this->url ?></p>
     </div>
 </a>
