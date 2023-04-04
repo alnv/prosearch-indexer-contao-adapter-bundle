@@ -18,11 +18,12 @@ class Indices extends Searcher
 
     /**
      * @param Document $document
+     * @param $meta
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function __construct(Document $document)
+    public function __construct(Document $document, $meta = [])
     {
 
         try {
@@ -38,7 +39,7 @@ class Indices extends Searcher
         $objPageObject = $objConsumer->loadHtml($strHtml);
 
         $arrDocument = [
-            'text' => $this->getValuesByTagName('main p'),
+            'text' => [Text::tokenize($this->parseContent($document->getBody()))],
             'strong' => $this->getValuesByTagName('main strong'),
             'h1' => $this->getValuesByTagName('h1'),
             'h2' => $this->getValuesByTagName('h2'),

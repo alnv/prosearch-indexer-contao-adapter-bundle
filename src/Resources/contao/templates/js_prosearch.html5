@@ -24,7 +24,7 @@
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
                         threshold: 2,
-                        debounce: 800,
+                        debounce: 600,
                         data: {
                             src: async (query) => {
                                 self.didYouMean = [];

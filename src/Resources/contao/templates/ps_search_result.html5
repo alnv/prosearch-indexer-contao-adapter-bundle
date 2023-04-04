@@ -8,15 +8,13 @@
             $arrImage = $this->images[0] ?? [];
         ?>
         <?php if (!empty($arrImage)): ?>
+            <div class="image<?= ($arrImage['icon']?' icon':'') ?>">
             <?php if (!$arrImage['icon']): ?>
-                <div class="image">
-                    <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
-                </div>
+                <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
             <?php else: ?>
-                <div class="image">
-                    <figure><img src="<?= $arrImage['path'] ?>" alt=""></figure>
-                </div>
+                <figure><img src="<?= $arrImage['path'] ?>" alt=""></figure>
             <?php endif; ?>
+            </div>
         <?php endif; ?>
     <?php endif; ?>
     <div class="text">

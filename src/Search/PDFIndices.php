@@ -13,14 +13,13 @@ use Contao\StringUtil;
 use Contao\System;
 use Psr\Log\LogLevel;
 use Smalot\PdfParser\Parser;
-use Smalot\PdfParser\Config;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 
 class PDFIndices extends Searcher
 {
 
-    public function __construct(Document $document)
+    public function __construct(Document $document, $meta = [])
     {
 
         set_time_limit(180);
@@ -33,10 +32,10 @@ class PDFIndices extends Searcher
 
         $_strUrl = $document->getUri()->__toString();
         $arrDomain = parse_url($_strUrl);
-        $strDomain = ($arrDomain['scheme']??'')
+        $strDomain = ($arrDomain['scheme'] ?? '')
             . '://'
-            . ($arrDomain['host']??'')
-            . (isset($arrDomain['port']) && $arrDomain['port']? ':' . $arrDomain['port']:'');
+            . ($arrDomain['host'] ?? '')
+            . (isset($arrDomain['port']) && $arrDomain['port'] ? ':' . $arrDomain['port'] : '');
 
         $strHtml = $document->getBody();
         $this->objCrawler = new Crawler($strHtml);
@@ -59,7 +58,7 @@ class PDFIndices extends Searcher
             }
 
             $_File = new File($objFile->path);
-            if (($_File->filesize/1000000) > 10) {
+            if (($_File->filesize / 1000000) > 10) {
                 continue;
             }
 
@@ -72,17 +71,17 @@ class PDFIndices extends Searcher
             $strMetaAlt = $arrMeta['alt'] ?? '';
             $strFilename = StringUtil::specialchars($_File->basename);
 
-            $arrStrong = [$strNodeContent, $strTitleAttr, $strMetaDescription, $strMetaTitle, $strMetaAlt, $strFilename];
-            $arrStrong = array_filter($arrStrong);
-
             try {
 
                 $objParser = new Parser();
                 $objPdf = $objParser->parseFile(TL_ROOT . '/' . $objFile->path);
 
+                $arrText = [Text::tokenize($objPdf->getText()), $strNodeContent, $strTitleAttr, $strMetaDescription, $strMetaTitle, $strMetaAlt, $strFilename];
+                $arrText = array_filter($arrText);
+
                 $arrDocument = [
-                    'text' => Text::tokenize($objPdf->getText()),
-                    'strong' => $arrStrong,
+                    'text' => $arrText,
+                    'strong' => [],
                     'h1' => [],
                     'h2' => [],
                     'h3' => [],
@@ -90,6 +89,10 @@ class PDFIndices extends Searcher
                     'h5' => [],
                     'h6' => []
                 ];
+
+                if ($strNodeContent) {
+                    $arrDocument['strong'][] = $strNodeContent;
+                }
 
                 $strUrl = $strDomain . '/' . $objFile->path;
                 $objIndicesModel = IndicesModel::findByUrl($strUrl);
@@ -107,7 +110,7 @@ class PDFIndices extends Searcher
                 $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
                 $objIndicesModel->document = serialize($arrDocument);
                 $objIndicesModel->domain = $document->getUri()->getHost();
-                $objIndicesModel->title = (($strMetaTitle?:$strNodeContent) ?: $strFilename);
+                $objIndicesModel->title = (($strMetaTitle ?: $strNodeContent) ?: $strFilename);
                 $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();

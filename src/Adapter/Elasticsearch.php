@@ -132,6 +132,14 @@ class Elasticsearch extends Adapter
                 ->log(LogLevel::DEBUG, 'Index document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
         }
 
+        $objIndicesModel = MicrodataModel::findByPid($strIndicesId);
+
+        if ($objIndicesModel) {
+            while ($objIndicesModel->next()) {
+                $objIndicesModel->delete();
+            }
+        }
+
         $objIndicesModel->delete();
     }
 
@@ -311,12 +319,6 @@ class Elasticsearch extends Adapter
 
         $objIndicesModel->last_indexed = time();
         $objIndicesModel->save();
-
-        /*
-        System::getContainer()
-            ->get('monolog.logger.contao')
-            ->log(LogLevel::DEBUG, 'Index document with ID ' . $arrDocument['id'], ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
-        */
     }
 
     /**
@@ -412,7 +414,6 @@ class Elasticsearch extends Adapter
 
     /**
      * @param $arrKeywords
-     * @param $arrOptions
      * @return array|array[]
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
@@ -563,8 +564,15 @@ class Elasticsearch extends Adapter
                 'fields' => ['title', 'description', 'text']
             ];
 
+            $arrShouldMatch = [
+                'query' => $arrKeywords['query'],
+                'analyzer' => $strAnalyzer,
+                'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^5', 'h3^2', 'h4', 'h5', 'h6']
+            ];
+
             if (isset($arrOptions['fuzziness'])) {
                 $arrMustMatch['fuzziness'] = 'AUTO';
+                $arrShouldMatch['fuzziness'] = 'AUTO';
             }
 
             $params['body']['query']['bool'] = [
@@ -575,11 +583,7 @@ class Elasticsearch extends Adapter
                 ],
                 'should' => [
                     [
-                        'multi_match' => [
-                            'query' => $arrKeywords['query'],
-                            'analyzer' => $strAnalyzer,
-                            'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^5', 'h3^2', 'h4', 'h5', 'h6']
-                        ]
+                        'multi_match' => $arrShouldMatch
                     ]
                 ]
             ];
