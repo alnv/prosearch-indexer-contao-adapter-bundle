@@ -4,6 +4,11 @@ $GLOBALS['TL_DCA']['tl_synonyms'] = [
     'config' => [
         'dataContainer' => 'Table',
         'enableVersioning' => true,
+        'onsubmit_callback' => [
+            function() {
+                (new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Synonyms());
+            }
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary'
