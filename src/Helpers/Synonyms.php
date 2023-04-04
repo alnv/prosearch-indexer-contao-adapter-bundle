@@ -44,7 +44,11 @@ class Synonyms {
 
         foreach ($arrPredicts as $strSynonym => $intPercent) {
 
-            if (($intPercent*100) > 70) {
+            if (!is_numeric($intPercent)) {
+                continue;
+            }
+
+            if (($intPercent*100) >= 50) {
                 return $strSynonym;
             }
         }
