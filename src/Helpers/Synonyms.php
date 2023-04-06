@@ -4,14 +4,15 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
 use Contao\Database;
 
-class Synonyms {
+class Synonyms
+{
 
-    protected $naive_bayes;
+    protected array $arrSynonyms = [];
 
-    public function __construct() {
+    public function __construct()
+    {
 
         $objSynonyms = Database::getInstance()->prepare('SELECT * FROM tl_synonyms WHERE disable!=?')->execute('1');
-        $this->naive_bayes = naive_bayes();
 
         while ($objSynonyms->next()) {
 
@@ -23,6 +24,11 @@ class Synonyms {
 
             $arrSynonyms = [];
             foreach (\StringUtil::deserialize($objSynonyms->synonyms, true) as $strSynonym) {
+
+                if (!$strSynonym) {
+                    continue;
+                }
+
                 $arrSynonyms[] = Text::tokenize($strSynonym);
             }
 
@@ -30,29 +36,25 @@ class Synonyms {
                 continue;
             }
 
-            $this->naive_bayes->train($strKeyword, tokenize(implode(' ', $arrSynonyms)));
+            $this->arrSynonyms[$strKeyword] = $arrSynonyms;
         }
     }
 
-    public function predict($strKeyword) {
+    public function predict($strQuery)
+    {
 
-        $arrPredicts = $this->naive_bayes->predict(tokenize($strKeyword));
+        foreach ($this->arrSynonyms as $strKeyWord => $arrSynonyms) {
 
-        if (empty($arrPredicts)) {
-            return $strKeyword;
-        }
+            foreach ($arrSynonyms as $strSynonym) {
 
-        foreach ($arrPredicts as $strSynonym => $intPercent) {
+                similar_text($strQuery, $strSynonym, $intPercent);
 
-            if (!is_numeric($intPercent)) {
-                continue;
-            }
-
-            if (($intPercent*100) >= 50) {
-                return $strSynonym;
+                if ($intPercent >= 75) {
+                    return $strKeyWord;
+                }
             }
         }
 
-        return $strKeyword;
+        return $strQuery;
     }
 }

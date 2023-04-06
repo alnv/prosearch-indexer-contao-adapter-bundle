@@ -26,21 +26,6 @@ class Keyword {
         $strSynonym = $this->objSynonyms->predict($strToken);
         $strQuery = $strSynonym;
 
-        /*
-        foreach ((new Categories())->getCategories() as $strCategory) {
-
-            $strCategory = strtolower($strCategory);
-
-            if (strpos($strCategory, $strQuery) !== false) {
-                $arrTypes[] = $strCategory;
-            }
-
-            if (strpos($this->objSynonyms->predict($strCategory), $strQuery) !== false) {
-                $arrTypes[] = $strCategory;
-            }
-        }
-        */
-
         $arrTypes = array_unique($arrTypes);
         $arrTypes = array_filter($arrTypes);
 

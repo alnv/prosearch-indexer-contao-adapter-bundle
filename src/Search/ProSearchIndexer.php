@@ -27,7 +27,7 @@ class ProSearchIndexer implements IndexerInterface
         try {
             $title = $document->getContentCrawler()->filterXPath('//head/title')->first()->text(null, true);
         } catch (\Exception $e) {
-            $title = 'undefined';
+            $title = '';
         }
 
         try {
@@ -40,7 +40,7 @@ class ProSearchIndexer implements IndexerInterface
             'title' => $title,
             'language' => $language,
             'protected' => false,
-            'groups' => [],
+            'groups' => []
         ];
 
         $this->extendMetaFromJsonLdScripts($document, $meta);

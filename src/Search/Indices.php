@@ -46,7 +46,8 @@ class Indices extends Searcher
             'h3' => $this->getValuesByTagName('h3'),
             'h4' => $this->getValuesByTagName('h4'),
             'h5' => $this->getValuesByTagName('h5'),
-            'h6' => $this->getValuesByTagName('h6')
+            'h6' => $this->getValuesByTagName('h6'),
+            'document' => []
         ];
 
         $strUrl = $document->getUri()->__toString();
@@ -77,6 +78,7 @@ class Indices extends Searcher
         $objIndicesModel->state = States::ACTIVE;
         $objIndicesModel->language = $strLanguage;
         $objIndicesModel->types = $arrSearchTypes;
+        $objIndicesModel->pageId = $meta['pageId'];
         $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
         $objIndicesModel->domain = $document->getUri()->getHost();

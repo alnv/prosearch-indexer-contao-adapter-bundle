@@ -51,6 +51,9 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ],
         'origin_url' => [
             'sql' => "text NULL"
+        ],
+        'pageId' => [
+            'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true]
         ]
     ]
 ];

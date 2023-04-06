@@ -1,6 +1,7 @@
 <?php
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
 use Contao\DataContainer;
 use Contao\Message;
 
@@ -12,12 +13,17 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             function () {
                 $objEntity = \Database::getInstance()->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')->limit(1)->execute();
                 if ($objEntity->numRows) {
+                    if (!$objEntity->signature) {
+                        \Database::getInstance()->prepare('UPDATE tl_search_credentials %s WHERE id=?')->set([
+                            'signature' => Signature::generate()
+                        ])->limit(1)->execute($objEntity->id);
+                    }
                     if (!\Input::get('act') && !\Input::get('id')) {
                         $this->redirect($this->addToUrl('act=edit&id=' . $objEntity->id . '&rt=' . REQUEST_TOKEN));
                     }
                 } else {
                     if (!\Input::get('act')) {
-                        $this->redirect($this->addToUrl('act=create'));
+                        $this->redirect($this->addToUrl('act=create' . '&rt=' . REQUEST_TOKEN));
                     }
                 }
             }
@@ -69,10 +75,10 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     ],
     'palettes' => [
         '__selector__' => ['type'],
-        'default' => 'type',
-        'licence' => 'type,key',
-        'elasticsearch' => 'type,host,port,username,password',
-        'elasticsearch_cloud' => 'type,cloudid,key'
+        'default' => 'signature,type',
+        'licence' => 'signature,type,key',
+        'elasticsearch' => 'signature,type,host,port,username,password',
+        'elasticsearch_cloud' => 'signature,type,signature,cloudid,key'
     ],
     'fields' => [
         'id' => [
@@ -81,6 +87,16 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'tstamp' => [
             'flag' => 6,
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
+        ],
+        'signature' => [
+            'inputType' => 'text',
+            'eval' => [
+                'maxlength' => 32,
+                'tl_class' => 'clr long',
+                'mandatory' => true,
+                'readonly' => true
+            ],
+            'sql' => "varchar(32) NOT NULL default ''"
         ],
         'type' => [
             'inputType' => 'select',

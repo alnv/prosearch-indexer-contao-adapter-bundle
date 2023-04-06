@@ -18,6 +18,8 @@ class Elasticsearch extends Adapter
 
     public const INDEX = 'contao_search';
 
+    private string $strSignature = "";
+
     protected array $arrAnalyzer = [
         "german" => [
             "type" => "custom",
@@ -86,11 +88,26 @@ class Elasticsearch extends Adapter
                 break;
         }
 
+        $this->strSignature = $arrCredentials['signature'] ?? '';
+
+        if (!$this->strSignature) {
+            $this->objClient = null;
+        }
+
         if (!$this->objClient) {
             System::getContainer()
                 ->get('monolog.logger.contao')
                 ->log(LogLevel::ERROR, 'No connection to the server could be established', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
         }
+    }
+
+    /**
+     * @return string
+     */
+    protected function getIndexName(): string
+    {
+
+        return Elasticsearch::INDEX . '_' . $this->strSignature;
     }
 
     public function getClient()
@@ -115,9 +132,9 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $strIndicesId])->asBool()) {
+        if ($this->getClient()->exists(['index' => $this->getIndexName(), 'id' => $strIndicesId])->asBool()) {
             $this->getClient()->deleteByQuery([
-                'index' => Elasticsearch::INDEX,
+                'index' => $this->getIndexName(),
                 'body' => [
                     'query' => [
                         'term' => [
@@ -204,7 +221,7 @@ class Elasticsearch extends Adapter
         ];
 
         $arrParams = [
-            "index" => Elasticsearch::INDEX,
+            "index" => $this->getIndexName(),
             "body" => [
                 "settings" => [
                     "analysis" => [
@@ -268,7 +285,7 @@ class Elasticsearch extends Adapter
         ];
 
         $blnExists = $this->getClient()->indices()->exists([
-            "index" => Elasticsearch::INDEX
+            "index" => $this->getIndexName()
         ])->asBool();
 
         if (!$blnExists) {
@@ -286,16 +303,16 @@ class Elasticsearch extends Adapter
         }
 
         $arrParams = [
-            'index' => Elasticsearch::INDEX,
+            'index' => $this->getIndexName(),
             'id' => $arrDocument['id'],
             'body' => $arrDocument
         ];
 
         try {
 
-            if ($this->getClient()->exists(['index' => Elasticsearch::INDEX, 'id' => $arrDocument['id']])->asBool()) {
+            if ($this->getClient()->exists(['index' => $this->getIndexName(), 'id' => $arrDocument['id']])->asBool()) {
                 $this->getClient()->deleteByQuery([
-                    'index' => Elasticsearch::INDEX,
+                    'index' => $this->getIndexName(),
                     'body' => [
                         'query' => [
                             'term' => [
@@ -429,7 +446,7 @@ class Elasticsearch extends Adapter
         $strAnalyzer = $this->getQueryAnalyzer();
 
         $params = [
-            "index" => Elasticsearch::INDEX,
+            "index" => $this->getIndexName(),
             "body" => [
                 "size" => 0,
                 "aggs" => [
@@ -514,7 +531,7 @@ class Elasticsearch extends Adapter
         $strAnalyzer = $arrOptions['analyzer'] ?? $this->getQueryAnalyzer();
 
         $params = [
-            'index' => Elasticsearch::INDEX,
+            'index' => $this->getIndexName(),
             'body' => [
                 "size" => $this->getSizeValue(),
                 'query' => [
@@ -524,12 +541,13 @@ class Elasticsearch extends Adapter
                     'pre_tags' => '<strong>',
                     'post_tags' => '</strong>',
                     'fields' => [
-                        'text' => new \stdClass()
+                        'text' => new \stdClass(),
+                        'document' => new \stdClass()
                     ],
                     'require_field_match' => true,
                     'type' => 'plain',
-                    'fragment_size' => 120,
-                    'number_of_fragments' => 120,
+                    'fragment_size' => 150,
+                    'number_of_fragments' => 3,
                     'fragmenter' => 'span'
                 ],
                 'suggest' => [
@@ -561,7 +579,7 @@ class Elasticsearch extends Adapter
             $arrMustMatch = [
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
-                'fields' => ['title', 'description', 'text']
+                'fields' => ['title', 'description', 'text', 'document']
             ];
 
             $arrShouldMatch = [

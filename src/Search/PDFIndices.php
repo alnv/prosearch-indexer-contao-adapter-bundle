@@ -76,11 +76,12 @@ class PDFIndices extends Searcher
                 $objParser = new Parser();
                 $objPdf = $objParser->parseFile(TL_ROOT . '/' . $objFile->path);
 
-                $arrText = [Text::tokenize($objPdf->getText()), $strNodeContent, $strTitleAttr, $strMetaDescription, $strMetaTitle, $strMetaAlt, $strFilename];
+                $arrText = [$strNodeContent, $strTitleAttr, $strMetaDescription, $strMetaTitle, $strMetaAlt, $strFilename];
                 $arrText = array_filter($arrText);
 
                 $arrDocument = [
                     'text' => $arrText,
+                    'document' => [Text::tokenize($objPdf->getText())],
                     'strong' => [],
                     'h1' => [],
                     'h2' => [],
@@ -107,6 +108,7 @@ class PDFIndices extends Searcher
                 $objIndicesModel->state = States::ACTIVE;
                 $objIndicesModel->language = $strLanguage;
                 $objIndicesModel->types = ['pdf'];
+                $objIndicesModel->pageId = $meta['pageId'];
                 $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
                 $objIndicesModel->document = serialize($arrDocument);
                 $objIndicesModel->domain = $document->getUri()->getHost();
