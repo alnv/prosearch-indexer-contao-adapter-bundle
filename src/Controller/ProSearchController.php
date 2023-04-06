@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
 use Contao\Input;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -24,12 +25,19 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
 
         $this->container->get('contao.framework')->initialize();
 
+        $arrJsonData = \json_decode(file_get_contents('php://input'), true);
+
+        if (!empty($arrJsonData) && is_array($arrJsonData)) {
+            \Input::setPost('module', $arrJsonData['module']);
+            \Input::setPost('categories', $arrJsonData['categories']);
+        }
+
         $arrCategories = Input::post('categories') ?? [];
-        $strModuleId = Input::post('module') ?? [];
-        $query = Input::get('query') ?? '';
+        $strModuleId = Input::post('module') ?: (Input::get('module') ?? '');
+        $strQuery = Input::get('query') ?? '';
 
         $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
-        $arrKeywords = $objKeyword->setKeywords($query, ['categories' => $arrCategories]);
+        $arrKeywords = $objKeyword->setKeywords($strQuery, ['categories' => $arrCategories]);
 
         $objCredentials = new Credentials();
         $arrCredentials = $objCredentials->getCredentials();
@@ -53,9 +61,11 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
                 break;
         }
 
-        // parse template
+        $objModule = \ModuleModel::findByPk($strModuleId);
+        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate??'ps_search_result') : 'ps_search_result';
+
         foreach (($arrResults['results']['hits']??[]) as $index => $arrResult) {
-            $objTemplate = new \FrontendTemplate('ps_search_result');
+            $objTemplate = new \FrontendTemplate($strSearchResultsTemplate);
             $objTemplate->setData($arrResult);
             $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
         }

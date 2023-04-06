@@ -18,12 +18,12 @@ class Indices extends Searcher
 
     /**
      * @param Document $document
-     * @param $meta
+     * @param array $meta
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function __construct(Document $document, $meta = [])
+    public function __construct(Document $document, array $meta = [])
     {
 
         try {
@@ -73,8 +73,8 @@ class Indices extends Searcher
             }
         }
 
-        $objIndicesModel->tstamp = time();
         $objIndicesModel->url = $strUrl;
+        $objIndicesModel->tstamp = time();
         $objIndicesModel->state = States::ACTIVE;
         $objIndicesModel->language = $strLanguage;
         $objIndicesModel->types = $arrSearchTypes;

@@ -5,6 +5,7 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Entity;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
+use Contao\PageModel;
 
 /**
  *
@@ -22,7 +23,8 @@ class Result
      * @param array $arrSource
      * @return void
      */
-    public function addHit(string $strId, array $arrHighlights, array $arrSource=[]) {
+    public function addHit(string $strId, array $arrHighlights, array $arrSource = [])
+    {
 
         $this->arrHit = [
             'id' => $strId,
@@ -34,7 +36,8 @@ class Result
     /**
      * @return array|void
      */
-    public function getResult() {
+    public function getResult()
+    {
 
         $arrImages = [];
         $objDocument = IndicesModel::findByPk($this->arrHit['id']);
@@ -45,6 +48,28 @@ class Result
 
         if ($objDocument->state == States::DELETE) {
             return;
+        }
+
+        $arrPages = [];
+        $arrModulePages = \StringUtil::deserialize($this->arrHit['source']['module']->pages, true);
+        if (!empty($arrModulePages) && \is_array($arrModulePages)) {
+
+            foreach ($arrModulePages as $intPageId) {
+                $arrPages[] = [$intPageId];
+                $arrPages[] = \Database::getInstance()->getChildRecords($intPageId, 'tl_page');
+            }
+
+            if (!empty($arrPages)) {
+                $arrPages = array_merge(...$arrPages);
+            }
+
+            $arrPages = array_unique($arrPages);
+        }
+
+        if (!empty($arrPages)) {
+            if (!in_array($objDocument->pageId, $arrPages)) {
+                return;
+            }
         }
 
         foreach (\StringUtil::deserialize($objDocument->images, true) as $strFileId) {

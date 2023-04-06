@@ -585,7 +585,7 @@ class Elasticsearch extends Adapter
             $arrShouldMatch = [
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
-                'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^5', 'h3^2', 'h4', 'h5', 'h6']
+                'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^5', 'h3', 'h4', 'h5', 'h6']
             ];
 
             if (isset($arrOptions['fuzziness'])) {
@@ -650,7 +650,8 @@ class Elasticsearch extends Adapter
             $objEntity = new Result();
             $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight']['text'] ?? []), [
                 'types' => $arrHit['_source']['types'],
-                'score' => $arrHit['_score']
+                'score' => $arrHit['_score'],
+                'module' => $this->objModule
             ]);
             if ($arrResult = $objEntity->getResult()) {
                 $arrResults['hits'][] = $arrResult;

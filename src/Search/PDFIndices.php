@@ -16,10 +16,18 @@ use Smalot\PdfParser\Parser;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 
+/**
+ *
+ */
 class PDFIndices extends Searcher
 {
 
-    public function __construct(Document $document, $meta = [])
+    /**
+     * @param Document $document
+     * @param array $meta
+     * @throws \Exception
+     */
+    public function __construct(Document $document, array $meta = [])
     {
 
         set_time_limit(180);
@@ -58,7 +66,7 @@ class PDFIndices extends Searcher
             }
 
             $_File = new File($objFile->path);
-            if (($_File->filesize / 1000000) > 10) {
+            if (($_File->filesize / 1000001) > 10) {
                 continue;
             }
 
