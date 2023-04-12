@@ -12,5 +12,6 @@ $GLOBALS['TL_LANG']['tl_module']['psReference']['simple'] = ['Wortvervollständi
 $GLOBALS['TL_LANG']['tl_module']['psReference']['advanced'] = ['Suchergebnisse', ''];
 
 $GLOBALS['TL_LANG']['tl_module']['psReference']['german'] = 'Deutsch';
-$GLOBALS['TL_LANG']['tl_module']['psReference']['english'] = 'Englisch';
+$GLOBALS['TL_LANG']['tl_module']['psReference']['english'] = 'English';
 $GLOBALS['TL_LANG']['tl_module']['psReference']['standard'] = 'Standard';
+$GLOBALS['TL_LANG']['tl_module']['psReference']['contao'] = 'Contao';

@@ -23,13 +23,18 @@ class Elasticsearch extends Adapter
     protected array $arrAnalyzer = [
         "german" => [
             "type" => "custom",
-            "tokenizer" => "standard",
+            "tokenizer" => "whitespace",
             "filter" => ["lowercase", "german_stopwords", "german_stemmer"]
         ],
         "english" => [
             "type" => "custom",
-            "tokenizer" => "standard",
+            "tokenizer" => "whitespace",
             "filter" => ["lowercase", "english_stopwords", "english_stemmer"]
+        ],
+        "contao" => [
+            "type" => "custom",
+            "tokenizer" => "whitespace",
+            "filter" => ["lowercase"]
         ]
     ];
 
@@ -213,11 +218,10 @@ class Elasticsearch extends Adapter
 
         $arrAnalyzer = $this->arrAnalyzer;
 
-        $arrAnalyzer['autocomplete'] = [
+        $arrAnalyzer["autocomplete"] = [
             "filter" => ["lowercase", "autocomplete"],
-            "char_filter" => ["html_strip"],
             "type" => "custom",
-            "tokenizer" => "standard"
+            "tokenizer" => "whitespace"
         ];
 
         $arrParams = [
@@ -258,17 +262,58 @@ class Elasticsearch extends Adapter
                             "fielddata" => true,
                             "analyzer" => "autocomplete"
                         ],
-                        "text" => [
+                        "title" => [
                             "type" => "text",
+                            "analyzer" => "contao",
                             "copy_to" => [
                                 "autocomplete"
                             ]
                         ],
-                        "title" => [
+                        "description" => [
                             "type" => "text",
+                            "analyzer" => "contao",
                             "copy_to" => [
                                 "autocomplete"
                             ]
+                        ],
+                        "text" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                            "copy_to" => [
+                                "autocomplete"
+                            ]
+                        ],
+                        "document" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "h1" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "h2" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "h3" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "h4" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "h5" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "h6" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
+                        ],
+                        "strong" => [
+                            "type" => "text",
+                            "analyzer" => "contao",
                         ],
                         "language" => [
                             "type" => "keyword"
@@ -423,10 +468,10 @@ class Elasticsearch extends Adapter
         }
 
         if (!$strLanguage) {
-            return 'standard';
+            return 'contao';
         }
 
-        return $this->arrAnalyzerLanguageMap[$strLanguage] ?? 'standard';
+        return $this->arrAnalyzerLanguageMap[$strLanguage] ?? 'contao';
     }
 
     /**
@@ -467,23 +512,23 @@ class Elasticsearch extends Adapter
                         ]
                     ]
                 ],
-                'suggest' => [
-                    'didYouMean' => [
-                        'text' => $arrKeywords['query'],
-                        'phrase' => [
-                            'field' => "autocomplete",
+                "suggest" => [
+                    "didYouMean" => [
+                        "text" => $arrKeywords['query'],
+                        "phrase" => [
+                            "field" => "autocomplete",
                             "size" => 1,
                             "gram_size" => 3,
-                            'analyzer' => $strAnalyzer,
-                            'direct_generator' => [
+                            "analyzer" => $strAnalyzer,
+                            "direct_generator" => [
                                 [
-                                    'field' => 'autocomplete',
-                                    'suggest_mode' => 'always'
+                                    "field" => "autocomplete",
+                                    "suggest_mode" => "always"
                                 ]
                             ],
-                            'highlight' => [
-                                'pre_tag' => '<em>',
-                                'post_tag' => '</em>'
+                            "highlight" => [
+                                "pre_tag" => '<em>',
+                                "post_tag" => '</em>'
                             ]
                         ]
                     ]
@@ -585,7 +630,7 @@ class Elasticsearch extends Adapter
             $arrShouldMatch = [
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
-                'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^5', 'h3', 'h4', 'h5', 'h6']
+                'fields' => ['title^10', 'h1^5', 'strong^5', 'h2^5', 'h3', 'h4', 'h5', 'h6']
             ];
 
             if (isset($arrOptions['fuzziness'])) {
@@ -660,7 +705,7 @@ class Elasticsearch extends Adapter
 
         if (empty($arrResults['hits']) && $blnTryItAgain) {
             return $this->search($arrKeywords, [
-                'analyzer' => 'standard',
+                // 'analyzer' => 'standard',
                 'fuzziness' => 'AUTO'
             ], false);
         }
