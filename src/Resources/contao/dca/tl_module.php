@@ -58,7 +58,6 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psAnalyzer'] = [
         $objAdapter = new Elasticsearch();
         $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
         $arrAnalyzer[] = 'standard';
-        $arrAnalyzer[] = 'contao';
         return $arrAnalyzer;
     },
     'reference' => &$GLOBALS['TL_LANG']['tl_module']['psReference'],
