@@ -5,7 +5,7 @@ use \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psSearchCategories,perPage;{redirect_legend:hide},jumpTo;{reference_legend:hide},pages;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psSearchCategories,perPage;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';

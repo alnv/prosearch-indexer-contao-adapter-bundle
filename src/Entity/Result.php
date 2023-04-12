@@ -50,28 +50,6 @@ class Result
             return;
         }
 
-        $arrPages = [];
-        $arrModulePages = \StringUtil::deserialize($this->arrHit['source']['module']->pages, true);
-        if (!empty($arrModulePages) && \is_array($arrModulePages)) {
-
-            foreach ($arrModulePages as $intPageId) {
-                $arrPages[] = [$intPageId];
-                $arrPages[] = \Database::getInstance()->getChildRecords($intPageId, 'tl_page');
-            }
-
-            if (!empty($arrPages)) {
-                $arrPages = array_merge(...$arrPages);
-            }
-
-            $arrPages = array_unique($arrPages);
-        }
-
-        if (!empty($arrPages)) {
-            if (!in_array($objDocument->pageId, $arrPages)) {
-                return;
-            }
-        }
-
         foreach (\StringUtil::deserialize($objDocument->images, true) as $strFileId) {
 
             $blnPath = false;
