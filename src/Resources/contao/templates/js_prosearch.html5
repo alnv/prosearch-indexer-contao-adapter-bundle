@@ -25,6 +25,7 @@
                         placeHolder: "<?= $this->keywordLabel ?>",
                         threshold: 2,
                         debounce: 600,
+                        submit: true,
                         data: {
                             src: async (query) => {
                                 self.didYouMean = [];
