@@ -57,9 +57,13 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psAnalyzer'] = [
     'options_callback' => function() {
         $objAdapter = new Elasticsearch();
         $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
+        $arrAnalyzer[] = 'whitespace';
         $arrAnalyzer[] = 'standard';
+        $arrAnalyzer[] = 'keyword';
+        $arrAnalyzer[] = 'simple';
+        $arrAnalyzer[] = 'stop';
         return $arrAnalyzer;
     },
-    'reference' => &$GLOBALS['TL_LANG']['tl_module']['psReference'],
+    'reference' => &$GLOBALS['TL_LANG']['MSC']['psAnalyzer'],
     'sql' => "varchar(64) NOT NULL default 'contao'"
 ];

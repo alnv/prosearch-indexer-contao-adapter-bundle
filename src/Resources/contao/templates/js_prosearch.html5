@@ -41,7 +41,8 @@
                                         referrerPolicy: "no-referrer",
                                         body: JSON.stringify({
                                             categories: self.categories,
-                                            module: "<?= $this->id ?>"
+                                            module: "<?= $this->id ?>",
+                                            root: "<?= $this->rootPageId ?>"
                                         })
                                     });
                                     const data = await source.json();
@@ -86,7 +87,7 @@
                     this.results = [];
                     this.didYouMean = [];
                     let fetchUrl = '/ps/search/results?query=' + this.keywords;
-                    this.$http.post(fetchUrl, {categories: this.categories, module:"<?= $this->id ?>"},
+                    this.$http.post(fetchUrl, {categories: this.categories, module:"<?= $this->id ?>", root: "<?= $this->rootPageId ?>"},
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'

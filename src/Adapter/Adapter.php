@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
 use Contao\ModuleModel;
+use Contao\PageModel;
 
 /**
  *
@@ -21,13 +22,22 @@ abstract class Adapter
     protected $objModule;
 
     /**
-     * @param $strModuleId
+     * @var
      */
-    public function __construct($strModuleId=null)
+    protected $objRoot;
+
+    /**
+     * @param $strModuleId
+     * @param $strRootId
+     */
+    public function __construct($strModuleId = null, $strRootId = null)
     {
         if ($strModuleId) {
-
             $this->objModule = ModuleModel::findByPk($strModuleId);
+        }
+
+        if ($strRootId) {
+            $this->objRoot = PageModel::findByPk($strRootId);
         }
     }
 
@@ -46,11 +56,11 @@ abstract class Adapter
      * @param array $arrOptions
      * @return array
      */
-    abstract public function search(array $arrKeywords, array $arrOptions=[]) : array;
+    abstract public function search(array $arrKeywords, array $arrOptions = []): array;
 
     /**
      * @param $strIndicesId
      * @return void
      */
-    abstract public function deleteIndex($strIndicesId) : void;
+    abstract public function deleteIndex($strIndicesId): void;
 }

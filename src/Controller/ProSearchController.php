@@ -28,12 +28,14 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         $arrJsonData = \json_decode(file_get_contents('php://input'), true);
 
         if (!empty($arrJsonData) && is_array($arrJsonData)) {
+            \Input::setPost('root', $arrJsonData['root']);
             \Input::setPost('module', $arrJsonData['module']);
             \Input::setPost('categories', $arrJsonData['categories']);
         }
 
         $arrCategories = Input::post('categories') ?? [];
         $strModuleId = Input::post('module') ?: (Input::get('module') ?? '');
+        $strRootPageId = Input::post('root') ?: (Input::get('root') ?? '');
         $strQuery = Input::get('query') ?? '';
 
         $objKeyword = new \Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword();
@@ -50,7 +52,7 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
-                $objElasticsearchAdapter = new Elasticsearch($strModuleId);
+                $objElasticsearchAdapter = new Elasticsearch($strModuleId, $strRootPageId);
                 $objElasticsearchAdapter->connect();
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->search($arrKeywords);
@@ -81,8 +83,17 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
 
         $this->container->get('contao.framework')->initialize();
 
+        $arrJsonData = \json_decode(file_get_contents('php://input'), true);
+
+        if (!empty($arrJsonData) && is_array($arrJsonData)) {
+            \Input::setPost('root', $arrJsonData['root']);
+            \Input::setPost('module', $arrJsonData['module']);
+            \Input::setPost('categories', $arrJsonData['categories']);
+        }
+
         $arrCategories = Input::post('categories') ?? [];
-        $strModuleId = Input::post('module') ?? [];
+        $strModuleId = Input::post('module') ?: (Input::get('module') ?? '');
+        $strRootPageId = Input::post('root') ?: (Input::get('root') ?? '');
         $query = Input::get('query') ?? '';
 
         $objCredentials = new Credentials();
@@ -99,7 +110,7 @@ class ProSearchController extends \Contao\CoreBundle\Controller\AbstractControll
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
-                $objElasticsearchAdapter = new Elasticsearch($strModuleId);
+                $objElasticsearchAdapter = new Elasticsearch($strModuleId, $strRootPageId);
                 $objElasticsearchAdapter->connect();
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->autocompltion($arrKeywords);

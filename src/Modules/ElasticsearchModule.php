@@ -33,9 +33,12 @@ class ElasticsearchModule extends Module
     protected function compile()
     {
 
+        global $objPage;
+
         $strKeywords = trim(Input::get('keywords'));
 
         $this->Template->uniqueId = $this->id;
+        $this->Template->rootPageId = $objPage->rootId;
         $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);

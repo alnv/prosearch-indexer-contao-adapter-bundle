@@ -38,15 +38,6 @@ class Elasticsearch extends Adapter
         ]
     ];
 
-    protected array $arrAnalyzerLanguageMap = [
-        'en' => 'english',
-        'en-US' => 'english',
-        'de' => 'german',
-        'de-DE' => 'german',
-        'de-CH' => 'german',
-        'de-AT' => 'german'
-    ];
-
     public function connect()
     {
 
@@ -106,13 +97,31 @@ class Elasticsearch extends Adapter
         }
     }
 
-    /**
-     * @return string
-     */
-    protected function getIndexName(): string
+    protected function rootPageSettings($strIndicesId): array
     {
 
-        return Elasticsearch::INDEX . '_' . $this->strSignature;
+        if ($objIndicesModel = IndicesModel::findByPk($strIndicesId)) {
+
+            $objPage = \PageModel::findByPk($objIndicesModel->pageId);
+
+            if ($objPage) {
+                $objRootPage = \PageModel::findByPk($objPage->loadDetails()->rootId);
+                return [
+                    'rootId' => $objRootPage->id,
+                    'analyzer' => $objRootPage->psAnalyzer ?: ''
+                ];
+            }
+        }
+
+        return [
+            'rootId' => ''
+        ];
+    }
+
+    protected function getIndexName($strRootId = ""): string
+    {
+
+        return Elasticsearch::INDEX . '_' . $this->strSignature . ($strRootId?'_'.$strRootId:'');
     }
 
     public function getClient()
@@ -121,10 +130,9 @@ class Elasticsearch extends Adapter
         return $this->objClient;
     }
 
+    // "curl -X DELETE http://localhost:9200/contao_search"
     public function deleteIndex($strIndicesId): void
     {
-
-        // todo "curl -X DELETE http://localhost:9200/contao_search"
         $this->connect();
 
         if (!$this->getClient()) {
@@ -137,9 +145,12 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        if ($this->getClient()->exists(['index' => $this->getIndexName(), 'id' => $strIndicesId])->asBool()) {
+        $arrRootSettings = $this->rootPageSettings($strIndicesId);
+        $strIndex = $this->getIndexName($arrRootSettings['rootId']);
+
+        if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
             $this->getClient()->deleteByQuery([
-                'index' => $this->getIndexName(),
+                'index' => $strIndex,
                 'body' => [
                     'query' => [
                         'term' => [
@@ -170,7 +181,7 @@ class Elasticsearch extends Adapter
      * @param int $intLimit
      * @return array
      */
-    public function getIndex($strIndicesId = null, int $intLimit = 25): array
+    public function getIndex($strIndicesId = null, int $intLimit = 5): array
     {
 
         $arrColumn = ['state=?'];
@@ -207,7 +218,7 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    protected function createMapping()
+    protected function createMapping($strIndicesId)
     {
 
         $this->connect();
@@ -215,6 +226,11 @@ class Elasticsearch extends Adapter
         if (!$this->getClient()) {
             return;
         }
+
+        $arrRootSettings = $this->rootPageSettings($strIndicesId);
+
+        $strAnalyzer = $arrRootSettings['analyzer'] ?? 'contao';
+        $strIndex = $this->getIndexName($arrRootSettings['rootId']);
 
         $arrAnalyzer = $this->arrAnalyzer;
 
@@ -225,7 +241,7 @@ class Elasticsearch extends Adapter
         ];
 
         $arrParams = [
-            "index" => $this->getIndexName(),
+            "index" => $strIndex,
             "body" => [
                 "settings" => [
                     "analysis" => [
@@ -264,56 +280,56 @@ class Elasticsearch extends Adapter
                         ],
                         "title" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                             "copy_to" => [
                                 "autocomplete"
                             ]
                         ],
                         "description" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                             "copy_to" => [
                                 "autocomplete"
                             ]
                         ],
                         "text" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                             "copy_to" => [
                                 "autocomplete"
                             ]
                         ],
                         "document" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "h1" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "h2" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "h3" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "h4" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "h5" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "h6" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "strong" => [
                             "type" => "text",
-                            "analyzer" => "contao",
+                            "analyzer" => $strAnalyzer,
                         ],
                         "language" => [
                             "type" => "keyword"
@@ -330,11 +346,15 @@ class Elasticsearch extends Adapter
         ];
 
         $blnExists = $this->getClient()->indices()->exists([
-            "index" => $this->getIndexName()
+            "index" => $strIndex
         ])->asBool();
 
         if (!$blnExists) {
             $this->getClient()->indices()->create($arrParams);
+
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::DEBUG, 'Mapping for Index ' . $strIndex . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ACCESS)]);
         }
     }
 
@@ -347,17 +367,20 @@ class Elasticsearch extends Adapter
             return;
         }
 
+        $arrRootSettings = $this->rootPageSettings($objIndicesModel->id);
+        $strIndex = $this->getIndexName($arrRootSettings['rootId']);
+
         $arrParams = [
-            'index' => $this->getIndexName(),
+            'index' => $strIndex,
             'id' => $arrDocument['id'],
             'body' => $arrDocument
         ];
 
         try {
 
-            if ($this->getClient()->exists(['index' => $this->getIndexName(), 'id' => $arrDocument['id']])->asBool()) {
+            if ($this->getClient()->exists(['index' => $strIndex, 'id' => $arrDocument['id']])->asBool()) {
                 $this->getClient()->deleteByQuery([
-                    'index' => $this->getIndexName(),
+                    'index' => $strIndex,
                     'body' => [
                         'query' => [
                             'term' => [
@@ -400,7 +423,7 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        $this->createMapping();
+        $this->createMapping($strIndicesId);
 
         foreach ($arrDocuments as $arrDocument) {
 
@@ -451,10 +474,9 @@ class Elasticsearch extends Adapter
     }
 
     /**
-     * @param string $strLanguage
      * @return string
      */
-    protected function getQueryAnalyzer(string $strLanguage = ""): string
+    protected function getQueryAnalyzer(): string
     {
 
         if ($this->objModule) {
@@ -463,15 +485,7 @@ class Elasticsearch extends Adapter
             }
         }
 
-        if (!$strLanguage) {
-            $strLanguage = $GLOBALS['TL_LANGUAGE'] ?: '';
-        }
-
-        if (!$strLanguage) {
-            return 'contao';
-        }
-
-        return $this->arrAnalyzerLanguageMap[$strLanguage] ?? 'contao';
+        return 'contao';
     }
 
     /**
@@ -488,10 +502,11 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
+        $strRootPageId = $this->objRoot ? $this->objRoot->id : '';
         $strAnalyzer = $this->getQueryAnalyzer();
 
         $params = [
-            "index" => $this->getIndexName(),
+            "index" => $this->getIndexName($strRootPageId),
             "body" => [
                 "size" => 0,
                 "aggs" => [
@@ -560,12 +575,13 @@ class Elasticsearch extends Adapter
 
     /**
      * @param $arrKeywords
-     * @param $arrOptions
-     * @return array
+     * @param array $arrOptions
+     * @param bool $blnTryItAgain
+     * @return array|array[]
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function search($arrKeywords, $arrOptions = [], $blnTryItAgain = true): array
+    public function search($arrKeywords, array $arrOptions = [], bool $blnTryItAgain = true): array
     {
 
         $arrResults = [
@@ -573,10 +589,11 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
+        $strRootPageId = $this->objRoot ? $this->objRoot->id : '';
         $strAnalyzer = $arrOptions['analyzer'] ?? $this->getQueryAnalyzer();
 
         $params = [
-            'index' => $this->getIndexName(),
+            'index' => $this->getIndexName($strRootPageId),
             'body' => [
                 "size" => $this->getSizeValue(),
                 'query' => [
@@ -705,7 +722,6 @@ class Elasticsearch extends Adapter
 
         if (empty($arrResults['hits']) && $blnTryItAgain) {
             return $this->search($arrKeywords, [
-                // 'analyzer' => 'standard',
                 'fuzziness' => 'AUTO'
             ], false);
         }
@@ -726,9 +742,9 @@ class Elasticsearch extends Adapter
     {
 
         if (!$this->objModule) {
-            return 50;
+            return 100;
         }
 
-        return $this->objModule->perPage ?: 50;
+        return $this->objModule->perPage ?: 100;
     }
 }
