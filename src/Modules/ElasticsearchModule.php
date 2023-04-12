@@ -71,7 +71,7 @@ class ElasticsearchModule extends Module
 
     private function getElementId() {
 
-        return 'id_search_' . $this->id;
+        return 'id_search_' . uniqid() . $this->id;
     }
 
     protected function loadAssets() {
