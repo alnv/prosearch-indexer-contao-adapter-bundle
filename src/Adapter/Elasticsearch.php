@@ -630,7 +630,7 @@ class Elasticsearch extends Adapter
             $arrShouldMatch = [
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
-                'fields' => ['title^10', 'h1^5', 'strong^5', 'h2^5', 'h3', 'h4', 'h5', 'h6']
+                'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^2', 'h3', 'h4', 'h5', 'h6']
             ];
 
             if (isset($arrOptions['fuzziness'])) {
