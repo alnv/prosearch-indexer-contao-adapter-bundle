@@ -40,8 +40,3 @@ array_insert($GLOBALS['FE_MOD'], 3, [
         'elasticsearch' => ElasticsearchModule::class
     ]
 ]);
-
-/**
- * cronjobs
- */
-$GLOBALS['TL_CRON']['minutely'][] = [\Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch::class, 'indexDocuments'];

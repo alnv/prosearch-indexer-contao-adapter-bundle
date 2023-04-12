@@ -413,8 +413,12 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function indexDocuments($strIndicesId = null)
+    public function indexDocuments($strIndicesId)
     {
+
+        if (!$strIndicesId) {
+            return;
+        }
 
         $this->connect();
         $arrDocuments = $this->getIndex($strIndicesId);
