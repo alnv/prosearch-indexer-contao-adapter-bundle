@@ -79,9 +79,16 @@ class Result
             }
         }
 
+        $arrHighlights = [];
+        foreach ($this->arrHit['highlights'] as $arrFields) {
+            foreach ($arrFields as $arrHighlight) {
+                $arrHighlights[] = $arrHighlight;
+            }
+        }
+
         $arrReturn = [
             'id' => $this->arrHit['id'],
-            'highlights' => $this->arrHit['highlights'],
+            'highlights' => $arrHighlights,
             'title' => $objDocument->title,
             'description' => $objDocument->description,
             'url' => $objDocument->url,

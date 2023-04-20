@@ -165,11 +165,10 @@ class Elasticsearch extends Adapter
                 ->log(LogLevel::DEBUG, 'Index document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
         }
 
-        $objIndicesModel = MicrodataModel::findByPid($strIndicesId);
-
-        if ($objIndicesModel) {
-            while ($objIndicesModel->next()) {
-                $objIndicesModel->delete();
+        $objMicrodataModel = MicrodataModel::findByPid($strIndicesId);
+        if ($objMicrodataModel) {
+            while ($objMicrodataModel->next()) {
+                $objMicrodataModel->delete();
             }
         }
 
@@ -435,7 +434,7 @@ class Elasticsearch extends Adapter
         }
     }
 
-    protected function createDocument($strIndicesId)
+    public function createDocument($strIndicesId)
     {
 
         $objIndices = IndicesModel::findByPk($strIndicesId);
@@ -645,18 +644,25 @@ class Elasticsearch extends Adapter
             $arrMustMatch = [
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
+                'type' => 'phrase_prefix',
+                // 'boost' => 2,
                 'fields' => ['title', 'description', 'text', 'document']
             ];
 
             $arrShouldMatch = [
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
-                'fields' => ['title^10', 'h1^10', 'strong^2', 'h2^2', 'h3', 'h4', 'h5', 'h6']
+                'type' => 'phrase_prefix',
+                'fields' => ['title^5', 'h1^10', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
             ];
 
             if (isset($arrOptions['fuzziness'])) {
+
                 $arrMustMatch['fuzziness'] = 'AUTO';
+                $arrMustMatch['type'] = 'best_fields';
+
                 $arrShouldMatch['fuzziness'] = 'AUTO';
+                $arrShouldMatch['type'] = 'best_fields';
             }
 
             $params['body']['query']['bool'] = [
@@ -689,7 +695,8 @@ class Elasticsearch extends Adapter
             foreach ($arrKeywords['types'] as $strType) {
                 $params['body']['query']['bool']['filter'][] = [
                     'term' => [
-                        'types' => $strType
+                        'types' => $strType,
+                        'case_insensitive' => false
                     ]
                 ];
             }
@@ -714,7 +721,7 @@ class Elasticsearch extends Adapter
 
         foreach ($arrHits as $arrHit) {
             $objEntity = new Result();
-            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight']['text'] ?? []), [
+            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
                 'types' => $arrHit['_source']['types'],
                 'score' => $arrHit['_score'],
                 'module' => $this->objModule
