@@ -63,7 +63,7 @@
                             return record;
                         },
                         resultsList: {
-                            maxResults: 35,
+                            maxResults: 40,
                             tabSelect: true,
                             noResults: true
                         },
