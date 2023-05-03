@@ -93,6 +93,7 @@ class Result
             'description' => $objDocument->description,
             'url' => $objDocument->url,
             'images' => $arrImages,
+            'doc_type' => $objDocument->doc_type ?: '',
             'types' => $this->arrHit['source']['types'] ?? [],
             'score' => $this->arrHit['source']['score'] ?? 0,
             'microdata' => []

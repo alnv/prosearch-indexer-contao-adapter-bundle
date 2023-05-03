@@ -73,8 +73,8 @@ abstract class Searcher
         preg_match('/<\/head>/', $strContent, $arrMatches, PREG_OFFSET_CAPTURE);
         $intOffset = \strlen($arrMatches[0][0]) + $arrMatches[0][1];
 
-        $strBody = str_ireplace(['<br', '><'], [' <br', '> <'], $strContent);
-        $strBody = substr($strBody, $intOffset);
+        $strBody = substr($strContent, $intOffset);
+        $strBody = str_ireplace(['<br', '><'], [' <br', '> <'], $strBody);
 
         return strip_tags($strBody);
     }
