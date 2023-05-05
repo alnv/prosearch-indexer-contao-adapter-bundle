@@ -39,6 +39,8 @@ class ElasticsearchModule extends Module
 
         $this->Template->uniqueId = $this->id;
         $this->Template->rootPageId = $objPage->rootId;
+        $this->Template->redirect = $this->getRedirectUrl();
+        $this->Template->isResultPage = $this->isResultsPage();
         $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
@@ -50,6 +52,24 @@ class ElasticsearchModule extends Module
         $this->Template->elementId = $this->getElementId();
 
         $this->getJsScript();
+    }
+
+    protected function isResultsPage() {
+
+        global $objPage;
+
+        return $objPage->id === $this->jumpTo;
+    }
+
+    protected function getRedirectUrl() {
+
+        $strRedirect = '';
+
+        if ($objPage = \PageModel::findByPk($this->jumpTo)) {
+            $strRedirect = $objPage->getFrontendUrl();
+        }
+
+        return $strRedirect;
     }
 
     protected function getActionUrl() {

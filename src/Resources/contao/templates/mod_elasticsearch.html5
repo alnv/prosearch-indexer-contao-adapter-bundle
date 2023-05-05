@@ -16,7 +16,7 @@
             </div>
         </div>
     </form>
-    <?php if ($this->keyword): ?>
+    <?php if ($this->isResultPage): ?>
         <div class="ce_results" v-if="results.length && keywords">
             <div v-for="result in results" v-html="result.template" class="result"></div>
         </div>

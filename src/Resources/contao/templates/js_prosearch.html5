@@ -63,28 +63,55 @@
                             return record;
                         },
                         resultsList: {
-                            maxResults: 40,
+                            maxResults: 30,
                             tabSelect: true,
-                            noResults: true
+                            noResults: false
                         },
                         resultItem: {
                             highlight: false
-                        }
-                        <?php if ($this->psAutoCompletionType == 'simple'): ?>
-                        ,events: {
+                        },
+                        events: {
                             input: {
+                                <?php if ($this->psAutoCompletionType == 'simple'): ?>
                                 selection: (event) => {
                                     objState.autoCompleteJS.input.value = event.detail.selection.value;
                                     let results = document.querySelector('#<?= $this->elementId ?>');
                                     let form = results.querySelector('form');
                                     form.submit();
+                                },
+                                <?php endif; ?>
+                                keydown(event) {
+                                    switch (event.keyCode) {
+                                        case 40:
+                                        case 38:
+                                            event.preventDefault();
+                                            event.keyCode === 40 ? objState.autoCompleteJS.next() : objState.autoCompleteJS.previous();
+                                            break;
+                                        case 9:
+                                            event.preventDefault();
+                                            if (objState.autoCompleteJS.resultsList.tabSelect) {
+                                                objState.autoCompleteJS.next()
+                                            }
+                                            break;
+                                        case 27:
+                                            objState.autoCompleteJS.input.value = "";
+                                            objState.autoCompleteJS.close();
+                                            break;
+                                        case 13:
+                                            event.preventDefault()
+                                            self.submit(objState.autoCompleteJS);
+                                            break;
+                                    }
                                 }
                             }
                         }
-                        <?php endif; ?>
                     });
                 },
                 getSearchResults: function () {
+                    <?php if (!$this->isResultPage): ?>
+                    window.location.href = "<?= $this->redirect ?>?keywords=" + this.keywords;
+                    return;
+                    <?php endif; ?>
                     this.results = [];
                     this.didYouMean = [];
                     let fetchUrl = '/ps/search/results?query=' + this.keywords;
@@ -101,6 +128,22 @@
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.didYouMean[0];
                     this.autoCompleteJS.start(this.keyword);
+                },
+                submit: function (autoCompleteJS) {
+                    let match = autoCompleteJS.feedback && autoCompleteJS.feedback.hasOwnProperty('cursor') && autoCompleteJS.feedback.cursor ? autoCompleteJS.feedback.matches[autoCompleteJS.feedback.cursor] : null;
+                    if (match) {
+                        const link = document.createElement("div");
+                        link.innerHTML = match.value;
+                        let a = link.querySelector('a');
+                        if (a) {
+                            window.location.href = a.href;
+                            return;
+                        }
+                        this.keywords = match.value;
+                        this.getSearchResults()
+                    } else {
+                        this.getSearchResults()
+                    }
                 }
             },
             mounted: function () {
