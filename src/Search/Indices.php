@@ -51,6 +51,9 @@ class Indices extends Searcher
         ];
 
         $strUrl = $document->getUri()->__toString();
+        $strUrl = \StringUtil::decodeEntities($strUrl);
+        $strUrl = strtok($strUrl, '?');
+
         $objIndicesModel = IndicesModel::findByUrl($strUrl);
         $arrSearchTypes = $this->objCrawler->filterXpath("//meta[@name='search:type']")->extract(['content']);
 
