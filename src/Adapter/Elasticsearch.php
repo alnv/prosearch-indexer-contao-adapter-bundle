@@ -681,7 +681,7 @@ class Elasticsearch extends Adapter
 
         $params['body']['query']['bool']['filter'][] = [
             'term' => [
-                'language' => $GLOBALS['TL_LANGUAGE'],
+                'language' => $this->objRoot ? $this->objRoot->language : $GLOBALS['TL_LANGUAGE'],
             ]
         ];
 

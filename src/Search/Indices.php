@@ -113,14 +113,14 @@ class Indices extends Searcher
 
     protected function getTitle($objPageObject) {
 
+        if ($objPageObject->title) {
+            return $objPageObject->title;
+        }
+
         $strTitle = $this->objCrawler->filter('title')->text();
 
         if ($strTitle) {
             return $strTitle;
-        }
-
-        if ($objPageObject->title) {
-            return $objPageObject->title;
         }
 
         $arrH1 = $this->getValuesByTagName('h1');
