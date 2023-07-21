@@ -1,7 +1,7 @@
 <?php
 
-use \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
-use \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\DataContainer\PaletteManipulator;
 
 PaletteManipulator::create()

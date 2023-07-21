@@ -1,7 +1,8 @@
 <?php
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
-use \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
 
@@ -55,7 +56,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psAnalyzer'] = [
         'tl_class' => 'w50'
     ],
     'options_callback' => function() {
-        $objAdapter = new Elasticsearch();
+        $objAdapter = new Elasticsearch((new Options())->getOptions());
         $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
         $arrAnalyzer[] = 'whitespace';
         $arrAnalyzer[] = 'standard';

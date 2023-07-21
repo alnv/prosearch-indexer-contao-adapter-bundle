@@ -2,12 +2,14 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Contao\CoreBundle\Search\Document;
+use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Fusonic\OpenGraph\Consumer;
+use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 /**
@@ -25,6 +27,14 @@ class Indices extends Searcher
      */
     public function __construct(Document $document, array $meta = [])
     {
+
+        if (200 !== $document->getStatusCode()) {
+            $this->throwBecause('HTTP Statuscode is not equal to 200.', false);
+        }
+
+        if ('' === $document->getBody()) {
+            $this->throwBecause('Cannot index empty response.');
+        }
 
         try {
             $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
@@ -76,12 +86,15 @@ class Indices extends Searcher
             }
         }
 
+        $objPage = \PageModel::findByPk($meta['pageId']);
+        $objPage->loadDetails();
+
         $objIndicesModel->url = $strUrl;
         $objIndicesModel->tstamp = time();
         $objIndicesModel->state = States::ACTIVE;
         $objIndicesModel->language = $strLanguage;
         $objIndicesModel->types = $arrSearchTypes;
-        $objIndicesModel->pageId = $meta['pageId'];
+        $objIndicesModel->pageId = $objPage->id;
         $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
         $objIndicesModel->domain = $document->getUri()->getHost();
@@ -93,11 +106,15 @@ class Indices extends Searcher
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
 
-        // todo event service for indexer
-        (new Elasticsearch())->indexDocuments($objIndicesModel->id);
+        $objOptions = new Options();
+        $objOptions->setLanguage($strLanguage);
+        $objOptions->setRootPageId($objPage->rootId);
+
+        (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
     }
 
-    protected function getDescription($objPageObject) {
+    protected function getDescription($objPageObject)
+    {
 
         if ($objPageObject->description) {
             return $objPageObject->description;
@@ -111,7 +128,8 @@ class Indices extends Searcher
         return '';
     }
 
-    protected function getTitle($objPageObject) {
+    protected function getTitle($objPageObject)
+    {
 
         if ($objPageObject->title) {
             return $objPageObject->title;
@@ -156,5 +174,14 @@ class Indices extends Searcher
         }
 
         return $arrReturn;
+    }
+
+    private function throwBecause(string $message, bool $onlyWarning = true): void
+    {
+        if ($onlyWarning) {
+            throw IndexerException::createAsWarning($message);
+        }
+
+        throw new IndexerException($message);
     }
 }

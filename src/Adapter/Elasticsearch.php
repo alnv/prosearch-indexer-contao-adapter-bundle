@@ -111,7 +111,8 @@ class Elasticsearch extends Adapter
             if ($objPage) {
 
                 $objPage->loadDetails();
-                return $objPage->rootPageId;
+
+                return $objPage->rootId;
             }
         }
 
@@ -473,15 +474,6 @@ class Elasticsearch extends Adapter
     }
 
     /**
-     * @return string
-     */
-    protected function getQueryAnalyzer(): string
-    {
-
-        return $this->arrOptions['analyzer'];
-    }
-
-    /**
      * @param $arrKeywords
      * @return array|array[]
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
@@ -496,7 +488,7 @@ class Elasticsearch extends Adapter
         ];
 
         $strRootPageId = $this->arrOptions['rootPageId'];
-        $strAnalyzer = $this->getQueryAnalyzer();
+        $strAnalyzer = $this->arrOptions['analyzer'];
 
         $params = [
             "index" => $this->getIndexName($strRootPageId),
@@ -583,7 +575,7 @@ class Elasticsearch extends Adapter
         ];
 
         $strRootPageId = $this->arrOptions['rootPageId'];
-        $strAnalyzer = $arrOptions['analyzer'] ?? $this->getQueryAnalyzer();
+        $strAnalyzer = $this->arrOptions['analyzer'];
 
         $params = [
             'index' => $this->getIndexName($strRootPageId),

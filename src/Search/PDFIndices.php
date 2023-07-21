@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
@@ -30,7 +31,7 @@ class PDFIndices extends Searcher
     public function __construct(Document $document, array $meta = [])
     {
 
-        set_time_limit(180);
+        set_time_limit(200);
 
         try {
             $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
@@ -110,13 +111,16 @@ class PDFIndices extends Searcher
                     $objIndicesModel = new IndicesModel();
                 }
 
+                $objPage = \PageModel::findByPk($meta['pageId']);
+                $objPage->loadDetails();
+
                 $objIndicesModel->tstamp = time();
                 $objIndicesModel->url = $strUrl;
                 $objIndicesModel->origin_url = $_strUrl;
                 $objIndicesModel->state = States::ACTIVE;
                 $objIndicesModel->language = $strLanguage;
                 $objIndicesModel->types = ['pdf'];
-                $objIndicesModel->pageId = $meta['pageId'];
+                $objIndicesModel->pageId = $objPage->id;
                 $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
                 $objIndicesModel->document = serialize($arrDocument);
                 $objIndicesModel->domain = $document->getUri()->getHost();
@@ -125,7 +129,11 @@ class PDFIndices extends Searcher
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
 
-                (new Elasticsearch())->indexDocuments($objIndicesModel->id);
+                $objOptions = new Options();
+                $objOptions->setLanguage($strLanguage);
+                $objOptions->setRootPageId($objPage->rootId);
+
+                (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
 
             } catch (\Exception $exception) {
 
