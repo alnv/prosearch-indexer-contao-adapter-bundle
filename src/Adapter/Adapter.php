@@ -2,9 +2,6 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
-use Contao\ModuleModel;
-use Contao\PageModel;
-
 /**
  *
  */
@@ -17,28 +14,16 @@ abstract class Adapter
     private $objClient;
 
     /**
-     * @var \Contao\ModuleModel|null
+     * @var array
      */
-    protected $objModule;
+    protected array $arrOptions = [];
 
     /**
-     * @var
+     * @param array $arrOptions
      */
-    protected $objRoot;
-
-    /**
-     * @param $strModuleId
-     * @param $strRootId
-     */
-    public function __construct($strModuleId = null, $strRootId = null)
+    public function __construct(array $arrOptions)
     {
-        if ($strModuleId) {
-            $this->objModule = ModuleModel::findByPk($strModuleId);
-        }
-
-        if ($strRootId) {
-            $this->objRoot = PageModel::findByPk($strRootId);
-        }
+        $this->arrOptions = $arrOptions;
     }
 
     /**

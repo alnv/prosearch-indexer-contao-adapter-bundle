@@ -5,7 +5,9 @@ services:
   Alnv\ProSearchIndexerContaoAdapterBundle\Cron\DeleteIndices:
     tags:
       - { name: contao.cron, interval: minutely }
-  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ProSearchController:
+  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ElasticsearchController:
+    public: true
+  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ElasticsearchProxyController:
     public: true
   Alnv\ProSearchIndexerContaoAdapterBundle\Search\ProSearchIndexer:
     tags:

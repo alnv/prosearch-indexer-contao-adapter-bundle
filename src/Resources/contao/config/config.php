@@ -7,10 +7,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
 /**
  * Models
  */
-$GLOBALS['TL_MODELS'] = [
-    'tl_microdata' => MicrodataModel::class,
-    'tl_indices' => IndicesModel::class
-];
+$GLOBALS['TL_MODELS']['tl_microdata'] = MicrodataModel::class;
+$GLOBALS['TL_MODELS']['tl_indices'] = IndicesModel::class;
 
 /**
  * Backend modules

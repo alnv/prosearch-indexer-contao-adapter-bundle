@@ -1,6 +1,7 @@
 <?php
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
 use Contao\DataContainer;
 use Contao\Message;
@@ -32,7 +33,8 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             switch ($dataContainer->activeRecord->type) {
                 case 'elasticsearch':
                 case 'elasticsearch_cloud':
-                    $objElasticsearchAdapter= new Elasticsearch();
+
+                    $objElasticsearchAdapter= new Elasticsearch((new Options())->getOptions());
                     $objElasticsearchAdapter->connect();
                     if (!$objElasticsearchAdapter->getClient()) {
                        Message::addError('No connection to the server could be established');

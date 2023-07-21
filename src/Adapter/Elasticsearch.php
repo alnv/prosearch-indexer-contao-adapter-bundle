@@ -2,13 +2,13 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\System;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
 
@@ -97,7 +97,11 @@ class Elasticsearch extends Adapter
         }
     }
 
-    protected function rootPageSettings($strIndicesId): array
+    /**
+     * @param $strIndicesId
+     * @return string
+     */
+    protected function getRootIdFromIndicesId($strIndicesId): string
     {
 
         if ($objIndicesModel = IndicesModel::findByPk($strIndicesId)) {
@@ -105,23 +109,19 @@ class Elasticsearch extends Adapter
             $objPage = \PageModel::findByPk($objIndicesModel->pageId);
 
             if ($objPage) {
-                $objRootPage = \PageModel::findByPk($objPage->loadDetails()->rootId);
-                return [
-                    'rootId' => $objRootPage->id,
-                    'analyzer' => $objRootPage->psAnalyzer ?: ''
-                ];
+
+                $objPage->loadDetails();
+                return $objPage->rootPageId;
             }
         }
 
-        return [
-            'rootId' => ''
-        ];
+        return '';
     }
 
     protected function getIndexName($strRootId = ""): string
     {
 
-        return Elasticsearch::INDEX . '_' . $this->strSignature . ($strRootId?'_'.$strRootId:'');
+        return Elasticsearch::INDEX . '_' . $this->strSignature . ($strRootId ? '_' . $strRootId : '');
     }
 
     public function getClient()
@@ -145,8 +145,7 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        $arrRootSettings = $this->rootPageSettings($strIndicesId);
-        $strIndex = $this->getIndexName($arrRootSettings['rootId']);
+        $strIndex = $this->getIndexName($this->getRootIdFromIndicesId($strIndicesId));
 
         if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
             $this->getClient()->deleteByQuery([
@@ -217,7 +216,7 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    protected function createMapping($strIndicesId)
+    protected function createMapping()
     {
 
         $this->connect();
@@ -226,10 +225,8 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        $arrRootSettings = $this->rootPageSettings($strIndicesId);
-
-        $strAnalyzer = $arrRootSettings['analyzer'] ?? 'contao';
-        $strIndex = $this->getIndexName($arrRootSettings['rootId']);
+        $strAnalyzer = $this->arrOptions['analyzer'];
+        $strIndex = $this->getIndexName($this->arrOptions['rootPageId']);
 
         $arrAnalyzer = $this->arrAnalyzer;
 
@@ -366,8 +363,7 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        $arrRootSettings = $this->rootPageSettings($objIndicesModel->id);
-        $strIndex = $this->getIndexName($arrRootSettings['rootId']);
+        $strIndex = $this->getIndexName($this->getRootIdFromIndicesId($arrDocument['id']));
 
         $arrParams = [
             'index' => $strIndex,
@@ -426,7 +422,7 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        $this->createMapping($strIndicesId);
+        $this->createMapping();
 
         foreach ($arrDocuments as $arrDocument) {
 
@@ -482,13 +478,7 @@ class Elasticsearch extends Adapter
     protected function getQueryAnalyzer(): string
     {
 
-        if ($this->objModule) {
-            if ($this->objModule->psAnalyzer) {
-                return $this->objModule->psAnalyzer;
-            }
-        }
-
-        return 'contao';
+        return $this->arrOptions['analyzer'];
     }
 
     /**
@@ -505,7 +495,7 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
-        $strRootPageId = $this->objRoot ? $this->objRoot->id : '';
+        $strRootPageId = $this->arrOptions['rootPageId'];
         $strAnalyzer = $this->getQueryAnalyzer();
 
         $params = [
@@ -592,7 +582,7 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
-        $strRootPageId = $this->objRoot ? $this->objRoot->id : '';
+        $strRootPageId = $this->arrOptions['rootPageId'];
         $strAnalyzer = $arrOptions['analyzer'] ?? $this->getQueryAnalyzer();
 
         $params = [
@@ -681,7 +671,7 @@ class Elasticsearch extends Adapter
 
         $params['body']['query']['bool']['filter'][] = [
             'term' => [
-                'language' => $this->objRoot ? $this->objRoot->language : $GLOBALS['TL_LANGUAGE'],
+                'language' => $this->arrOptions['language'],
             ]
         ];
 
@@ -724,7 +714,7 @@ class Elasticsearch extends Adapter
             $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
                 'types' => $arrHit['_source']['types'],
                 'score' => $arrHit['_score'],
-                'module' => $this->objModule
+                'elasticOptions' => $this->arrOptions
             ]);
             if ($arrResult = $objEntity->getResult()) {
                 $arrResults['hits'][] = $arrResult;
@@ -752,10 +742,6 @@ class Elasticsearch extends Adapter
     protected function getSizeValue()
     {
 
-        if (!$this->objModule) {
-            return 100;
-        }
-
-        return $this->objModule->perPage ?: 100;
+        return $this->arrOptions['perPage'];
     }
 }

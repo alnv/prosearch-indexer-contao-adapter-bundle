@@ -1,10 +1,11 @@
 <?php
 
 use \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use \Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\DataContainer\PaletteManipulator;
 
 PaletteManipulator::create()
-    ->addLegend('ps_search_legend', 'global_legend', PaletteManipulator::POSITION_AFTER)
+    ->addLegend('ps_search_legend', 'global_legend')
     ->addField('psAnalyzer', 'ps_search_legend', PaletteManipulator::POSITION_APPEND)
     ->applyToPalette('root', 'tl_page')
     ->applyToPalette('rootfallback', 'tl_page');
@@ -17,7 +18,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['psAnalyzer'] = [
         'tl_class' => 'w50'
     ],
     'options_callback' => function() {
-        $objAdapter = new Elasticsearch();
+        $objAdapter = new Elasticsearch((new Options())->getOptions());
         $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
         $arrAnalyzer[] = 'whitespace';
         $arrAnalyzer[] = 'standard';

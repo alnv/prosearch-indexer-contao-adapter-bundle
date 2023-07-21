@@ -19,7 +19,7 @@
                     }
                     let self = this;
                     let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
-                    let fetchUrl = '/ps/search/'+type+'?query=';
+                    let fetchUrl = '/elastic/search/'+type+'?query=';
                     this.autoCompleteJS = new autoComplete({
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
@@ -115,7 +115,7 @@
                     <?php endif; ?>
                     this.results = [];
                     this.didYouMean = [];
-                    let fetchUrl = '/ps/search/results?query=' + this.keywords;
+                    let fetchUrl = '/elastic/search/results?query=' + this.keywords;
                     this.$http.post(fetchUrl, {categories: this.categories, module:"<?= $this->id ?>", root: "<?= $this->rootPageId ?>"},
                         {
                             emulateJSON: true,
