@@ -1,7 +1,7 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';

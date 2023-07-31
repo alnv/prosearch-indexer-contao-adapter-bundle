@@ -62,7 +62,10 @@ class ElasticsearchController extends AbstractController {
                 }
                 break;
             case 'licence':
-                // todo
+
+                // wir nehmen die Paramter (getOptionsByModuleAndRootId und $arrKeywords) und den Lizenzschlüssel und senden es an den Proxy
+                // der Proxy liefert und dann die $objElasticsearchAdapter->search($arrKeywords)
+
                 break;
         }
 
@@ -110,7 +113,6 @@ class ElasticsearchController extends AbstractController {
             'results' => []
         ];
 
-
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
@@ -121,7 +123,10 @@ class ElasticsearchController extends AbstractController {
                 }
                 break;
             case 'licence':
-                // todo
+
+                // wir nehmen die Paramter (getOptionsByModuleAndRootId und $arrKeywords) und den Lizenzschlüssel und senden es an den Proxy
+                // der Proxy liefert und dann die $objElasticsearchAdapter->autocompltion($arrKeywords)
+
                 break;
         }
 
