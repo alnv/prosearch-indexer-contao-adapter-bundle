@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 class Proxy
 {
 
-    protected string $strProxyDomain = "http://airtec:8888/proxy";
+    protected string $strProxyDomain = "https://elasticsearch.sineos.de/proxy";
 
     protected string $strLicence = "";
 
