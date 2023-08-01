@@ -144,27 +144,11 @@ class Elasticsearch extends Adapter
 
         if (!$this->getClient()) {
 
-            // try to connect with proxy
+            (new Proxy('free'))->deleteDocument($strIndex, $strIndicesId);
 
-            return;
         } else {
 
-            if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
-                $this->getClient()->deleteByQuery([
-                    'index' => $strIndex,
-                    'body' => [
-                        'query' => [
-                            'term' => [
-                                'id' => $strIndicesId
-                            ]
-                        ]
-                    ]
-                ]);
-
-                System::getContainer()
-                    ->get('monolog.logger.contao')
-                    ->log(LogLevel::DEBUG, 'Index document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
-            }
+            $this->clientDelete($strIndex, $strIndicesId);
         }
 
         if ($objMicrodataModel) {
@@ -173,7 +157,27 @@ class Elasticsearch extends Adapter
             }
         }
 
+        System::getContainer()
+            ->get('monolog.logger.contao')
+            ->log(LogLevel::DEBUG, 'Index ('. $strIndex .') document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+
         $objIndicesModel->delete();
+    }
+
+    public function clientDelete($strIndex, $strIndicesId) {
+
+        if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
+            $this->getClient()->deleteByQuery([
+                'index' => $strIndex,
+                'body' => [
+                    'query' => [
+                        'term' => [
+                            'id' => $strIndicesId
+                        ]
+                    ]
+                ]
+            ]);
+        }
     }
 
     /**
@@ -340,22 +344,31 @@ class Elasticsearch extends Adapter
 
         if (!$this->getClient()) {
 
-            // try to connect with proxy
+            (new Proxy('free'))->indexMapping($arrParams);
 
-            return;
         } else {
 
-            $blnExists = $this->getClient()->indices()->exists([
-                "index" => $strIndex
-            ])->asBool();
+            $this->clientMapping($arrParams);
+        }
+    }
 
-            if (!$blnExists) {
-                $this->getClient()->indices()->create($arrParams);
+    public function clientMapping($arrParams) {
 
-                System::getContainer()
-                    ->get('monolog.logger.contao')
-                    ->log(LogLevel::DEBUG, 'Mapping for Index ' . $strIndex . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ACCESS)]);
-            }
+        if (!$this->getClient()) {
+            return;
+        }
+
+        $blnExists = $this->getClient()->indices()->exists([
+            "index" => $arrParams['index']
+        ])->asBool();
+
+        if (!$blnExists) {
+
+            $this->getClient()->indices()->create($arrParams);
+
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::DEBUG, 'Mapping for Index ' . $arrParams['index'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ACCESS)]);
         }
     }
 
@@ -378,27 +391,13 @@ class Elasticsearch extends Adapter
 
         if (!$this->getClient()) {
 
-            // try to connect with proxy
-            return;
+            (new Proxy('free'))->indexDocument($arrParams);
 
         } else {
 
             try {
 
-                if ($this->getClient()->exists(['index' => $strIndex, 'id' => $arrDocument['id']])->asBool()) {
-                    $this->getClient()->deleteByQuery([
-                        'index' => $strIndex,
-                        'body' => [
-                            'query' => [
-                                'term' => [
-                                    'id' => $arrDocument['id']
-                                ]
-                            ]
-                        ]
-                    ]);
-                }
-
-                $this->getClient()->index($arrParams);
+                $this->clientIndex($arrParams);
 
             } catch (\Exception $e) {
 
@@ -412,6 +411,34 @@ class Elasticsearch extends Adapter
 
         $objIndicesModel->last_indexed = time();
         $objIndicesModel->save();
+    }
+
+    public function clientIndex($arrParams)
+    {
+
+        if (!$this->getClient()) {
+            return;
+        }
+
+        if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
+
+            $this->getClient()->deleteByQuery([
+                'index' => $arrParams['index'],
+                'body' => [
+                    'query' => [
+                        'term' => [
+                            'id' =>$arrParams['id']
+                        ]
+                    ]
+                ]
+            ]);
+        }
+
+        $this->getClient()->index($arrParams);
+
+        System::getContainer()
+            ->get('monolog.logger.contao')
+            ->log(LogLevel::DEBUG, 'Index ('. $arrParams['index'] .') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
     }
 
     /**
@@ -651,7 +678,7 @@ class Elasticsearch extends Adapter
                 'query' => $arrKeywords['query'],
                 'analyzer' => $strAnalyzer,
                 'type' => 'phrase_prefix',
-                'fields' => ['title^5', 'h1^10', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
+                'fields' => ['title^10', 'h1^5', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
             ];
 
             if (isset($arrOptions['fuzziness'])) {
@@ -685,7 +712,7 @@ class Elasticsearch extends Adapter
 
         $params['body']['query']['bool']['filter'][] = [
             'term' => [
-                'domain' => \Environment::get('host')
+                'domain' => $this->arrOptions['domain']
             ]
         ];
 
@@ -706,10 +733,9 @@ class Elasticsearch extends Adapter
 
         $response = $this->getClient()->search($params);
 
-        $arrHits = $response['hits']['hits'] ?? [];
-        $arrSuggests = $response['suggest']['didYouMean'] ?? [];
+        $arrResults['hits'] = $response['hits']['hits'] ?? [];
 
-        foreach ($arrSuggests as $arrSuggest) {
+        foreach (($response['suggest']['didYouMean'] ?? []) as $arrSuggest) {
             if (isset($arrSuggest['options']) && is_array($arrSuggest['options'])) {
                 foreach ($arrSuggest['options'] as $arrOption) {
                     $arrResults['didYouMean'][] = $arrOption['text'];
@@ -717,22 +743,10 @@ class Elasticsearch extends Adapter
             }
         }
 
-        foreach ($arrHits as $arrHit) {
-            $objEntity = new Result();
-            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
-                'types' => $arrHit['_source']['types'],
-                'score' => $arrHit['_score'],
-                'elasticOptions' => $this->arrOptions
-            ]);
-            if ($arrResult = $objEntity->getResult()) {
-                $arrResults['hits'][] = $arrResult;
-            }
-        }
-
         if (empty($arrResults['hits']) && $blnTryItAgain) {
             return $this->search($arrKeywords, [
                 'fuzziness' => 'AUTO'
-            ], false);
+            ], false, $strIndexName);
         }
 
         return $arrResults;
@@ -750,6 +764,6 @@ class Elasticsearch extends Adapter
     protected function getSizeValue()
     {
 
-        return $this->arrOptions['perPage'];
+        return $this->arrOptions['perPage'] ?: 100;
     }
 }

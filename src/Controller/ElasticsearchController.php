@@ -3,28 +3,30 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
 use Contao\Input;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Contao\CoreBundle\Controller\AbstractController;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
-use Contao\CoreBundle\Controller\AbstractController;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 /**
  *
  * @Route("/elastic", defaults={"_scope" = "frontend", "_token_check" = false})
  */
-class ElasticsearchController extends AbstractController {
+class ElasticsearchController extends AbstractController
+{
 
     /**
      *
      * @Route("/search/results", methods={"POST", "GET"}, name="get-search-results")
      */
-    public function getSearchResults() {
+    public function getSearchResults()
+    {
 
         $this->container->get('contao.framework')->initialize();
 
@@ -52,27 +54,52 @@ class ElasticsearchController extends AbstractController {
             'results' => []
         ];
 
+        $arrElasticOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
+
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
-                $objElasticsearchAdapter = new Elasticsearch($this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId));
+
+                $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
                 $objElasticsearchAdapter->connect();
+
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->search($arrKeywords);
                 }
+
                 break;
             case 'licence':
 
-                // wir nehmen die Paramter (getOptionsByModuleAndRootId und $arrKeywords) und den Lizenzschlüssel und senden es an den Proxy
-                // der Proxy liefert und dann die $objElasticsearchAdapter->search($arrKeywords)
+                $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
+                $objElasticsearchAdapter->connect(); // get index signature
+
+                $objProxy = new Proxy('free');
+                $arrResults['results'] = $objProxy->search($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrElasticOptions);
 
                 break;
         }
 
-        $objModule = \ModuleModel::findByPk($strModuleId);
-        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate??'ps_search_result') : 'ps_search_result';
+        $arrHits = $arrResults['results']['hits'];
+        unset($arrResults['results']['hits']);
 
-        foreach (($arrResults['results']['hits']??[]) as $index => $arrResult) {
+        foreach ($arrHits as $arrHit) {
+
+            $objEntity = new Result();
+            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
+                'types' => $arrHit['_source']['types'],
+                'score' => $arrHit['_score'],
+                'elasticOptions' => $arrElasticOptions
+            ]);
+
+            if ($arrResult = $objEntity->getResult()) {
+                $arrResults['results']['hits'][] = $arrResult;
+            }
+        }
+
+        $objModule = \ModuleModel::findByPk($strModuleId);
+        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'ps_search_result') : 'ps_search_result';
+
+        foreach (($arrResults['results']['hits'] ?? []) as $index => $arrResult) {
             $objTemplate = new \FrontendTemplate($strSearchResultsTemplate);
             $objTemplate->setData($arrResult);
             $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
@@ -85,7 +112,8 @@ class ElasticsearchController extends AbstractController {
      *
      * @Route("/search/autocompletion", methods={"POST", "GET"}, name="get-search-autocompletion")
      */
-    public function getAutoCompletion() {
+    public function getAutoCompletion()
+    {
 
         $this->container->get('contao.framework')->initialize();
 
@@ -116,16 +144,23 @@ class ElasticsearchController extends AbstractController {
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
+
                 $objElasticsearchAdapter = new Elasticsearch($this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId));
                 $objElasticsearchAdapter->connect();
+
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->autocompltion($arrKeywords);
                 }
+
                 break;
             case 'licence':
 
-                // wir nehmen die Paramter (getOptionsByModuleAndRootId und $arrKeywords) und den Lizenzschlüssel und senden es an den Proxy
-                // der Proxy liefert und dann die $objElasticsearchAdapter->autocompltion($arrKeywords)
+                $arrOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
+                $objElasticsearchAdapter = new Elasticsearch($arrOptions);
+                $objElasticsearchAdapter->connect(); // get index signature
+
+                $objProxy = new Proxy('free');
+                $arrResults['results'] = $objProxy->autocompletion($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrOptions);
 
                 break;
         }
@@ -137,17 +172,17 @@ class ElasticsearchController extends AbstractController {
     {
 
         $objModule = \ModuleModel::findByPk($strModuleId);
-
         $objRootPage = \PageModel::findByPk($strRootPageId);
         $objRootPage->loadDetails();
 
-        $strAnalyzer = $objRootPage->psAnalyzer ?: $objModule->psAnalyzer;
+        $strAnalyzer = $objModule->psAnalyzer ?: $objRootPage->psAnalyzer;
 
         $objElasticOptions = new Options();
         $objElasticOptions->setLanguage($objRootPage->language);
         $objElasticOptions->setRootPageId($strRootPageId);
         $objElasticOptions->setPerPage($objModule->perPage);
         $objElasticOptions->setAnalyzer($strAnalyzer);
+        $objElasticOptions->setDomain();
 
         return $objElasticOptions->getOptions();
     }

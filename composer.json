@@ -26,6 +26,7 @@
     "contao/core-bundle": "~4.9",
     "fusonic/opengraph": "^2.2",
     "smalot/pdfparser": "^2.4",
+    "guzzlehttp/guzzle": "^7.7",
     "elasticsearch/elasticsearch": "^8.6",
     "sensio/framework-extra-bundle": "^5.2",
     "menatwork/contao-multicolumnwizard-bundle": "^3.5"

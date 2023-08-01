@@ -18,6 +18,11 @@ class Options
     protected string $language = '';
 
     /**
+     * @var string
+     */
+    protected string $domain = '';
+
+    /**
      * @var int
      */
     protected int $rootPageId = 0;
@@ -69,6 +74,16 @@ class Options
     }
 
     /**
+     * @param string $strDomain
+     * @return void
+     */
+    public function setDomain(string $strDomain = ""): void
+    {
+
+        $this->domain = $strDomain ?: \Environment::get('host');
+    }
+
+    /**
      * @return array
      */
     public function getOptions(): array
@@ -78,7 +93,8 @@ class Options
             'analyzer' => $this->analyzer,
             'language' => $this->language,
             'rootPageId' => $this->rootPageId,
-            'perPage' => $this->perPage
+            'perPage' => $this->perPage,
+            'domain' => $this->domain
         ];
     }
 }
