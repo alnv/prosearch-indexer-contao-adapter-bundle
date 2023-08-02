@@ -67,7 +67,7 @@ class PDFIndices extends Searcher
             }
 
             $_File = new File($objFile->path);
-            if (($_File->filesize / 1000001) > 10) {
+            if (($_File->filesize / 1000001) > 5) {
                 continue;
             }
 
@@ -139,7 +139,7 @@ class PDFIndices extends Searcher
 
                 System::getContainer()
                     ->get('monolog.logger.contao')
-                    ->log(LogLevel::ERROR, 'PDF Parser: ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                    ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
             }
         }
     }
