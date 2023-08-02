@@ -71,9 +71,9 @@ class ElasticsearchController extends AbstractController
             case 'licence':
 
                 $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
-                $objElasticsearchAdapter->connect(); // get index signature
+                $objElasticsearchAdapter->connect();
 
-                $objProxy = new Proxy('free');
+                $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
                 $arrResults['results'] = $objProxy->search($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrElasticOptions);
 
                 break;
@@ -157,9 +157,9 @@ class ElasticsearchController extends AbstractController
 
                 $arrOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
                 $objElasticsearchAdapter = new Elasticsearch($arrOptions);
-                $objElasticsearchAdapter->connect(); // get index signature
+                $objElasticsearchAdapter->connect();
 
-                $objProxy = new Proxy('free');
+                $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
                 $arrResults['results'] = $objProxy->autocompletion($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrOptions);
 
                 break;

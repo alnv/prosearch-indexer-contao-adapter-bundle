@@ -14,6 +14,11 @@ abstract class Adapter
     private $objClient;
 
     /**
+     * @var string
+     */
+    private string $strLicense = "";
+
+    /**
      * @var array
      */
     protected array $arrOptions = [];

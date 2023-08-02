@@ -78,6 +78,7 @@ class Elasticsearch extends Adapter
                 }
                 break;
             case 'licence':
+                $this->strLicense = $arrCredentials['key'] ?? '';
                 return;
         }
 
@@ -144,7 +145,9 @@ class Elasticsearch extends Adapter
 
         if (!$this->getClient()) {
 
-            (new Proxy('free'))->deleteDocument($strIndex, $strIndicesId);
+            if ((new Proxy($this->strLicense))->deleteDocument($strIndex, $strIndicesId) === false) {
+                return;
+            }
 
         } else {
 
@@ -344,7 +347,7 @@ class Elasticsearch extends Adapter
 
         if (!$this->getClient()) {
 
-            (new Proxy('free'))->indexMapping($arrParams);
+            (new Proxy($this->strLicense))->indexMapping($arrParams);
 
         } else {
 
@@ -391,7 +394,9 @@ class Elasticsearch extends Adapter
 
         if (!$this->getClient()) {
 
-            (new Proxy('free'))->indexDocument($arrParams);
+            if ((new Proxy($this->strLicense))->indexDocument($arrParams) === false) {
+                return;
+            }
 
         } else {
 
@@ -434,7 +439,18 @@ class Elasticsearch extends Adapter
             ]);
         }
 
-        $this->getClient()->index($arrParams);
+        try {
+
+            $this->getClient()->index($arrParams);
+
+        } catch (\Exception $objError) {
+
+            System::getContainer()
+                ->get('monolog.logger.contao')
+                ->log(LogLevel::DEBUG, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+
+            return;
+        }
 
         System::getContainer()
             ->get('monolog.logger.contao')
@@ -765,5 +781,11 @@ class Elasticsearch extends Adapter
     {
 
         return $this->arrOptions['perPage'] ?: 100;
+    }
+
+    public function getLicense()
+    {
+
+        return $this->strLicense;
     }
 }

@@ -31,7 +31,7 @@ class PDFIndices extends Searcher
     public function __construct(Document $document, array $meta = [])
     {
 
-        set_time_limit(200);
+        set_time_limit(500);
 
         try {
             $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
