@@ -13,7 +13,7 @@ class Proxy
 
     public function __construct($strLicence)
     {
-        $this->strLicence = $strLicence;
+        $this->strLicence = $strLicence ?: "";
     }
 
     public function indexDocument($arrParams)
