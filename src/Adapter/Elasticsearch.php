@@ -2,7 +2,6 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
@@ -162,12 +161,13 @@ class Elasticsearch extends Adapter
 
         System::getContainer()
             ->get('monolog.logger.contao')
-            ->log(LogLevel::DEBUG, 'Index ('. $strIndex .') document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+            ->log(LogLevel::DEBUG, 'Index (' . $strIndex . ') document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
 
         $objIndicesModel->delete();
     }
 
-    public function clientDelete($strIndex, $strIndicesId) {
+    public function clientDelete($strIndex, $strIndicesId)
+    {
 
         if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
             $this->getClient()->deleteByQuery([
@@ -355,7 +355,8 @@ class Elasticsearch extends Adapter
         }
     }
 
-    public function clientMapping($arrParams) {
+    public function clientMapping($arrParams)
+    {
 
         if (!$this->getClient()) {
             return;
@@ -425,23 +426,28 @@ class Elasticsearch extends Adapter
             return;
         }
 
+        /*
         if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
-
             $this->getClient()->deleteByQuery([
                 'index' => $arrParams['index'],
                 'body' => [
                     'query' => [
                         'term' => [
-                            'id' =>$arrParams['id']
+                            'id' => $arrParams['id']
                         ]
                     ]
                 ]
             ]);
         }
+        */
 
         try {
-
-            $this->getClient()->index($arrParams);
+            
+            if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
+                $this->getClient()->update($arrParams);
+            } else {
+                $this->getClient()->index($arrParams);
+            }
 
         } catch (\Exception $objError) {
 
@@ -454,7 +460,7 @@ class Elasticsearch extends Adapter
 
         System::getContainer()
             ->get('monolog.logger.contao')
-            ->log(LogLevel::DEBUG, 'Index ('. $arrParams['index'] .') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+            ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
     }
 
     /**
