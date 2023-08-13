@@ -444,7 +444,14 @@ class Elasticsearch extends Adapter
         try {
             
             if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
-                $this->getClient()->update($arrParams);
+                unset($arrParams['body']['id']);
+                $this->getClient()->update([
+                    'index' => $arrParams['index'],
+                    'id' => $arrParams['id'],
+                    'body' => [
+                        'doc'  => $arrParams['body']
+                    ]
+                ]);
             } else {
                 $this->getClient()->index($arrParams);
             }
