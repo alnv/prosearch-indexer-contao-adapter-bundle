@@ -2,6 +2,7 @@
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchTypeAheadModule;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
 
 /**
@@ -21,10 +22,22 @@ array_insert($GLOBALS['BE_MOD'], 3, [
                 'tl_search_credentials'
             ]
         ],
+        'categories' => [
+            'name' => 'categories',
+            'tables' => [
+                'tl_ps_categories'
+            ]
+        ],
         'synonyms' => [
             'name' => 'synonyms',
             'tables' => [
                 'tl_synonyms'
+            ]
+        ],
+        'stats' => [
+            'name' => 'stats',
+            'tables' => [
+                'tl_search_stats'
             ]
         ]
     ]
@@ -35,6 +48,7 @@ array_insert($GLOBALS['BE_MOD'], 3, [
  */
 array_insert($GLOBALS['FE_MOD'], 3, [
     'prosearch-modules' => [
+        'elasticsearch_type_ahead' => ElasticsearchTypeAheadModule::class,
         'elasticsearch' => ElasticsearchModule::class
     ]
 ]);

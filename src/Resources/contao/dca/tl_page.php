@@ -10,6 +10,34 @@ PaletteManipulator::create()
     ->applyToPalette('root', 'tl_page')
     ->applyToPalette('rootfallback', 'tl_page');
 
+PaletteManipulator::create()
+    ->addLegend('ps_search_legend', 'chmod_legend')
+    ->addField('psSearchCategory', 'ps_search_legend', PaletteManipulator::POSITION_APPEND)
+    ->applyToPalette('regular', 'tl_page');
+
+$GLOBALS['TL_DCA']['tl_page']['fields']['psSearchCategory'] = [
+    'inputType' => 'text',
+    'default' => 'page',
+    'eval' => [
+        'maxlength' => 128,
+        'tl_class' => 'w50',
+    ],
+    'save_callback' => [function($strValue) {
+    
+        if (!$strValue) {
+            return '';
+        }
+
+        $strValue = strtolower($strValue);
+        $strValue = str_replace('-', '', $strValue);
+        $strValue = str_replace('_', '', $strValue);
+        $strValue = str_replace('.', '', $strValue);
+
+        return str_replace(' ', '', $strValue);
+    }],
+    'sql' => "varchar(128) NOT NULL default 'page'"
+];
+
 $GLOBALS['TL_DCA']['tl_page']['fields']['psAnalyzer'] = [
     'inputType' => 'select',
     'default' => 'contao',

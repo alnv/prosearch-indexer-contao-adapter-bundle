@@ -23,6 +23,7 @@
     ]
   },
   "require": {
+    "php": "^7.4 || ^8.0",
     "contao/core-bundle": "~4.9",
     "fusonic/opengraph": "^2.2",
     "smalot/pdfparser": "^2.4",

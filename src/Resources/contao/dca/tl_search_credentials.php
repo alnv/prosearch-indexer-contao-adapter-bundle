@@ -103,14 +103,14 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'type' => [
             'inputType' => 'select',
             'eval' => [
-                'maxlength' => 32,
+                'maxlength' => 16,
                 'tl_class' => 'w50',
                 'submitOnChange' => true,
                 'includeBlankOption' => true
             ],
-            'options' => ['licence', 'elasticsearch', 'elasticsearch_cloud'],
+            'options' => ['licence'], // 'elasticsearch', 'elasticsearch_cloud'
             'reference' => &$GLOBALS['TL_LANG']['tl_search_credentials'],
-            'sql' => "varchar(32) NOT NULL default ''"
+            'sql' => "varchar(16) NOT NULL default ''"
         ],
         'host' => [
             'inputType' => 'text',

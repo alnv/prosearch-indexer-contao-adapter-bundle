@@ -2,17 +2,20 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
-use Contao\Input;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Contao\CoreBundle\Controller\AbstractController;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
+use Contao\CoreBundle\Controller\AbstractController;
+use Contao\Input;
+use Contao\PageModel;
+use Contao\ModuleModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 /**
  *
@@ -33,12 +36,12 @@ class ElasticsearchController extends AbstractController
         $arrJsonData = \json_decode(file_get_contents('php://input'), true);
 
         if (!empty($arrJsonData) && is_array($arrJsonData)) {
-            \Input::setPost('root', $arrJsonData['root']);
-            \Input::setPost('module', $arrJsonData['module']);
-            \Input::setPost('categories', $arrJsonData['categories']);
+            Input::setPost('root', $arrJsonData['root']);
+            Input::setPost('module', $arrJsonData['module']);
+            Input::setPost('categories', $arrJsonData['categories']);
         }
 
-        $arrCategories = Input::post('categories') ?? [];
+        $arrCategories = Input::post('categories') ?: (Input::get('categories') ?? []);
         $strModuleId = Input::post('module') ?: (Input::get('module') ?? '');
         $strRootPageId = Input::post('root') ?: (Input::get('root') ?? '');
         $strQuery = Input::get('query') ?? '';
@@ -96,14 +99,16 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        $objModule = \ModuleModel::findByPk($strModuleId);
-        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'ps_search_result') : 'ps_search_result';
+        $objModule = ModuleModel::findByPk($strModuleId);
+        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'elasticsearch_result') : 'elasticsearch_result';
 
         foreach (($arrResults['results']['hits'] ?? []) as $index => $arrResult) {
             $objTemplate = new \FrontendTemplate($strSearchResultsTemplate);
             $objTemplate->setData($arrResult);
             $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
         }
+
+        Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])));
 
         return new JsonResponse($arrResults);
     }
@@ -120,9 +125,9 @@ class ElasticsearchController extends AbstractController
         $arrJsonData = \json_decode(file_get_contents('php://input'), true);
 
         if (!empty($arrJsonData) && is_array($arrJsonData)) {
-            \Input::setPost('root', $arrJsonData['root']);
-            \Input::setPost('module', $arrJsonData['module']);
-            \Input::setPost('categories', $arrJsonData['categories']);
+            Input::setPost('root', $arrJsonData['root']);
+            Input::setPost('module', $arrJsonData['module']);
+            Input::setPost('categories', $arrJsonData['categories']);
         }
 
         $arrCategories = Input::post('categories') ?? [];
@@ -171,8 +176,8 @@ class ElasticsearchController extends AbstractController
     protected function getOptionsByModuleAndRootId($strModuleId, $strRootPageId): array
     {
 
-        $objModule = \ModuleModel::findByPk($strModuleId);
-        $objRootPage = \PageModel::findByPk($strRootPageId);
+        $objModule = ModuleModel::findByPk($strModuleId);
+        $objRootPage = PageModel::findByPk($strRootPageId);
         $objRootPage->loadDetails();
 
         $strAnalyzer = $objModule->psAnalyzer ?: $objRootPage->psAnalyzer;
@@ -182,6 +187,8 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setRootPageId($strRootPageId);
         $objElasticOptions->setPerPage($objModule->perPage);
         $objElasticOptions->setAnalyzer($strAnalyzer);
+        $objElasticOptions->setFuzzy((bool)$objModule->fuzzy);
+        $objElasticOptions->setMinKeywordLength((int)$objModule->minKeywordLength);
         $objElasticOptions->setDomain();
 
         return $objElasticOptions->getOptions();

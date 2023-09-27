@@ -23,9 +23,19 @@ class Options
     protected string $domain = '';
 
     /**
+     * @var bool
+     */
+    protected bool $fuzzy = false;
+
+    /**
      * @var int
      */
     protected int $rootPageId = 0;
+
+    /**
+     * @var int
+     */
+    protected int $minKeywordLength = 0;
 
     /**
      * @var int
@@ -84,6 +94,26 @@ class Options
     }
 
     /**
+     * @param bool $blnFuzzy
+     * @return void
+     */
+    public function setFuzzy(bool $blnFuzzy): void
+    {
+
+        $this->fuzzy = $blnFuzzy;
+    }
+
+    /**
+     * @param int $wordLength
+     * @return void
+     */
+    public function setMinKeywordLength(int $wordLength = 4): void
+    {
+
+        $this->minKeywordLength = $wordLength;
+    }
+
+    /**
      * @return array
      */
     public function getOptions(): array
@@ -94,6 +124,8 @@ class Options
             'language' => $this->language,
             'rootPageId' => $this->rootPageId,
             'perPage' => $this->perPage,
+            'fuzzy' => $this->fuzzy,
+            'minKeywordLength' => $this->minKeywordLength,
             'domain' => $this->domain
         ];
     }

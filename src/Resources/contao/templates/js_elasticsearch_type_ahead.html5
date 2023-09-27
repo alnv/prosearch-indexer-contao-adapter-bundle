@@ -5,6 +5,8 @@
             keywords: '<?= $this->keyword ?>',
             didYouMean: [],
             results: [],
+            loading: false,
+            submitted: false,
             autoCompleteJS: null
         };
         new Vue({
@@ -23,13 +25,14 @@
                     this.autoCompleteJS = new autoComplete({
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
-                        threshold: 2,
+                        threshold: <?= $this->minKeywordLength ?>,
                         debounce: 600,
                         submit: true,
                         data: {
-                            src: async (query) => {
+                            src: async function(query) {
                                 self.didYouMean = [];
                                 try {
+                                    self.loading = true;
                                     let headers = new Headers();
                                     headers.append('Accept', 'application/json');
                                     headers.append('Content-Type', 'application/json');
@@ -52,6 +55,7 @@
                                         let suggest = data['results']['hits'][i];
                                         suggests.push(suggest.template);
                                     }
+                                    self.loading = false;
                                     self.didYouMean = data['results']['didYouMean'];
                                     return suggests;
                                 } catch (error) {
@@ -109,34 +113,62 @@
                     });
                 },
                 getSearchResults: function () {
+                    this.submitted = true;
                     <?php if (!$this->isResultPage): ?>
                     window.location.href = "<?= $this->redirect ?>?keywords=" + this.keywords;
                     return;
                     <?php endif; ?>
                     this.results = [];
                     this.didYouMean = [];
+                    this.loading = true;
                     let fetchUrl = '/elastic/search/results?query=' + this.keywords;
-                    this.$http.post(fetchUrl, {categories: this.categories, module:"<?= $this->id ?>", root: "<?= $this->rootPageId ?>"},
+                    this.$http.post(fetchUrl, {
+                            categories: this.categories,
+                            module:"<?= $this->id ?>",
+                            root: "<?= $this->rootPageId ?>"
+                        },
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     ).then(function (res) {
+                        this.loading = false;
                         this.results = res.body['results']['hits'];
-                        this.didYouMean = res.body['results']['didYouMean']
+                        this.didYouMean = res.body['results']['didYouMean'];
                     }.bind(this));
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.didYouMean[0];
-                    this.autoCompleteJS.start(this.keyword);
+                    this.autoCompleteJS.start(this.keywords);
+                },
+                sendHrefStat: function (href) {
+                    this.$http.post('/stat/click?query=' + this.keywords, {
+                            url: href,
+                            categories: this.categories
+                        },
+                        {
+                            emulateJSON: true,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    ).then(function (res) {
+                        //
+                    });
+                },
+                sendStat: function (e) {
+                    let href = e.currentTarget.querySelector('a').href;
+                    if (!href) {
+                        return;
+                    }
+                    this.sendHrefStat(href);
                 },
                 submit: function (autoCompleteJS) {
-                    let match = autoCompleteJS.feedback && autoCompleteJS.feedback.hasOwnProperty('cursor') && autoCompleteJS.feedback.cursor ? autoCompleteJS.feedback.matches[autoCompleteJS.feedback.cursor] : null;
+                    let match = autoCompleteJS.feedback && autoCompleteJS.feedback.hasOwnProperty('cursor') ? autoCompleteJS.feedback.matches[autoCompleteJS.feedback.cursor] : null;
                     if (match) {
                         const link = document.createElement("div");
                         link.innerHTML = match.value;
                         let a = link.querySelector('a');
                         if (a) {
+                            this.sendHrefStat(a.href);
                             window.location.href = a.href;
                             return;
                         }

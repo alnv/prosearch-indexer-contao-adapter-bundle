@@ -294,10 +294,7 @@ class Elasticsearch extends Adapter
                         ],
                         "text" => [
                             "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                            "copy_to" => [
-                                "autocomplete"
-                            ]
+                            "analyzer" => $strAnalyzer
                         ],
                         "document" => [
                             "type" => "text",
@@ -306,14 +303,23 @@ class Elasticsearch extends Adapter
                         "h1" => [
                             "type" => "text",
                             "analyzer" => $strAnalyzer,
+                            "copy_to" => [
+                                "autocomplete"
+                            ]
                         ],
                         "h2" => [
                             "type" => "text",
                             "analyzer" => $strAnalyzer,
+                            "copy_to" => [
+                                "autocomplete"
+                            ]
                         ],
                         "h3" => [
                             "type" => "text",
                             "analyzer" => $strAnalyzer,
+                            "copy_to" => [
+                                "autocomplete"
+                            ]
                         ],
                         "h4" => [
                             "type" => "text",
@@ -426,21 +432,6 @@ class Elasticsearch extends Adapter
             return;
         }
 
-        /*
-        if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
-            $this->getClient()->deleteByQuery([
-                'index' => $arrParams['index'],
-                'body' => [
-                    'query' => [
-                        'term' => [
-                            'id' => $arrParams['id']
-                        ]
-                    ]
-                ]
-            ]);
-        }
-        */
-
         try {
             
             if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
@@ -527,7 +518,10 @@ class Elasticsearch extends Adapter
             }
         }
 
-        $arrDocument['types'] = $arrTypes;
+        $arrDocument['types'] = array_filter($arrTypes, function ($strType) {
+            return strtolower($strType);
+        });
+
         foreach ($arrDomDocument as $strField => $varValues) {
             if (is_array($varValues)) {
                 $varValues = implode(', ', $varValues);
@@ -645,6 +639,10 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
+        if (isset($arrOptions['fuzzy'])) {
+            $blnTryItAgain = $arrOptions['fuzzy'];
+        }
+
         $strRootPageId = $this->arrOptions['rootPageId'];
         $strAnalyzer = $this->arrOptions['analyzer'];
 
@@ -748,14 +746,11 @@ class Elasticsearch extends Adapter
         ];
 
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
-            foreach ($arrKeywords['types'] as $strType) {
-                $params['body']['query']['bool']['filter'][] = [
-                    'term' => [
-                        'types' => $strType,
-                        'case_insensitive' => false
-                    ]
-                ];
-            }
+            $params['body']['query']['bool']['filter'][] = [
+                'terms' => [
+                    'types' => $arrKeywords['types'],
+                ]
+            ];
         }
 
         if (empty($params['body']['query'])) {

@@ -1,21 +1,22 @@
 <?php
     $strDescription = (!empty($this->highlights)?implode(' ', $this->highlights):$this->description);
     $strDescription = \StringUtil::substrHtml($strDescription, 250);
+    $arrImage = [];
+    $strCssClass = '';
+    if (!empty($this->images) && is_array($this->images)) {
+        $arrImage = $this->images[0] ?? [];
+        $strCssClass = ($arrImage['icon']?' icon':'') . (empty($arrImage)?'':' with-image');
+    }
 ?>
-<a href="<?= $this->url ?>" class="hit">
-    <?php if (!empty($this->images) && is_array($this->images)): ?>
-        <?php
-            $arrImage = $this->images[0] ?? [];
-        ?>
-        <?php if (!empty($arrImage)): ?>
-            <div class="image<?= ($arrImage['icon']?' icon':'') ?>">
+<a href="<?= $this->url ?>" class="hit<?= $strCssClass ?>">
+    <?php if (!empty($arrImage)): ?>
+        <div class="image">
             <?php if (!$arrImage['icon']): ?>
                 <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
             <?php else: ?>
                 <figure><img src="<?= $arrImage['path'] ?>" alt=""></figure>
             <?php endif; ?>
-            </div>
-        <?php endif; ?>
+        </div>
     <?php endif; ?>
     <div class="text">
         <p class="title"><strong><?= $this->title ?></strong></p>

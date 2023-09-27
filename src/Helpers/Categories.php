@@ -20,6 +20,50 @@ class Categories
         return $arrCategories;
     }
 
+    public function getTranslatedCategories(): array
+    {
+
+        $this->setCategories();
+
+        $arrCategories = [];
+        $strCurrentLanguage = $GLOBALS['TL_LANGUAGE'] ?? '';
+
+        if (!$strCurrentLanguage) {
+            $objRootPage = \Database::getInstance()->prepare('SELECT * FROM tl_page WHERE (type=? OR type=?) AND `language`!=?')->limit(1)->execute('rootfallback', 'root', '');
+            if ($objRootPage->numRows) {
+                $strCurrentLanguage = $objRootPage->language;
+            }
+        }
+
+        $objCategories = \Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE exist=? ORDER BY category')->execute('1');
+
+        while ($objCategories->next()) {
+
+            if (!$objCategories->category) {
+                continue;
+            }
+
+            $strLabel = $objCategories->category;
+            $arrTranslations = \StringUtil::deserialize($objCategories->translating, true);
+
+            foreach ($arrTranslations as $arrTranslation) {
+                if ($arrTranslation['language'] == $strCurrentLanguage && $arrTranslation['label']) {
+                    $strLabel = $arrTranslation['label'];
+                }
+            }
+
+            $arrSet = [
+                'id' => $objCategories->id,
+                'key' => $objCategories->category,
+                'label' => \StringUtil::decodeEntities($strLabel)
+            ];
+
+            $arrCategories[$objCategories->category] = $arrSet;
+        }
+
+        return $arrCategories;
+    }
+
     public function setCategories()
     {
 

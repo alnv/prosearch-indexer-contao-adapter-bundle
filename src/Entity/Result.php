@@ -115,5 +115,4 @@ class Result
 
         return $arrReturn;
     }
-
 }

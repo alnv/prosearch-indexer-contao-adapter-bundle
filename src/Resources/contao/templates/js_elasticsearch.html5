@@ -1,0 +1,234 @@
+<script>
+    (function () {
+        let objState = {
+            keywords: '',
+            initial: true,
+            timeout: null,
+            autoCompleteJS: null,
+            categories: [],
+            loading: false,
+            hasResults: false,
+            resultsOnly: false,
+            views: {
+                results: [],
+                didYouMean: [],
+                categories: []
+            },
+            options: {
+                categories: <?= json_encode($this->categoryOptions, null, 512) ?>
+            }
+        };
+        new Vue({
+            el: "#<?= $this->elementId ?>",
+            data: function () {
+                return objState
+            },
+            methods: {
+                fetch: function () {
+                    if (this.keywords.length && this.keywords.length < <?= $this->minKeywordLength ?>) {
+                        return;
+                    }
+                    this.loading = true;
+                    this.initial = false;
+                    if (!this.keywords) {
+                        this.hasResults = false;
+                        this.views.results = {};
+                        this.views.didYouMean = {}
+                        this.loading = false;
+                        return;
+                    }
+                    this.$http.post('/elastic/search/results?query=' + this.keywords, {
+                            categories: this.categories,
+                            module:"<?= $this->id ?>",
+                            root: "<?= $this->rootPageId ?>"
+                        },
+                        {
+                            emulateJSON: true,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    ).then(function (res) {
+                        this.views.results = this.groupResults(res.body.results['hits'] ? res.body.results['hits'] : []);
+                        this.views.didYouMean = res.body.results['didYouMean'];
+                        this.loading = false;
+                        this.resultsOnly = false;
+                    }.bind(this));
+                },
+                setDidYouMeanToKeyword: function () {
+                    this.keywords = this.views.didYouMean[0];
+                    this.autoCompleteJS.start(this.keywords);
+                },
+                groupResults: function (hits) {
+                    if (hits.length) {
+                        this.hasResults = true;
+                    } else {
+                        this.categories = [];
+                        return {}
+                    }
+                    let groups = {
+                        '': {
+                            hits: [],
+                            value: '',
+                            label: ''
+                        }
+                    };
+                    let categories = {};
+                    let onlyCategories = <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>;
+                    for (let i=0;i<hits.length;i++) {
+                        let hit = hits[i];
+                        let types = hit.types.length > 0 ? hit.types : [''];
+                        for (let j=0;j<types.length;j++) {
+                            let type = types[j];
+                            if ((this.categories.length && this.categories.indexOf(type) === -1) || (onlyCategories.length && onlyCategories.indexOf(type) === -1)) {
+                                continue;
+                            }
+                            let label = this.options.categories[type] ? this.options.categories[type]['label'] : type;
+                            groups[label] = groups[label] || {
+                                hits: [],
+                                value: type,
+                                label: label
+                            };
+                            if (type && this.options.categories[type]) {
+                                categories[label] = categories[label] || this.options.categories[type];
+                            }
+                            groups[label]['hits'].push(hit);
+                        }
+                    }
+                    if (!this.resultsOnly) {
+                        this.views.categories = this.sortObject(categories);
+                    }
+                    return this.sortObject(groups);
+                },
+                sortObject: function (obj) {
+                    let s = {};
+                    Object.keys(obj)
+                        .sort()
+                        .forEach(function(v) {
+                            s[v] = obj[v];
+                        });
+                    return s;
+                },
+                setCategory: function (category) {
+                    this.resultsOnly = true;
+                    let index = this.categories.indexOf(category);
+                    if (index === -1) {
+                        this.categories.push(category);
+                    } else {
+                        this.categories.splice(index, 1);
+                    }
+                    this.fetch();
+                },
+                activeCategory: function (category) {
+                    let index = this.categories.indexOf(category);
+                    return index !== -1;
+                },
+                search: function () {
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(function () {
+                        this.fetch();
+                    }.bind(this), 600);
+                },
+                submit: function () {
+                    let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
+                    if (match) {
+                        this.keywords = match.value;
+                        this.fetch()
+                    } else {
+                        this.keywords = '';
+                        this.fetch()
+                    }
+                },
+                sendStat: function (e) {
+                    let href = e.currentTarget.querySelector('a').href;
+                    if (!href) {
+                        return;
+                    }
+                    this.$http.post('/stat/click?query=' + this.keywords, {
+                            url: href,
+                            categories: this.categories
+                        },
+                        {
+                            emulateJSON: true,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    ).then(function (res) {
+                        //
+                    });
+                },
+                setAutoComplete: function () {
+                    let self = this;
+                    this.autoCompleteJS = new autoComplete({
+                        selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
+                        placeHolder: "<?= $this->keywordLabel ?>",
+                        threshold: 2,
+                        debounce: 600,
+                        submit: true,
+                        data: {
+                            src: async function(query) {
+                                let headers = new Headers();
+                                headers.append('Accept', 'application/json');
+                                headers.append('Content-Type', 'application/json');
+                                const source = await fetch('/elastic/search/autocompletion?query=' + query, {
+                                    method: "POST",
+                                    headers: headers,
+                                    cache: "no-cache",
+                                    redirect: "follow",
+                                    credentials: "same-origin",
+                                    referrerPolicy: "no-referrer",
+                                    body: JSON.stringify({
+                                        categories: self.categories,
+                                        module: "<?= $this->id ?>",
+                                        root: "<?= $this->rootPageId ?>"
+                                    })
+                                });
+                                let results = [];
+                                let data = await source.json();
+                                for (let i=0; i<data.results['hits'].length; i++) {
+                                    results.push(data.results['hits'][i]['term']);
+                                }
+                                return results;
+                            }
+                        },
+                        resultsList: {
+                            maxResults: 50,
+                            tabSelect: true
+                        },
+                        resultItem: {
+                            highlight: true
+                        },
+                        events: {
+                            input: {
+                                keydown(event) {
+                                    switch (event.keyCode) {
+                                        case 40:
+                                        case 38:
+                                            event.preventDefault();
+                                            event.keyCode === 40 ? objState.autoCompleteJS.next() : objState.autoCompleteJS.previous();
+                                            break;
+                                        case 9:
+                                            event.preventDefault();
+                                            if (objState.autoCompleteJS.resultsList.tabSelect) {
+                                                objState.autoCompleteJS.next()
+                                            }
+                                            break;
+                                        case 27:
+                                            objState.autoCompleteJS.input.value = "";
+                                            objState.autoCompleteJS.close();
+                                            break;
+                                        case 13:
+                                            event.preventDefault()
+                                            self.submit();
+                                            objState.autoCompleteJS.close();
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            mounted: function () {
+                this.setAutoComplete();
+            }
+        })
+    })();
+</script>

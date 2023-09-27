@@ -1,0 +1,41 @@
+.mod_elasticsearch_type_ahead {
+
+  .autoComplete_wrapper {
+
+    ul {
+      padding: 0;
+
+      li {
+        white-space: normal;
+        list-style: none;
+        text-align: left;
+        font-size: 16px;
+        color: #212121;
+        border-radius: 0;
+        overflow: hidden;
+        border-bottom: solid 1px #cccccc;
+        width: calc(100% - 30px);
+        margin: 0 auto;
+        padding: 15px;
+
+        &:hover {
+          background: #f1f1f1;
+        }
+      }
+    }
+  }
+
+  .search-results {
+    margin-top: 30px;
+  }
+
+  .result-hit {
+    border-bottom: 1px solid #f1f1f1;
+
+    &:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
+}

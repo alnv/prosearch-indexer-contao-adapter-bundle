@@ -65,7 +65,13 @@ class Indices extends Searcher
         $strUrl = strtok($strUrl, '?');
 
         $objIndicesModel = IndicesModel::findByUrl($strUrl);
-        $arrSearchTypes = $this->objCrawler->filterXpath("//meta[@name='search:type']")->extract(['content']);
+
+        $arrSearchTypes = [];
+        foreach ($this->objCrawler->filterXpath("//meta[@name='search:type']")->extract(['content']) as $strType) {
+            foreach (explode(',', $strType) as $strCategoryType) {
+                $arrSearchTypes[] = $strCategoryType;
+            }
+        }
 
         if (!$objIndicesModel) {
             $objIndicesModel = new IndicesModel();

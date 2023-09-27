@@ -9,6 +9,11 @@ services:
     public: true
   Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ElasticsearchProxyController:
     public: true
+  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\StatController:
+    public: true
+  Alnv\ProSearchIndexerContaoAdapterBundle\EventListener\GetPageLayoutListener:
+    tags:
+      - { name: contao.hook, hook: getPageLayout, method: getPageLayout, priority: 100 }
   Alnv\ProSearchIndexerContaoAdapterBundle\Search\ProSearchIndexer:
     tags:
       - { name: 'contao.search_indexer' }

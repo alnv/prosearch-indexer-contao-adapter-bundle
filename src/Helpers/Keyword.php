@@ -28,6 +28,9 @@ class Keyword {
 
         $arrTypes = array_unique($arrTypes);
         $arrTypes = array_filter($arrTypes);
+        $arrTypes = array_filter($arrTypes, function ($strType) {
+            return strtolower($strType);
+        });
 
         return [
             'keyword' => $strKeywords,
@@ -44,6 +47,11 @@ class Keyword {
         $arrReturn = [];
 
         foreach ($arrWords as $strWord) {
+
+            if (!$strWord) {
+                continue;
+            }
+
             $strWord = strtolower($strWord);
             $arrReturn[] = $this->objSynonyms->predict($strWord);
         }

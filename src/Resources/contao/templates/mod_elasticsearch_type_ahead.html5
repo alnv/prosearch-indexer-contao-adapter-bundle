@@ -1,0 +1,31 @@
+<?php $this->extend('block_unsearchable'); ?>
+<?php $this->block('content'); ?>
+
+<div id="<?= $this->elementId ?>" class="elasticsearch-container">
+    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
+        <div class="suggest-results">
+            <p v-if="didYouMean.length && didYouMean[0] !== keywords"><?= $this->didYouMeanLabel ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
+        </div>
+        <div class="elasticsearch-input">
+            <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" value="<?= $this->keyword ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
+            <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>">
+                <img v-if="!loading" src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>">
+                <img v-else src="/system/themes/flexible/icons/loading.svg" alt="">
+            </button>
+        </div>
+    </form>
+    <?php if ($this->isResultPage): ?>
+        <div class="search-results" v-if="results.length && keywords">
+            <div v-for="result in results" v-html="result.template" class="result-hit" @click="sendStat"></div>
+        </div>
+        <div v-if="!results.length && keywords && !loading && submitted" class="no-search-results">
+            <p><?= $GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?></p>
+        </div>
+    <?php endif; ?>
+</div>
+
+<?php if ($this->script): ?>
+    <?= $this->script ?>
+<?php endif; ?>
+
+<?php $this->endblock(); ?>

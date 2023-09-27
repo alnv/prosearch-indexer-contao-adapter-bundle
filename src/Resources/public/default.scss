@@ -1,152 +1,115 @@
-.mod_elasticsearch {
+.elasticsearch-container {
   width: 100%;
-  max-width: 768px;
-  margin: 30px auto;
-  overflow: visible;
-  position: relative;
-  .formbody {
+
+  .autoComplete_wrapper {
+    width: calc(100% - 42px);
+  }
+
+  .elasticsearch-input {
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    position: relative;
+    align-items: flex-start;
   }
-  .widget {
-    margin: 0;
-    &.widget-submit {
-      position: absolute;
-      background: none;
-      left: 15px;
-      width: 43px;
-      z-index: 99;
-      top: -3px;
-    }
-    &.widget-text {
-      width: 85%;
-    }
-  }
+
   input[type="search"] {
-    max-width: 100%;
-    display: block;
     width: 100%;
-    margin: 0;
-    padding: 0 10px;
     line-height: 42px;
     height: 42px;
-    background: none !important;
-    color: #6a6a6a;
-    box-shadow: none !important;
-    position: relative;
-    z-index: 999;
+    border: 1px solid #f1f1f1;
+    background: #fff;
+    padding: 0 15px;
+    outline: none;
   }
+
   button {
-    line-height: 44px;
-    height: 44px;
-    width: initial;
-    background: none;
-    border: none;
+    width: 42px;
+    height: 42px;
+    margin: 0;
     padding: 0;
-    margin: 3px 0 0 0;
-    img {
-      height: 20px;
-      width: 20px;
-    }
-  }
-  a.hit {
+    border: 0;
+    background: none;
+    cursor: pointer;
+
     display: flex;
+    justify-content: center;
     align-items: center;
-    text-decoration: none;
-    padding: 10px;
-    color: #000;
-    width: 100%;
+
     &:hover,
     &:focus {
       background: none;
-      text-decoration: none;
+      border: 0;
     }
-    .image {
-      width: 85px;
-      min-width: 85px;
-      margin-right: 15px;
-      img {
-        width: 100%;
-        object-fit: contain;
-      }
+
+    img {
+      width: 75%;
+      height: 75%;
+      object-fit: contain;
     }
-    p.url {
-      color: initial;
-      letter-spacing: 0;
-      font-size: 0.9em;
-    }
-    p.title {
-      margin: 0 0 5px 0;
-    }
-    p.description {
+  }
+
+  .result-hit {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+
+    &:last-child {
       margin-bottom: 0;
-      white-space: break-spaces;
-      strong {
-        color: #00539f;
-        font-weight: normal;
-        font-style: italic;
+      padding-bottom: 0;
+    }
+  }
+
+  a.hit {
+    text-decoration: none;
+    font-size: 16px;
+    display: block;
+
+    &.with-image {
+      display: flex;
+
+      .image {
+        width: 200px;
+        margin-right: 10px;
+        figure {
+          display: block;
+          line-height: 1;
+          margin: 0;
+        }
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      }
+
+      &.icon {
+        .image {
+          width: 50px;
+          margin-right: 10px;
+        }
+
+        .text {
+          width: calc(100% - 60px);
+        }
+      }
+
+      .text {
+        width: calc(100% - 210px);
       }
     }
-  }
-  .autoComplete_wrapper {
-    width: 100%;
-    border: solid 1px #6a6a6a !important;
-    border-radius: 35px;
-    background: #ffffff;
-    padding: 0 !important;
-  }
-  .suggest {
-    min-height: 30px;
-    p {
+
+    .title {
+      margin: 0 0 5px 0;
+      line-height: 1.2;
+    }
+
+    .description {
       margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
     }
   }
-  .autoComplete_wrapper input {
-    width: 90%;
-    display: block;
-    z-index: 99;
-    background: #ffffff !important;
-    margin: 0 auto;
-    border: none;
-    padding: 1em 1em 1em 2em;
-  }
-  .autoComplete_wrapper > ul {
-    left: -1px !important;
-    right: -1px !important;
-  }
-  .autoComplete_wrapper > ul > li {
-    white-space: normal;
-    list-style: none;
-    text-align: left;
-    font-size: 1rem;
-    color: #212121;
-    border-radius: 0 !important;
-    background-color: white;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    border-bottom: solid 1px #cccccc;
-    width: 90%;
-    margin: 0 auto;
-    padding: 1em;
-  }
-  ul#autoComplete_list_1 li a .image {
-    max-width: 125px;
-    margin: 0 1em;
-  }
-  .mod_elasticsearch ul#autoComplete_list_1 {
-    box-shadow: none !important;
-    height: 600px !important;
-    overflow-y: scroll;
-    max-height: initial;
-    border: none !important;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-  }
-  .autoComplete_wrapper > ul > li:hover {
-    background-color: rgba(200, 200, 200, 0.1);
+
+  a {
+    color: #333;
   }
 }

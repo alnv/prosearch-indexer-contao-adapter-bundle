@@ -1,30 +1,48 @@
 <?php $this->extend('block_unsearchable'); ?>
 <?php $this->block('content'); ?>
 
-<div id="<?= $this->elementId ?>" class="search-container">
-    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
-        <div class="suggest">
-            <p v-if="didYouMean.length && didYouMean[0] !== keywords"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
-        </div>
-        <div class="formbody">
-            <div class="widget widget-text">
-                <label for="ctrl_keywords_<?= $this->uniqueId ?>" class="invisible"><?= $this->keywordLabel ?></label>
-                <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" class="text" value="<?= $this->keyword ?>">
-            </div>
-            <div class="widget widget-submit">
-                <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" class="submit"><img src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>"></button>
+<div id="<?= $this->elementId ?>" class="elasticsearch-container">
+    <form method="GET">
+        <div class="elasticsearch-search-panel">
+            <div class="elasticsearch-input">
+                <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" v-model="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
+                <button @click.stop.prevent="search">
+                    <img v-if="!loading" src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>">
+                    <img v-else src="/system/themes/flexible/icons/loading.svg" alt="">
+                </button>
             </div>
         </div>
     </form>
-    <?php if ($this->isResultPage): ?>
-        <div class="ce_results" v-if="results.length && keywords">
-            <div v-for="result in results" v-html="result.template" class="result"></div>
+    <div class="elasticsearch-results-panel" v-if="hasResults">
+        <div class="suggest-results" v-if="views.didYouMean.length && views.didYouMean[0] !== keywords">
+            <p><?= $this->didYouMeanLabel ?> <a @click.stop.prevent="setDidYouMeanToKeyword"><span>{{ views.didYouMean[0] }}</span></a>?</p>
         </div>
-    <?php endif; ?>
+        <div class="categories-results" v-if="Object.keys(views.categories).length">
+            <div class="categories-headline">
+                <p><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?></p>
+            </div>
+            <nav>
+                <ul>
+                    <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
+                        <a @click.stop.prevent="setCategory(category.key)">{{ category.label }}</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div v-if="Object.keys(views.results).length" class="search-results">
+            <div v-for="result in views.results" class="results-group" v-if="result.hits.length">
+                <div class="result-category" v-if="result.label">
+                    <p class="category-name">{{ result.label }} <span class="category-count">({{ result.hits.length }})</span></p>
+                </div>
+                <div class="result-hit" v-for="hit in result.hits" v-html="hit.template" @click="sendStat"></div>
+            </div>
+        </div>
+    </div>
+    <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
+        <p><?= $GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?></p>
+    </div>
 </div>
 
-<?php if ($this->script): ?>
-    <?= $this->script ?>
-<?php endif; ?>
+<?= $this->script ?>
 
 <?php $this->endblock(); ?>

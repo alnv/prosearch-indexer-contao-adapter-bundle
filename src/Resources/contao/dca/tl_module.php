@@ -6,7 +6,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psSearchCategories,perPage;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psSearchCategories,minKeywordLength,perPage,fuzzy;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psSearchCategories,minKeywordLength,perPage,fuzzy;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';
@@ -43,7 +44,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psResultsTemplate'] = [
         'tl_class' => 'w50'
     ],
     'options_callback' => function() {
-        return $this->getTemplateGroup('ps_search_result');
+        return $this->getTemplateGroup('elasticsearch_result');
     },
     'sql' => "varchar(64) NOT NULL default ''"
 ];
