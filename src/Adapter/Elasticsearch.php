@@ -639,8 +639,8 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
-        if (isset($arrOptions['fuzzy'])) {
-            $blnTryItAgain = $arrOptions['fuzzy'];
+        if (isset($this->arrOptions['fuzzy'])) {
+            $blnTryItAgain = $this->arrOptions['fuzzy'];
         }
 
         $strRootPageId = $this->arrOptions['rootPageId'];

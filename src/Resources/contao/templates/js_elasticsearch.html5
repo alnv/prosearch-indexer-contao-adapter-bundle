@@ -197,6 +197,10 @@
                         },
                         events: {
                             input: {
+                                selection: (event) => {
+                                    self.keywords = event.detail.selection.value;
+                                    self.fetch();
+                                },
                                 keydown(event) {
                                     switch (event.keyCode) {
                                         case 40:
