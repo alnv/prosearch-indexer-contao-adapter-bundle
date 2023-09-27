@@ -237,7 +237,7 @@ class Elasticsearch extends Adapter
         $arrAnalyzer["autocomplete"] = [
             "filter" => ["lowercase", "autocomplete"],
             "type" => "custom",
-            "tokenizer" => "whitespace"
+            "tokenizer" => "standard"
         ];
 
         $arrParams = [
