@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Contao\CoreBundle\Search\Indexer\IndexerException;
+use Contao\System;
 use Fusonic\OpenGraph\Consumer;
 use Contao\Validator;
 use Contao\CoreBundle\Search\Document;
@@ -72,9 +73,8 @@ class Indices extends Searcher
             $strCanonicalUrl = \StringUtil::decodeEntities($strCanonicalUrl);
             $strCanonicalUrl = strtok($strCanonicalUrl, '?');
 
-            if (Validator::isUrl($strCanonicalUrl)) {
-
-                $strUrl = $strCanonicalUrl;
+            if (Validator::isUrl($strCanonicalUrl) && $strUrl !== $strCanonicalUrl) {
+                $this->throwBecause('Cannot index canonical page');
             }
         }
 
