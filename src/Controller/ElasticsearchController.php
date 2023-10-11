@@ -28,7 +28,7 @@ class ElasticsearchController extends AbstractController
      *
      * @Route("/search/results", methods={"POST", "GET"}, name="get-search-results")
      */
-    public function getSearchResults()
+    public function getSearchResults(): JsonResponse
     {
 
         $this->container->get('contao.framework')->initialize();

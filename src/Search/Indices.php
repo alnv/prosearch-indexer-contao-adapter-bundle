@@ -4,6 +4,7 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Fusonic\OpenGraph\Consumer;
+use Contao\Validator;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
@@ -63,6 +64,19 @@ class Indices extends Searcher
         $strUrl = $document->getUri()->__toString();
         $strUrl = \StringUtil::decodeEntities($strUrl);
         $strUrl = strtok($strUrl, '?');
+
+        $arrCanonicalUrls = $this->objCrawler->filterXpath("//link[@rel='canonical']")->extract(['href']);
+        if (is_array($arrCanonicalUrls) && !empty($arrCanonicalUrls) && isset($arrCanonicalUrls[0])) {
+
+            $strCanonicalUrl = $arrCanonicalUrls[0];
+            $strCanonicalUrl = \StringUtil::decodeEntities($strCanonicalUrl);
+            $strCanonicalUrl = strtok($strCanonicalUrl, '?');
+
+            if (Validator::isUrl($strCanonicalUrl)) {
+
+                $strUrl = $strCanonicalUrl;
+            }
+        }
 
         $objIndicesModel = IndicesModel::findByUrl($strUrl);
 

@@ -36,7 +36,7 @@ class ElasticsearchProxyController extends AbstractController
         $objElasticsearch = new Elasticsearch($arrBody['options']);
         $objElasticsearch->connect();
 
-        return new JsonResponse($objElasticsearch->search($arrBody['keywords'], $arrBody['options'], true, $arrBody['index']));
+        return new JsonResponse($objElasticsearch->search($arrBody['keywords'], $arrBody['index']));
     }
 
 

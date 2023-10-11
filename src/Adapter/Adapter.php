@@ -43,10 +43,11 @@ abstract class Adapter
 
     /**
      * @param array $arrKeywords
-     * @param array $arrOptions
+     * @param string $strIndexName
+     * @param int $intTryCounts
      * @return array
      */
-    abstract public function search(array $arrKeywords, array $arrOptions = []): array;
+    abstract public function search(array $arrKeywords, string $strIndexName, int $intTryCounts): array;
 
     /**
      * @param $strIndicesId

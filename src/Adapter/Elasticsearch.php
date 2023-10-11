@@ -624,25 +624,19 @@ class Elasticsearch extends Adapter
 
     /**
      * @param $arrKeywords
-     * @param array $arrOptions // todo: remove it
-     * @param bool $blnTryItAgain // todo: remove it
      * @param string $strIndexName
-     * @return array|array[]
+     * @param int $intTryCounts
+     * @return array[]
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function search($arrKeywords, array $arrOptions = [], bool $blnTryItAgain = true, string $strIndexName = ''): array
+    public function search($arrKeywords, string $strIndexName = '', int $intTryCounts = 0): array
     {
 
         $arrResults = [
             'hits' => [],
             'didYouMean' => []
         ];
-
-        $blnFuzzy = false;
-        if (isset($this->arrOptions['fuzzy']) && $this->arrOptions['fuzzy'] === true && !$blnTryItAgain) {
-            $blnFuzzy = true;
-        }
 
         $strRootPageId = $this->arrOptions['rootPageId'];
         $strAnalyzer = $this->arrOptions['analyzer'];
@@ -697,41 +691,80 @@ class Elasticsearch extends Adapter
 
         if (isset($arrKeywords['query']) && $arrKeywords['query']) {
 
-            $arrMustMatch = [
-                'query' => $arrKeywords['query'],
-                'analyzer' => $strAnalyzer,
-                'type' => 'phrase_prefix',
-                'fields' => ['title', 'description', 'text', 'document']
-            ];
-
-            $arrShouldMatch = [
-                'query' => $arrKeywords['query'],
-                'analyzer' => $strAnalyzer,
-                'type' => 'phrase_prefix',
-                'fields' => ['title^10', 'h1^5', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
-            ];
-
-            if ($blnFuzzy) {
-
-                $arrMustMatch['fuzziness'] = 'AUTO';
-                $arrMustMatch['type'] = 'best_fields';
-
-                $arrShouldMatch['fuzziness'] = 'AUTO';
-                $arrShouldMatch['type'] = 'best_fields';
+            switch ($intTryCounts) {
+                case 0:
+                    $params['body']['query']['bool'] = [
+                        'must' => [
+                            [
+                                'multi_match' => [
+                                    'query' => $arrKeywords['query'],
+                                    'analyzer' => $strAnalyzer,
+                                    'type' => 'phrase_prefix',
+                                    'fields' => ['description', 'text', 'document']
+                                ]
+                            ]
+                        ],
+                        'should' => [
+                            [
+                                'multi_match' => [
+                                    'query' => $arrKeywords['query'],
+                                    'analyzer' => $strAnalyzer,
+                                    'type' => 'phrase_prefix',
+                                    'fields' => ['title^3', 'h1^5', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                                ]
+                            ]
+                        ]
+                    ];
+                    break;
+                case 1:
+                    $params['body']['query']['bool'] = [
+                        'must' => [
+                            [
+                                'query_string' => [
+                                    'query' => '*' . $arrKeywords['query'] . '*',
+                                    'fields' => ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'description', 'text', 'document']
+                                ]
+                            ]
+                        ],
+                        'should' => [
+                            [
+                                'multi_match' => [
+                                    'query' => $arrKeywords['query'],
+                                    'analyzer' => $strAnalyzer,
+                                    'type' => 'best_fields',
+                                    'fields' => ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                                ]
+                            ]
+                        ]
+                    ];
+                    break;
+                case 2:
+                    $params['body']['query']['bool'] = [
+                        'must' => [
+                            [
+                                'multi_match' => [
+                                    'query' => $arrKeywords['query'],
+                                    'analyzer' => $strAnalyzer,
+                                    'type' => 'best_fields',
+                                    'fuzziness' => 'AUTO',
+                                    'fields' => ['description', 'text', 'document']
+                                ]
+                            ]
+                        ],
+                        'should' => [
+                            [
+                                'multi_match' => [
+                                    'query' => $arrKeywords['query'],
+                                    'analyzer' => $strAnalyzer,
+                                    'type' => 'best_fields',
+                                    'fuzziness' => 'AUTO',
+                                    'fields' => ['title', 'h1', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
+                                ]
+                            ]
+                        ]
+                    ];
+                    break;
             }
-
-            $params['body']['query']['bool'] = [
-                'must' => [
-                    [
-                        'multi_match' => $arrMustMatch
-                    ]
-                ],
-                'should' => [
-                    [
-                        'multi_match' => $arrShouldMatch
-                    ]
-                ]
-            ];
         }
 
         $params['body']['query']['bool']['filter'][] = [
@@ -770,8 +803,14 @@ class Elasticsearch extends Adapter
             }
         }
 
-        if (empty($arrResults['hits']) && $blnTryItAgain) {
-            return $this->search($arrKeywords, [], false, $strIndexName);
+        $intMaxTryCounts = 1;
+        if (isset($this->arrOptions['fuzzy']) && $this->arrOptions['fuzzy'] === true) {
+            $intMaxTryCounts = 2;
+        }
+
+        if (empty($arrResults['hits']) && $intMaxTryCounts > $intTryCounts) {
+            $intNextTryCount = $intTryCounts + 1;
+            return $this->search($arrKeywords, $strIndexName, $intNextTryCount);
         }
 
         return $arrResults;
