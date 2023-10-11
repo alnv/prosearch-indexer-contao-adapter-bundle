@@ -624,8 +624,8 @@ class Elasticsearch extends Adapter
 
     /**
      * @param $arrKeywords
-     * @param array $arrOptions
-     * @param bool $blnTryItAgain
+     * @param array $arrOptions // todo: remove it
+     * @param bool $blnTryItAgain // todo: remove it
      * @param string $strIndexName
      * @return array|array[]
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
@@ -639,8 +639,9 @@ class Elasticsearch extends Adapter
             'didYouMean' => []
         ];
 
-        if (isset($this->arrOptions['fuzzy'])) {
-            $blnTryItAgain = $this->arrOptions['fuzzy'];
+        $blnFuzzy = false;
+        if (isset($this->arrOptions['fuzzy']) && $this->arrOptions['fuzzy'] === true && !$blnTryItAgain) {
+            $blnFuzzy = true;
         }
 
         $strRootPageId = $this->arrOptions['rootPageId'];
@@ -710,7 +711,7 @@ class Elasticsearch extends Adapter
                 'fields' => ['title^10', 'h1^5', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
             ];
 
-            if (isset($arrOptions['fuzziness'])) {
+            if ($blnFuzzy) {
 
                 $arrMustMatch['fuzziness'] = 'AUTO';
                 $arrMustMatch['type'] = 'best_fields';
@@ -770,9 +771,7 @@ class Elasticsearch extends Adapter
         }
 
         if (empty($arrResults['hits']) && $blnTryItAgain) {
-            return $this->search($arrKeywords, [
-                'fuzziness' => 'AUTO'
-            ], false, $strIndexName);
+            return $this->search($arrKeywords, [], false, $strIndexName);
         }
 
         return $arrResults;

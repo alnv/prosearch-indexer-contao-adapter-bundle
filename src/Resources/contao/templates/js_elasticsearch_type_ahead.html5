@@ -59,6 +59,7 @@
                                     self.didYouMean = data['results']['didYouMean'];
                                     return suggests;
                                 } catch (error) {
+                                    self.loading = false;
                                     return error;
                                 }
                             }
