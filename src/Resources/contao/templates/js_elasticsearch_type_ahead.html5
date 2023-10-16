@@ -26,7 +26,7 @@
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
                         threshold: <?= $this->minKeywordLength ?>,
-                        debounce: 600,
+                        debounce: 800,
                         submit: true,
                         data: {
                             src: async function(query) {

@@ -65,8 +65,12 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
                             'includeBlankOption' => true
                         ],
                         'options_callback' => function() {
-                            return System::getContainer()->get('contao.intl.locales')->getLocales(null, false);
-                        },
+                            try {
+                                return System::getContainer()->get('contao.intl.locales')->getLocales(null, false);
+                            } catch (\Exception $objError) {
+                                return System::getCountries();
+                            }
+                        }
                     ],
                     'label' => [
                         'label' => &$GLOBALS['TL_LANG']['tl_ps_categories']['label'],

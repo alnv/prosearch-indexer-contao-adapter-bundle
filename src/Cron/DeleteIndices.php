@@ -11,7 +11,7 @@ class DeleteIndices
     public function __invoke()
     {
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
-        $objIndices = \Database::getInstance()->prepare('SELECT * FROM tl_indices WHERE state=?')->limit(50)->execute(States::DELETE);
+        $objIndices = \Database::getInstance()->prepare('SELECT * FROM tl_indices WHERE state=? ORDER BY RAND()')->limit(50)->execute(States::DELETE);
 
         while ($objIndices->next()) {
 

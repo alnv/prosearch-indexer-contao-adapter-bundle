@@ -66,6 +66,9 @@ class ProSearchIndexer implements IndexerInterface
     public function delete(Document $document): void
     {
         $strUrl = $document->getUri()->__toString();
+        $strUrl = \StringUtil::decodeEntities($strUrl);
+        $strUrl = strtok($strUrl, '?');
+
         $objIndices = IndicesModel::findByUrl($strUrl);
 
         if (!$objIndices) {
