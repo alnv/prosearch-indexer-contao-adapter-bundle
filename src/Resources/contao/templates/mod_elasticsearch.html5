@@ -24,7 +24,7 @@
             <nav>
                 <ul>
                     <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
-                        <a @click.stop.prevent="setCategory(category.key)">{{ category.label }}</a>
+                        <button @click.stop.prevent="setCategory(category.key)" class="category-item-button" v-html="category.label"></button>
                     </li>
                 </ul>
             </nav>
