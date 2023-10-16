@@ -55,7 +55,7 @@
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.views.didYouMean[0];
-                    this.autoCompleteJS.start(this.keywords);
+                    // this.autoCompleteJS.start(this.keywords);
                 },
                 groupResults: function (hits) {
                     if (hits.length) {
