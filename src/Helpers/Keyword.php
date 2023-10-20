@@ -21,7 +21,7 @@ class Keyword {
         $strToken = strtolower($strToken);
 
         $arrTypes = $arrOptions['categories'] ?? [];
-        $arrTypes = $this->convertSynonyms($arrTypes);
+        // $arrTypes = $this->convertSynonyms($arrTypes);
 
         $strSynonym = $this->objSynonyms->predict($strToken);
         $strQuery = $strSynonym;

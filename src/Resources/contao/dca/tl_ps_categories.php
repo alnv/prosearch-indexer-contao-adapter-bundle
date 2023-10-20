@@ -27,6 +27,11 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
             'edit' => [
                 'icon' => 'header.svg',
                 'href' => 'act=edit'
+            ],
+            'delete' => [
+                'href' => 'act=delete',
+                'icon' => 'delete.svg',
+                'attributes' => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['MSC']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"'
             ]
         ]
     ],

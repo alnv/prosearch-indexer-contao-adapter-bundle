@@ -2,14 +2,12 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 /**
  *
@@ -28,10 +26,14 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence= \Input::post('license');
+        $strLicence = \Input::post('license');
 
         // todo check license
         // check body params
+        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
+            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+        }
+
 
         $objElasticsearch = new Elasticsearch($arrBody['options']);
         $objElasticsearch->connect();
@@ -50,10 +52,13 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence= \Input::post('license');
+        $strLicence = \Input::post('license');
 
         // todo check license
         // check body params
+        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
+            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+        }
 
         $objElasticsearch = new Elasticsearch($arrBody['options']);
         $objElasticsearch->connect();
@@ -72,14 +77,17 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence= \Input::post('license');
+        $strLicence = \Input::post('license');
 
         // todo check license
         // check body params
+        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
+            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
-        $objElasticsearch->clientIndex($arrBody['body']??[]);
+        $objElasticsearch->clientIndex($arrBody['body'] ?? []);
 
         return new JsonResponse([]);
     }
@@ -95,10 +103,13 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence= \Input::post('license');
+        $strLicence = \Input::post('license');
 
         // todo check license
         // check body params
+        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
+            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
@@ -117,14 +128,17 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence= \Input::post('license');
+        $strLicence = \Input::post('license');
 
         // todo check license
         // check body params
+        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
+            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
-        $objElasticsearch->clientMapping($arrBody['body']??[]);
+        $objElasticsearch->clientMapping($arrBody['body'] ?? []);
 
         return new JsonResponse([]);
     }

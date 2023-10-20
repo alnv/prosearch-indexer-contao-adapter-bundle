@@ -72,22 +72,30 @@ class Categories
         $objIndices = \Database::getInstance()->prepare('SELECT DISTINCT (types) FROM tl_indices WHERE state=?')->execute(States::ACTIVE);
         while ($objIndices->next()) {
             foreach (\StringUtil::deserialize($objIndices->types, true) as $strType) {
+
                 if (!$strType) {
                     continue;
                 }
+
+                $strType = trim($strType);
+
                 if (!in_array($strType, $arrCategories)) {
-                    $arrCategories[] = trim($strType);
+                    $arrCategories[] = $strType;
                 }
             }
         }
 
         $objMicrodata = \Database::getInstance()->prepare('SELECT DISTINCT (type) FROM tl_microdata')->execute();
         while ($objMicrodata->next()) {
+
             if (!$objMicrodata->type) {
                 continue;
             }
+
+            $objMicrodata->type = trim($objMicrodata->type);
+
             if (!in_array($objMicrodata->type, $arrCategories)) {
-                $arrCategories[] = trim($objMicrodata->type);
+                $arrCategories[] = $objMicrodata->type;
             }
         }
 

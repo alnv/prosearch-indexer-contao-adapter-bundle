@@ -5,13 +5,14 @@ $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] = 'Kategorien';
 $GLOBALS['TL_LANG']['MSC']['noSearchResults'] = 'Keine Suchergebnisse gefunden.';
 
 $GLOBALS['TL_LANG']['MSC']['psAnalyzer'] = [
-    'german' => 'Deutsch',
-    'english' => 'English',
-    'standard' => 'Standard',
-    'contao' => 'Shop',
-    'whitespace' => 'Whitespace',
-    'keyword' => 'Keyword',
-    'stop' => 'Stop',
-    'simple' => 'Simple'
+    'contao' => 'whitespace',
+    'german' => 'lowercase//german_stopwords//german_stemmer',
+    'english' => 'lowercase//english_stopwords//english_stemmer',
+    'standard' => 'Elasticsearch//Standard',
+    'lowercase' => 'Elasticsearch//lowercase',
+    'whitespace' => 'Elasticsearch//Whitespace',
+    'keyword' => 'Elasticsearch//Keyword',
+    'stop' => 'Elasticsearch//Stop',
+    'simple' => 'Elasticsearch//Simple'
 ];
 
