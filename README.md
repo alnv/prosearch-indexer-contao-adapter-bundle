@@ -5,3 +5,5 @@
 Mit stetig wachsenden Online-Inhalten wird es immer anspruchsvoller, relevanten und bedeutsamen Content schnell zu finden. Genau hier setzt Contao Search Pro an. Basierend auf der hochmodernen Elasticsearch-Technologie und ausgestattet mit einer Fülle an nützlichen Features.
 
 Mehr Details: https://www.sineos.de/contao/contao-search-pro
+
+__* Contao 5 Version kommt Mitte/Ende November 23__
