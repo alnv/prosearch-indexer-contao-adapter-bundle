@@ -6,6 +6,11 @@
   "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete"],
   "authors": [
     {
+      "name": "SINEOS GmbH",
+      "homepage": "https://www.sineos.de",
+      "role": "Support"
+    },
+    {
       "name": "Alexander Naumov",
       "homepage": "https://alexandernaumov.de",
       "role": "Developer"
