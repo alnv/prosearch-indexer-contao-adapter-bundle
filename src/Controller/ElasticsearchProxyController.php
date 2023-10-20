@@ -31,7 +31,7 @@ class ElasticsearchProxyController extends AbstractController
         // todo check license
         // check body params
         if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 
 
@@ -57,7 +57,7 @@ class ElasticsearchProxyController extends AbstractController
         // todo check license
         // check body params
         if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch($arrBody['options']);
@@ -82,7 +82,7 @@ class ElasticsearchProxyController extends AbstractController
         // todo check license
         // check body params
         if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
@@ -108,7 +108,7 @@ class ElasticsearchProxyController extends AbstractController
         // todo check license
         // check body params
         if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
@@ -133,7 +133,7 @@ class ElasticsearchProxyController extends AbstractController
         // todo check license
         // check body params
         if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
