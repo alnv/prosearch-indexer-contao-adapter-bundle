@@ -6,4 +6,4 @@ Mit stetig wachsenden Online-Inhalten wird es immer anspruchsvoller, relevanten 
 
 Mehr Details: https://www.sineos.de/contao/contao-search-pro
 
-__* Contao 5 Version kommt Mitte/Ende November 23__
+_* Contao 5 Version kommt Mitte/Ende November 23_
