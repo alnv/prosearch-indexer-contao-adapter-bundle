@@ -2,7 +2,8 @@
   "name": "alnv/prosearch-indexer-contao-adapter-bundle",
   "type": "contao-bundle",
   "license": "proprietary",
-  "description": "",
+  "description": "Contao Search Pro // Elasticsearch",
+  "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete"],
   "authors": [
     {
       "name": "Alexander Naumov",
