@@ -58,7 +58,7 @@ Der search:type wird erst nach einem erneuten Aufbau des Suchindexes übernommen
 
 ### Frontend-Modul
 
-Es gibt zwei Frontend-Module "Elasticsearch" und "Elasticsearch Type Ahead". Lege dein gewünschtes Modul an und binden es in der Seite ein.
+Es gibt zwei Frontend-Module "Elasticsearch" und "Elasticsearch Type Ahead". Lege dein gewünschtes Modul an und binde es in der Seite ein.
 
 ### Suchindex aufbauen
 
