@@ -54,6 +54,8 @@ $GLOBALS['TL_HEAD']['search:type'] = '<meta name="search:type" content="news"/>'
 ?>
 ```
 
+Der search:type wird erst nach einem erneuten Aufbau des Suchindexes übernommen.
+
 ### Frontend-Modul
 
 Es gibt zwei Frontend-Module "Elasticsearch" und "Elasticsearch Type Ahead". Lege dein gewünschtes Modul an und binden es in der Seite ein.
@@ -76,7 +78,7 @@ Hier hast du einen Überblick über die gesuchten Suchbegriffe.
 
 ### Bilder anzeigen
 
-Die Bilder für die Suche werden über die Open Graph Meta Tags gepflegt. Am Besten installiert man eine Open Graph Erweiterung für Contao oder man vergibt je Seite ein og:image Tag.
+Die Bilder für die Suche werden über die Open Graph Meta Tags gepflegt. Am besten installiert man eine Open Graph Erweiterung für Contao oder man vergibt je Seite ein og:image Tag. Der og:image wird erst nach einem erneuten Aufbau des Suchindexes übernommen.
 
 ``` html
 <meta property=“og:image“ content="url"/>
