@@ -31,7 +31,7 @@ composer require alnv/prosearch-indexer-contao-adapter-bundle
 ## Setup
 
 Nach der Installation siehst du im Backend einen weiteren Navigationspunkt "Elasticsearch".  Als Erstes musst du die Zugangsdaten eingeben, klicke hierzu auf Zugangsdaten und wähle unter Paket die Option API-Key aus und trage anschließend in das API-Key-Feld deinen Lizenzschlüssel ein.
-Da die Erweiterung sich noch in der Test-Phase befindet, kannst du diese kostenlos ausprobieren, indem du in das API-Key-Feld "alpha-test" einträgst.
+Da die Erweiterung sich noch in der Test-Phase befindet, kannst du diese kostenlos ausprobieren, indem du in das API-Key-Feld **"alpha-test"** einträgst.
 
 ### Seitenstruktur
 
@@ -43,9 +43,9 @@ In Elasticsearch ist ein Analyzer ein Feature, das für die Textanalyse verantwo
 
 ### Kategorien
 
-In der Seitenstruktur im Seitentyp "Reguläre Seite" lassen sich die Kategorien eintragen. Diese können später für die Filterung der Suchergebnisse verwendet werden. 
+In der Seitenstruktur im Seitentyp "Reguläre Seite" lassen sich die Kategorien eintragen. Diese können später für die Filterung der Suchergebnisse verwendet werden.
 
-Es ist auch möglich die Kategorien direkt im Template z.B. im News oder Event Modul zu vergeben.
+Es ist auch möglich, die Kategorien direkt im Template z.B. im News oder Event Modul zu vergeben.
 
 ``` php
 <?php
