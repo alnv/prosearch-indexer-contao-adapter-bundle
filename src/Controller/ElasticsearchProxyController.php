@@ -26,14 +26,6 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence = \Input::post('license');
-
-        // todo check license
-        // check body params
-        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
-        }
-
 
         $objElasticsearch = new Elasticsearch($arrBody['options']);
         $objElasticsearch->connect();
@@ -52,13 +44,6 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence = \Input::post('license');
-
-        // todo check license
-        // check body params
-        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
-        }
 
         $objElasticsearch = new Elasticsearch($arrBody['options']);
         $objElasticsearch->connect();
@@ -77,12 +62,11 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence = \Input::post('license');
 
-        // todo check license
-        // check body params
+        $strLicence = \Input::post('licence') ?: \Input::get('licence');
+
         if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
@@ -103,13 +87,6 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence = \Input::post('license');
-
-        // todo check license
-        // check body params
-        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
-        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
@@ -128,13 +105,6 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence = \Input::post('license');
-
-        // todo check license
-        // check body params
-        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
-            // throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
-        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();

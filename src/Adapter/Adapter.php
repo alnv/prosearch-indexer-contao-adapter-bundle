@@ -16,7 +16,7 @@ abstract class Adapter
     /**
      * @var string
      */
-    private string $strLicense = "";
+    protected string $strLicense = "";
 
     /**
      * @var array

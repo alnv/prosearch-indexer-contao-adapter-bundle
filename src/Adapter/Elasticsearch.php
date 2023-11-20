@@ -128,7 +128,6 @@ class Elasticsearch extends Adapter
         return $this->objClient;
     }
 
-    // "curl -X DELETE http://localhost:9200/contao_search"
     public function deleteIndex($strIndicesId): void
     {
         $this->connect();
@@ -780,9 +779,12 @@ class Elasticsearch extends Adapter
         ];
 
         if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
+            $arrLowerCaseTypes = array_map(function ($strType) {
+                return strtolower($strType);
+            }, $arrKeywords['types']);
             $params['body']['query']['bool']['filter'][] = [
                 'terms' => [
-                    'types' => $arrKeywords['types'],
+                    'types' => $arrLowerCaseTypes,
                 ]
             ];
         }

@@ -44,7 +44,13 @@
                         },
                         {
                             emulateJSON: true,
-                            'Content-Type': 'application/x-www-form-urlencoded'
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            before: function (request) {
+                                if (this.previousRequest) {
+                                    this.previousRequest.abort();
+                                }
+                                this.previousRequest = request;
+                            }
                         }
                     ).then(function (res) {
                         this.views.results = this.groupResults(res.body.results['hits'] ? res.body.results['hits'] : []);
