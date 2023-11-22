@@ -16,11 +16,36 @@ abstract class MicroData
     protected string $type;
 
     /**
+     * @var bool
+     */
+    public bool $richSnippet = false;
+
+    /**
+     * @var bool
+     */
+    public bool $globalRichSnippet = false;
+
+    /***
+     * @var array|mixed
+     */
+    protected array $jsonLdScriptsData = [];
+
+    /**
+     * @param array $jsonLdScriptsData
+     */
+    public function __construct(array $jsonLdScriptsData = [])
+    {
+
+        $this->jsonLdScriptsData = $jsonLdScriptsData;
+    }
+
+    /**
      * @param array $jsonLdScriptsData
      * @param int $indicesId
      * @return void
      */
-    public function dispatch(array $jsonLdScriptsData, int $indicesId) : void {
+    public function dispatch(array $jsonLdScriptsData, int $indicesId): void
+    {
 
         if (empty($jsonLdScriptsData)) {
             return;
@@ -28,7 +53,9 @@ abstract class MicroData
 
         foreach ($jsonLdScriptsData as $arrDataScriptsData) {
 
-            $strChecksum = md5(serialize($arrDataScriptsData));
+            $strSerialized = serialize($arrDataScriptsData);
+
+            $strChecksum = md5($strSerialized);
             $objMicrodataModel = MicrodataModel::findByChecksumAndPid($strChecksum, $indicesId);
 
             if (!$objMicrodataModel) {
@@ -39,9 +66,25 @@ abstract class MicroData
             $objMicrodataModel->pid = $indicesId;
             $objMicrodataModel->type = $this->type;
             $objMicrodataModel->checksum = $strChecksum;
-            $objMicrodataModel->data = serialize($arrDataScriptsData);
+            $objMicrodataModel->data = $strSerialized;
 
             $objMicrodataModel->save();
         }
+    }
+
+    public function getJsonLdScriptsData(): array
+    {
+
+        return $this->jsonLdScriptsData;
+    }
+
+    public function generate(array $arrParentData = []): string
+    {
+        return '';
+    }
+
+    public function match($arrKeyWords): void
+    {
+        //
     }
 }

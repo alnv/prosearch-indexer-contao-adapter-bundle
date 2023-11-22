@@ -6,8 +6,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psSearchCategories,minKeywordLength,perPage,fuzzy;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psSearchCategories,minKeywordLength,perPage,fuzzy;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psSearchCategories,minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psSearchCategories,minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';
@@ -47,6 +47,22 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psResultsTemplate'] = [
         return $this->getTemplateGroup('elasticsearch_result');
     },
     'sql' => "varchar(64) NOT NULL default ''"
+];
+
+$GLOBALS['TL_DCA']['tl_module']['fields']['psUseRichSnippets'] = [
+    'inputType' => 'checkbox',
+    'eval' => [
+        'tl_class' => 'clr'
+    ],
+    'sql' => "char(1) NOT NULL default ''"
+];
+
+$GLOBALS['TL_DCA']['tl_module']['fields']['psOpenDocumentInBrowser'] = [
+    'inputType' => 'checkbox',
+    'eval' => [
+        'tl_class' => 'clr'
+    ],
+    'sql' => "char(1) NOT NULL default '1'"
 ];
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['psAnalyzer'] = [

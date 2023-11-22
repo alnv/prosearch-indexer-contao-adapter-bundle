@@ -1,9 +1,28 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchTypeAheadModule;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\JobPosting;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Article;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Dataset;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\FAQPage;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Product;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Person;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Event;
+
+/**
+ * Microdata
+ */
+$GLOBALS['PS_MICRODATA_CLASSES'] = [];
+$GLOBALS['PS_MICRODATA_CLASSES']['Event'] = Event::class;
+$GLOBALS['PS_MICRODATA_CLASSES']['Person'] = Person::class;
+$GLOBALS['PS_MICRODATA_CLASSES']['Product'] = Product::class;
+$GLOBALS['PS_MICRODATA_CLASSES']['FAQPage'] = FAQPage::class;
+$GLOBALS['PS_MICRODATA_CLASSES']['Article'] = Article::class;
+$GLOBALS['PS_MICRODATA_CLASSES']['Dataset'] = Dataset::class;
+$GLOBALS['PS_MICRODATA_CLASSES']['JobPosting'] = JobPosting::class;
 
 /**
  * Models

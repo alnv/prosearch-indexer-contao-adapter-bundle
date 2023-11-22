@@ -28,6 +28,16 @@ class Options
     protected bool $fuzzy = false;
 
     /**
+     * @var bool
+     */
+    protected bool $openDocumentsInBrowser = true;
+
+    /**
+     * @var bool
+     */
+    protected bool $useUseRichSnippets = false;
+
+    /**
      * @var int
      */
     protected int $rootPageId = 0;
@@ -104,6 +114,26 @@ class Options
     }
 
     /**
+     * @param bool $blnUseRichSnippets
+     * @return void
+     */
+    public function setUseRichSnippets(bool $blnUseRichSnippets): void
+    {
+
+        $this->useUseRichSnippets = $blnUseRichSnippets;
+    }
+
+    /**
+     * @param bool $blnOpenDocumentsInBrowser
+     * @return void
+     */
+    public function setOpenDocumentsInBrowser(bool $blnOpenDocumentsInBrowser = true): void
+    {
+
+        $this->openDocumentsInBrowser = $blnOpenDocumentsInBrowser;
+    }
+
+    /**
      * @param int $wordLength
      * @return void
      */
@@ -125,6 +155,8 @@ class Options
             'rootPageId' => $this->rootPageId,
             'perPage' => $this->perPage,
             'fuzzy' => $this->fuzzy,
+            'openDocumentsInBrowser' => $this->openDocumentsInBrowser,
+            'useUseRichSnippets' => $this->useUseRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
             'domain' => $this->domain
         ];

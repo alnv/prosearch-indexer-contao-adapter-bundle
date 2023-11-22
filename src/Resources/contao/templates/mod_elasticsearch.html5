@@ -30,6 +30,20 @@
             </nav>
         </div>
         <div v-if="Object.keys(views.results).length" class="search-results">
+
+            <div v-if="Object.keys(views.globalRichSnippets).length && views.globalRichSnippets.hasOwnProperty('FAQPage')" class="search-rich-snippets">
+                <div class="faq-rich-snippet" v-if="Object.keys(richSnippets['faq']).length">
+                    <div v-for="(faq,name) in richSnippets['faq']" class="faq-container" v-bind:class="{active:faq.active}">
+                        <div class="faq-question" @click="toggleFaqSnippet(name)">
+                            <p><strong>{{ faq.question }}</strong></p>
+                        </div>
+                        <div class="faq-answer" v-show="faq.active">
+                            <p>{{ faq.answer }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div v-for="result in views.results" class="results-group" v-if="result.hits.length">
                 <div class="result-category" v-if="result.label">
                     <p class="category-name">{{ result.label }} <span class="category-count">({{ result.hits.length }})</span></p>

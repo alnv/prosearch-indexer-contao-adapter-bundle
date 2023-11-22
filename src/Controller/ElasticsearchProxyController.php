@@ -6,6 +6,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Contao\System;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Events\LicenceCheckEvent;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 
@@ -62,10 +64,9 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-
         $strLicence = \Input::post('licence') ?: \Input::get('licence');
 
-        if (!in_array($strLicence, ['ck-23-kiel', 'alpha-test'])) {
+        if (!(new LicenceCheckEvent())->isValidLicence($strLicence)) {
             throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
         }
 

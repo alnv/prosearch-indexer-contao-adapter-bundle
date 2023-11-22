@@ -6,13 +6,14 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Contao\CoreBundle\Controller\AbstractController;
 use Contao\Input;
-use Contao\PageModel;
 use Contao\ModuleModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
+use Contao\PageModel;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -44,6 +45,7 @@ class ElasticsearchController extends AbstractController
         $arrCategories = Input::post('categories') ?: (Input::get('categories') ?? []);
         $strModuleId = Input::post('module') ?: (Input::get('module') ?? '');
         $strRootPageId = Input::post('root') ?: (Input::get('root') ?? '');
+        $blnGroup = (bool)(Input::post('group') ?: (Input::get('group') ?? false));
         $strQuery = Input::get('query') ?? '';
 
         $objKeyword = new Keyword();
@@ -54,6 +56,7 @@ class ElasticsearchController extends AbstractController
 
         $arrResults = [
             'keywords' => $arrKeywords,
+            'globalRichSnippets' => [],
             'results' => []
         ];
 
@@ -83,41 +86,158 @@ class ElasticsearchController extends AbstractController
         }
 
         $arrHits = $arrResults['results']['hits'];
+
         unset($arrResults['results']['hits']);
 
+        $objModule = ModuleModel::findByPk($strModuleId);
+        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'elasticsearch_result') : 'elasticsearch_result';
+
+        if ($blnGroup === true) {
+
+            $arrGrouped = [];
+            $arrGlobalRichSnippets = [];
+            $arrCategoriesLabels = (new Categories())->getTranslatedCategories();
+
+            foreach ($arrHits as $arrHit) {
+
+                $arrTypes = empty($arrHit['_source']['types']) ? [''] : $arrHit['_source']['types'];
+
+                foreach ($arrTypes as $strType) {
+
+                    $strLabel = $arrCategoriesLabels[$strType]['label'] ?? '';
+
+                    if (!isset($arrGrouped[$strLabel])) {
+                        $arrGrouped[$strLabel] = [
+                            'hits' => [],
+                            'label' => $strLabel,
+                            'value' => $strType
+                        ];
+                    }
+
+                    $arrElasticOptions['usedKeyWord'] = $strType;
+                    $arrParsedHit = $this->parseHit($arrHit, $arrKeywords, $arrElasticOptions);
+
+                    if (empty($arrParsedHit)) {
+                        continue;
+                    }
+
+                    $arrGrouped[$strLabel]['hits'][] = $this->addTemplate($strSearchResultsTemplate, $arrParsedHit, $arrGlobalRichSnippets);
+                }
+            }
+
+            ksort($arrGrouped);
+            $arrResults['globalRichSnippets'] = $arrGlobalRichSnippets;
+            $arrResults['results']['hits'] = $arrGrouped;
+
+        } else {
+
+            foreach ($arrHits as $index => $arrHit) {
+
+                $arrParsedHit = $this->parseHit($arrHit, $arrKeywords, $arrElasticOptions);
+
+                if (empty($arrParsedHit)) {
+                    continue;
+                }
+
+                $arrResults['results']['hits'][$index] = $this->addTemplate($strSearchResultsTemplate, $arrParsedHit);
+            }
+        }
+
+        /*
         foreach ($arrHits as $arrHit) {
 
             $objEntity = new Result();
             $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
                 'types' => $arrHit['_source']['types'],
                 'score' => $arrHit['_score'],
-                'elasticOptions' => $arrElasticOptions
+                'keywords' => $arrKeywords,
+                'elasticOptions' => $arrElasticOptions,
             ]);
 
             if ($arrResult = $objEntity->getResult()) {
                 $arrResults['results']['hits'][] = $arrResult;
             }
         }
+        */
 
-        $objModule = ModuleModel::findByPk($strModuleId);
-        $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'elasticsearch_result') : 'elasticsearch_result';
-
+        /*
         foreach (($arrResults['results']['hits'] ?? []) as $index => $arrResult) {
             $objTemplate = new \FrontendTemplate($strSearchResultsTemplate);
             $objTemplate->setData($arrResult);
+            $arrMicroData = [];
+            foreach ($arrResults['results']['hits'][$index]['microdata'] as $strType => $arrEntities) {
+                $arrMicroData[$strType] = [];
+                foreach ($arrEntities as $objEntity) {
+                    $arrMicroData[$strType][] = $objEntity->getJsonLdScriptsData();
+                }
+            }
+            $arrResults['results']['hits'][$index]['microdata'] = $arrMicroData;
             $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
         }
+        */
 
         Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])));
 
         return new JsonResponse($arrResults);
     }
 
+    protected function parseHit($arrHit, $arrKeywords, $arrElasticOptions): array
+    {
+
+        $objEntity = new Result();
+        $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
+            'types' => $arrHit['_source']['types'],
+            'score' => $arrHit['_score'],
+            'keywords' => $arrKeywords,
+            'elasticOptions' => $arrElasticOptions,
+        ]);
+
+        if ($arrResult = $objEntity->getResult()) {
+            return $arrResult;
+        }
+
+        return [];
+    }
+
+    protected function addTemplate($strTemplate, $arrHit, &$arrGlobalRichSnippets = []): array
+    {
+
+        $objTemplate = new \FrontendTemplate($strTemplate);
+        $objTemplate->setData($arrHit);
+        $arrMicroData = [];
+
+        foreach ($arrHit['microdata'] as $strType => $arrEntities) {
+
+            $arrMicroData[$strType] = [];
+
+            foreach ($arrEntities as $objEntity) {
+
+                $arrJsonLdScriptsData = $objEntity->getJsonLdScriptsData();
+
+                if ($objEntity->globalRichSnippet) {
+
+                    if (!isset($arrGlobalRichSnippets[$strType])) {
+                        $arrGlobalRichSnippets[$strType] = [];
+                    }
+
+                    $arrGlobalRichSnippets[$strType][] = $arrJsonLdScriptsData;
+                }
+
+                $arrMicroData[$strType][] = $arrJsonLdScriptsData;
+            }
+        }
+
+        $arrHit['microdata'] = $arrMicroData;
+        $arrHit['template'] = \Controller::replaceInsertTags($objTemplate->parse());
+
+        return $arrHit;
+    }
+
     /**
      *
      * @Route("/search/autocompletion", methods={"POST", "GET"}, name="get-search-autocompletion")
      */
-    public function getAutoCompletion()
+    public function getAutoCompletion(): JsonResponse
     {
 
         $this->container->get('contao.framework')->initialize();
@@ -188,6 +308,8 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setPerPage($objModule->perPage);
         $objElasticOptions->setAnalyzer($strAnalyzer);
         $objElasticOptions->setFuzzy((bool)$objModule->fuzzy);
+        $objElasticOptions->setUseRichSnippets((bool)$objModule->psUseRichSnippets);
+        $objElasticOptions->setOpenDocumentsInBrowser((bool)$objModule->psOpenDocumentInBrowser);
         $objElasticOptions->setMinKeywordLength((int)$objModule->minKeywordLength);
         $objElasticOptions->setDomain();
 

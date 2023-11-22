@@ -1,25 +1,20 @@
-<?php
-    $strDescription = (!empty($this->highlights)?implode(' ', $this->highlights):$this->description);
-    $strDescription = \StringUtil::substrHtml($strDescription, 250);
-    $arrImage = [];
-    $strCssClass = '';
-    if (!empty($this->images) && is_array($this->images)) {
-        $arrImage = $this->images[0] ?? [];
-        $strCssClass = ($arrImage['icon']?' icon':'') . (empty($arrImage)?'':' with-image');
-    }
-?>
-<a href="<?= $this->url ?>" class="hit<?= $strCssClass ?>">
-    <?php if (!empty($arrImage)): ?>
-        <div class="image">
-            <?php if (!$arrImage['icon']): ?>
-                <figure>{{image::<?= $arrImage['path'] ?>?alt=}}</figure>
-            <?php else: ?>
-                <figure><img src="<?= $arrImage['path'] ?>" alt=""></figure>
-            <?php endif; ?>
+<a href="<?= $this->usedUrl ?>" class="hit<?= (!empty($this->mainImage) && $this->mainImage['icon']?' icon':'') . (empty($this->mainImage)?'':' with-image') ?>">
+    <?php if ($this->rich_snippet): ?>
+        <?= $this->rich_snippet ?>
+    <?php else: ?>
+        <?php if (!empty($this->mainImage)): ?>
+            <div class="image">
+                <?php if (!$this->mainImage['icon']): ?>
+                    <figure>{{image::<?= $this->mainImage['path'] ?>?alt=}}</figure>
+                <?php else: ?>
+                    <figure><img src="<?= $this->mainImage['path'] ?>" alt=""></figure>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        <div class="text">
+            <p class="title"><strong><?= $this->title ?></strong></p>
+            <p class="description"><?= $this->summary ?></p>
+            <p class="url"><?= $this->usedUrl ?></p>
         </div>
     <?php endif; ?>
-    <div class="text">
-        <p class="title"><strong><?= $this->title ?></strong></p>
-        <p class="description"><?= $strDescription ?></p>
-    </div>
 </a>
