@@ -144,7 +144,7 @@ class Result
     protected function getRichSnippets($arrMicrodata, $arrData = []): string
     {
 
-        $strRichSnippets = '';
+        $arrRichSnippets = [];
 
         foreach ($arrMicrodata as $strType => $arrEntities) {
 
@@ -157,6 +157,7 @@ class Result
                 }
 
                 $arrJsonLdScriptsData = $objMicroData->getJsonLdScriptsData();
+                $strId = md5(serialize($arrJsonLdScriptsData));
 
                 if ($this->arrHit['source']['elasticOptions']['usedKeyWord'] && $strType !== $this->arrHit['source']['elasticOptions']['usedKeyWord']) {
                     continue;
@@ -166,10 +167,10 @@ class Result
                     continue;
                 }
 
-                $strRichSnippets .= $objMicroData->generate($arrData);
+                $arrRichSnippets[$strId] = $objMicroData->generate($arrData);
             }
         }
 
-        return $strRichSnippets;
+        return implode('', $arrRichSnippets);
     }
 }
