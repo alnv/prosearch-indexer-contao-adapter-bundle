@@ -5,6 +5,9 @@
         <?php endif; ?>
         <div class="content">
             <p class="name"><strong><?= $this->name ?></strong></p>
+            <?php if ($this->sku): ?>
+                <p class="sku"><?= $this->sku ?></p>
+            <?php endif; ?>
             <?php if ($this->description): ?>
             <p class="description"><?= $this->description ?></p>
             <?php endif; ?>
