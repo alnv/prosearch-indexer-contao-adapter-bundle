@@ -24,7 +24,6 @@ class Product extends MicroData
         $strQuery = $arrKeyWords['keyword'] ?? '';
 
         if (!$strQuery) {
-
             return;
         }
 
@@ -48,6 +47,7 @@ class Product extends MicroData
     {
 
         $arrData = $this->jsonLdScriptsData;
+        $arrData['image'] = $this->getImage($arrData['image']);
         $arrData['parent'] = $arrParentData;
 
         $objTemplate = new FrontendTemplate('md_product');

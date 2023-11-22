@@ -1,4 +1,4 @@
-<a href="<?= $this->usedUrl ?>" class="hit<?= (!empty($this->mainImage) && $this->mainImage['icon']?' icon':'') . (empty($this->mainImage)?'':' with-image') ?>">
+<a href="<?= $this->usedUrl ?>" target="<?= $this->target ?>" class="hit<?= (!empty($this->mainImage) && $this->mainImage['icon']?' icon':'') . (empty($this->mainImage)?'':' with-image') ?>">
     <?php if ($this->rich_snippet): ?>
         <?= $this->rich_snippet ?>
     <?php else: ?>

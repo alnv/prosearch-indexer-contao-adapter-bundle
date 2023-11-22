@@ -1,0 +1,30 @@
+<div class="microdata md_person">
+    <div class="microdata-container">
+        <?php if ($this->image): ?>
+            <figure class="image"><img src="<?= $this->image ?>" alt=""></figure>
+        <?php endif; ?>
+        <div class="content">
+            <p class="name <?= $this->gender ?>"><strong><?= $this->name ?></strong></p>
+            <?php if ($this->jobTitle): ?>
+                <p class="jobTitle"><?= $this->jobTitle ?></p>
+            <?php endif; ?>
+            <div class="contact-details">
+                <?php if ($this->email): ?>
+                    <p class="email"><?= $this->email ?></p>
+                <?php endif; ?>
+                <?php if ($this->telephone): ?>
+                    <p class="telephone"><?= $this->telephone ?></p>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($this->address) && is_array($this->address)): ?>
+            <div class="address-details">
+                <p>
+                    <span class="postal"><?php if ($this->address['postalCode']): ?><?= $this->address['postalCode'] ?><?php endif; ?></span>
+                    <span class="city"><?php if ($this->address['addressLocality']): ?><?= $this->address['addressLocality'] ?><?php endif; ?></span>
+                    <span class="street"><?php if ($this->address['streetAddress']): ?><?= $this->address['streetAddress'] ?><?php endif; ?></span>
+                </p>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>

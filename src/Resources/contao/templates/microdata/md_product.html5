@@ -1,11 +1,9 @@
 <div class="microdata md_product">
     <div class="microdata-container">
-        <?php if (!empty($this->image) && isset($this->image[0]) && is_string($this->image[0])): ?>
-            <figure class="image">
-                <img src="<?= $this->image[0] ?>" alt="">
-            </figure>
+        <?php if ($this->image): ?>
+            <figure class="image"><img src="<?= $this->image ?>" alt=""></figure>
         <?php endif; ?>
-        <div class="description">
+        <div class="content">
             <p class="name"><strong><?= $this->name ?></strong></p>
             <?php if ($this->description): ?>
             <p class="description"><?= $this->description ?></p>

@@ -100,6 +100,7 @@ class Result
             'origin_url' => $objDocument->origin_url,
             'usedUrl' => !$blnOpenDocumentsInBrowser ? ($objDocument->origin_url?$objDocument->origin_url:$objDocument->url) : $objDocument->url,
             'id' => $this->arrHit['id'],
+            'target' => $objDocument->origin_url && $blnOpenDocumentsInBrowser ? '_target' : '_self',
             'highlights' => $arrHighlights,
             'title' => $objDocument->title,
             'doc_type' => $objDocument->doc_type ?: '',

@@ -87,4 +87,18 @@ abstract class MicroData
     {
         //
     }
+
+    protected function getImage($varImage): string
+    {
+
+        if (is_array($varImage) && !empty($varImage)) {
+            return $varImage[0] ?? '';
+        }
+
+        if (is_string($varImage) && !empty($varImage)) {
+            return $varImage;
+        }
+
+        return '';
+    }
 }
