@@ -86,8 +86,7 @@ class ElasticsearchController extends AbstractController
         }
 
         $arrHits = $arrResults['results']['hits'];
-
-        unset($arrResults['results']['hits']);
+        $arrResults['results']['hits'] = [];
 
         $objModule = ModuleModel::findByPk($strModuleId);
         $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'elasticsearch_result') : 'elasticsearch_result';
@@ -131,7 +130,8 @@ class ElasticsearchController extends AbstractController
 
         } else {
 
-            foreach ($arrHits as $index => $arrHit) {
+
+            foreach ($arrHits as $arrHit) {
 
                 $arrParsedHit = $this->parseHit($arrHit, $arrKeywords, $arrElasticOptions);
 
@@ -139,7 +139,7 @@ class ElasticsearchController extends AbstractController
                     continue;
                 }
 
-                $arrResults['results']['hits'][$index] = $this->addTemplate($strSearchResultsTemplate, $arrParsedHit);
+                $arrResults['results']['hits'][] = $this->addTemplate($strSearchResultsTemplate, $arrParsedHit);
             }
         }
 
