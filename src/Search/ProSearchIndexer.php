@@ -7,6 +7,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Contao\CoreBundle\Search\Document;
 use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Contao\CoreBundle\Search\Indexer\IndexerInterface;
+use Contao\StringUtil;
 
 /**
  * https://docs.contao.org/dev/framework/search-indexing/
@@ -66,7 +67,7 @@ class ProSearchIndexer implements IndexerInterface
     public function delete(Document $document): void
     {
         $strUrl = $document->getUri()->__toString();
-        $strUrl = \StringUtil::decodeEntities($strUrl);
+        $strUrl = StringUtil::decodeEntities($strUrl);
         $strUrl = strtok($strUrl, '?');
 
         $objIndices = IndicesModel::findByUrl($strUrl);

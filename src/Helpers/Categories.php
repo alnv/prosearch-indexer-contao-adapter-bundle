@@ -2,6 +2,9 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
+use Contao\Database;
+use Contao\StringUtil;
+
 class Categories
 {
 
@@ -11,7 +14,7 @@ class Categories
         $this->setCategories();
 
         $arrCategories = [];
-        $objCategories = \Database::getInstance()->prepare('SELECT * FROM tl_ps_categories ORDER BY tstamp')->execute();
+        $objCategories = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories ORDER BY tstamp')->execute();
 
         while ($objCategories->next()) {
             $arrCategories[] = $objCategories->category;
@@ -29,13 +32,13 @@ class Categories
         $strCurrentLanguage = $GLOBALS['TL_LANGUAGE'] ?? '';
 
         if (!$strCurrentLanguage) {
-            $objRootPage = \Database::getInstance()->prepare('SELECT * FROM tl_page WHERE (type=? OR type=?) AND `language`!=?')->limit(1)->execute('rootfallback', 'root', '');
+            $objRootPage = Database::getInstance()->prepare('SELECT * FROM tl_page WHERE (type=? OR type=?) AND `language`!=?')->limit(1)->execute('rootfallback', 'root', '');
             if ($objRootPage->numRows) {
                 $strCurrentLanguage = $objRootPage->language;
             }
         }
 
-        $objCategories = \Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE exist=? ORDER BY category')->execute('1');
+        $objCategories = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE exist=? ORDER BY category')->execute('1');
 
         while ($objCategories->next()) {
 
@@ -44,7 +47,7 @@ class Categories
             }
 
             $strLabel = $objCategories->category;
-            $arrTranslations = \StringUtil::deserialize($objCategories->translating, true);
+            $arrTranslations = StringUtil::deserialize($objCategories->translating, true);
 
             foreach ($arrTranslations as $arrTranslation) {
                 if ($arrTranslation['language'] == $strCurrentLanguage && $arrTranslation['label']) {
@@ -55,7 +58,7 @@ class Categories
             $arrSet = [
                 'id' => $objCategories->id,
                 'key' => $objCategories->category,
-                'label' => \StringUtil::decodeEntities($strLabel)
+                'label' => StringUtil::decodeEntities($strLabel)
             ];
 
             $arrCategories[$objCategories->category] = $arrSet;
@@ -69,9 +72,9 @@ class Categories
 
         $arrCategories = [];
 
-        $objIndices = \Database::getInstance()->prepare('SELECT DISTINCT (types) FROM tl_indices WHERE state=?')->execute(States::ACTIVE);
+        $objIndices = Database::getInstance()->prepare('SELECT DISTINCT (types) FROM tl_indices WHERE state=?')->execute(States::ACTIVE);
         while ($objIndices->next()) {
-            foreach (\StringUtil::deserialize($objIndices->types, true) as $strType) {
+            foreach (StringUtil::deserialize($objIndices->types, true) as $strType) {
 
                 if (!$strType) {
                     continue;
@@ -85,7 +88,7 @@ class Categories
             }
         }
 
-        $objMicrodata = \Database::getInstance()->prepare('SELECT DISTINCT (type) FROM tl_microdata')->execute();
+        $objMicrodata = Database::getInstance()->prepare('SELECT DISTINCT (type) FROM tl_microdata')->execute();
         while ($objMicrodata->next()) {
 
             if (!$objMicrodata->type) {
@@ -99,7 +102,7 @@ class Categories
             }
         }
 
-        \Database::getInstance()->prepare('UPDATE tl_ps_categories %s')->set(['tstamp' => time(), 'exist' => ''])->execute();
+        Database::getInstance()->prepare('UPDATE tl_ps_categories %s')->set(['tstamp' => time(), 'exist' => ''])->execute();
 
         foreach ($arrCategories as $strCategory) {
 
@@ -109,12 +112,12 @@ class Categories
                 'category' => $strCategory
             ];
 
-            $objCategory = \Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE category=?')->limit(1)->execute($strCategory);
+            $objCategory = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE category=?')->limit(1)->execute($strCategory);
 
             if ($objCategory->numRows) {
-                \Database::getInstance()->prepare('UPDATE tl_ps_categories %s WHERE id=?')->set($arrSet)->execute($objCategory->id);
+                Database::getInstance()->prepare('UPDATE tl_ps_categories %s WHERE id=?')->set($arrSet)->execute($objCategory->id);
             } else {
-                \Database::getInstance()->prepare('INSERT INTO tl_ps_categories %s')->set($arrSet)->execute();
+                Database::getInstance()->prepare('INSERT INTO tl_ps_categories %s')->set($arrSet)->execute();
             }
         }
     }

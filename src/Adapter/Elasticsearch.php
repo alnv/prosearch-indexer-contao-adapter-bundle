@@ -8,6 +8,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\System;
+use Contao\PageModel;
+use Contao\StringUtil;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
 
@@ -94,16 +96,12 @@ class Elasticsearch extends Adapter
         }
     }
 
-    /**
-     * @param $strIndicesId
-     * @return string
-     */
     protected function getRootIdFromIndicesId($strIndicesId): string
     {
 
         if ($objIndicesModel = IndicesModel::findByPk($strIndicesId)) {
 
-            $objPage = \PageModel::findByPk($objIndicesModel->pageId);
+            $objPage = PageModel::findByPk($objIndicesModel->pageId);
 
             if ($objPage) {
 
@@ -182,11 +180,6 @@ class Elasticsearch extends Adapter
         }
     }
 
-    /**
-     * @param $strIndicesId
-     * @param int $intLimit
-     * @return array
-     */
     public function getIndex($strIndicesId = null, int $intLimit = 5): array
     {
 
@@ -218,12 +211,6 @@ class Elasticsearch extends Adapter
         return $arrDocuments;
     }
 
-    /**
-     * @return void
-     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
-     * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
-     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
-     */
     protected function createMapping()
     {
 
@@ -495,7 +482,7 @@ class Elasticsearch extends Adapter
             return false;
         }
 
-        $arrDomDocument = \StringUtil::deserialize($objIndices->document, true);
+        $arrDomDocument = StringUtil::deserialize($objIndices->document, true);
 
         $arrDocument = [
             'id' => $strIndicesId,
@@ -506,7 +493,7 @@ class Elasticsearch extends Adapter
             'language' => $objIndices->language
         ];
 
-        $arrTypes = \StringUtil::deserialize($objIndices->types, true);
+        $arrTypes = StringUtil::deserialize($objIndices->types, true);
         $objMicroData = MicrodataModel::findByPid($strIndicesId);
 
         if ($objMicroData) {
@@ -531,13 +518,6 @@ class Elasticsearch extends Adapter
         return $arrDocument;
     }
 
-    /**
-     * @param $arrKeywords
-     * @param string $strIndexName
-     * @return array|array[]
-     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
-     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
-     */
     public function autocompltion($arrKeywords, string $strIndexName = ''): array
     {
 
@@ -621,14 +601,6 @@ class Elasticsearch extends Adapter
         return $arrResults;
     }
 
-    /**
-     * @param $arrKeywords
-     * @param string $strIndexName
-     * @param int $intTryCounts
-     * @return array[]
-     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
-     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
-     */
     public function search($arrKeywords, string $strIndexName = '', int $intTryCounts = 0): array
     {
 
@@ -818,9 +790,6 @@ class Elasticsearch extends Adapter
         return $arrResults;
     }
 
-    /**
-     * @return array|array[]
-     */
     public function getAnalyzer(): array
     {
 
@@ -833,7 +802,7 @@ class Elasticsearch extends Adapter
         return $this->arrOptions['perPage'] ?: 100;
     }
 
-    public function getLicense()
+    public function getLicense(): string
     {
 
         return $this->strLicense;

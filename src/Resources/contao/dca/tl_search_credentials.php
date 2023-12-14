@@ -5,26 +5,31 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
 use Contao\DataContainer;
 use Contao\Message;
+use Contao\Database;
+use Contao\Input;
+use Contao\System;
+use Contao\DC_Table;
 
 $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
-        'dataContainer' => 'Table',
+        'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
         'onload_callback' => [
             function () {
-                $objEntity = \Database::getInstance()->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')->limit(1)->execute();
+                $strRequestToken = System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue();
+                $objEntity = Database::getInstance()->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')->limit(1)->execute();
                 if ($objEntity->numRows) {
                     if (!$objEntity->signature) {
-                        \Database::getInstance()->prepare('UPDATE tl_search_credentials %s WHERE id=?')->set([
+                        Database::getInstance()->prepare('UPDATE tl_search_credentials %s WHERE id=?')->set([
                             'signature' => Signature::generate()
                         ])->limit(1)->execute($objEntity->id);
                     }
-                    if (!\Input::get('act') && !\Input::get('id')) {
-                        $this->redirect($this->addToUrl('act=edit&id=' . $objEntity->id . '&rt=' . REQUEST_TOKEN));
+                    if (!Input::get('act') && !Input::get('id')) {
+                        $this->redirect($this->addToUrl('act=edit&id=' . $objEntity->id . '&rt=' . $strRequestToken));
                     }
                 } else {
-                    if (!\Input::get('act')) {
-                        $this->redirect($this->addToUrl('act=create' . '&rt=' . REQUEST_TOKEN));
+                    if (!Input::get('act')) {
+                        $this->redirect($this->addToUrl('act=create' . '&rt=' . $strRequestToken));
                     }
                 }
             }
@@ -33,7 +38,6 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             switch ($dataContainer->activeRecord->type) {
                 case 'elasticsearch':
                 case 'elasticsearch_cloud':
-
                     $objElasticsearchAdapter= new Elasticsearch((new Options())->getOptions());
                     $objElasticsearchAdapter->connect();
                     if (!$objElasticsearchAdapter->getClient()) {
@@ -67,7 +71,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'delete' => [
                 'href' => 'act=delete',
                 'icon' => 'delete.svg',
-                'attributes' => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['MSC']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"'
+                'attributes' => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm']??'') . '\'))return false;Backend.getScrollOffset()"'
             ],
             'show' => [
                 'href' => 'act=show',

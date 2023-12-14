@@ -3,7 +3,7 @@
   "type": "contao-bundle",
   "license": "proprietary",
   "description": "Contao Search Pro // Elasticsearch",
-  "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete"],
+  "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete", "fulltext search"],
   "authors": [
     {
       "name": "SINEOS GmbH",
@@ -30,12 +30,11 @@
   },
   "require": {
     "php": "^7.4 || ^8.0",
-    "contao/core-bundle": "~4.9",
+    "contao/core-bundle": "~4.13 || ~5.0",
     "fusonic/opengraph": "^2.2",
     "smalot/pdfparser": "^2.4",
     "guzzlehttp/guzzle": "^7.7",
     "elasticsearch/elasticsearch": "^8.6",
-    "sensio/framework-extra-bundle": "^5.2",
     "menatwork/contao-multicolumnwizard-bundle": "^3.5"
   },
   "config": {

@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
 use Contao\Database;
+use Contao\StringUtil;
 
 class Synonyms
 {
@@ -23,7 +24,7 @@ class Synonyms
             }
 
             $arrSynonyms = [];
-            foreach (\StringUtil::deserialize($objSynonyms->synonyms, true) as $strSynonym) {
+            foreach (StringUtil::deserialize($objSynonyms->synonyms, true) as $strSynonym) {
 
                 if (!$strSynonym) {
                     continue;

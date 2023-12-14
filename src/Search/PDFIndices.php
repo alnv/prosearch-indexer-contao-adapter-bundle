@@ -11,7 +11,9 @@ use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\Frontend;
 use Contao\File;
 use Contao\StringUtil;
+use Contao\FilesModel;
 use Contao\System;
+use Contao\PageModel;
 use Psr\Log\LogLevel;
 use Smalot\PdfParser\Parser;
 use Contao\CoreBundle\Search\Document;
@@ -31,7 +33,7 @@ class PDFIndices extends Searcher
     public function __construct(Document $document, array $meta = [])
     {
 
-        set_time_limit(500);
+        set_time_limit(600);
 
         try {
             $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
@@ -60,7 +62,7 @@ class PDFIndices extends Searcher
 
             $arrUrl = parse_url($strHref);
             $strFile = $arrUrl['path'];
-            $objFile = \FilesModel::findByPath($strFile);
+            $objFile = FilesModel::findByPath($strFile);
 
             if (!$objFile) {
                 continue;
@@ -71,7 +73,7 @@ class PDFIndices extends Searcher
                 continue;
             }
 
-            $arrMeta = Frontend::getMetaData(\StringUtil::deserialize($objFile->meta), $strLanguage);
+            $arrMeta = Frontend::getMetaData(StringUtil::deserialize($objFile->meta), $strLanguage);
 
             $strNodeContent = Text::tokenize($objLink->textContent);
             $strTitleAttr = $objLink->getAttribute('title');
@@ -83,7 +85,8 @@ class PDFIndices extends Searcher
             try {
 
                 $objParser = new Parser();
-                $objPdf = $objParser->parseFile(TL_ROOT . '/' . $objFile->path);
+                $strRootDir = System::getContainer()->getParameter('kernel.project_dir');
+                $objPdf = $objParser->parseFile($strRootDir . '/' . $objFile->path);
 
                 $arrText = [$strNodeContent, $strTitleAttr, $strMetaDescription, $strMetaTitle, $strMetaAlt, $strFilename];
                 $arrText = array_filter($arrText);
@@ -111,7 +114,7 @@ class PDFIndices extends Searcher
                     $objIndicesModel = new IndicesModel();
                 }
 
-                $objPage = \PageModel::findByPk($meta['pageId']);
+                $objPage = PageModel::findByPk($meta['pageId']);
                 $objPage->loadDetails();
 
                 $objIndicesModel->tstamp = time();

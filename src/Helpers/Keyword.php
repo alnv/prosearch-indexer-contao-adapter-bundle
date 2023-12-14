@@ -4,24 +4,26 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
 use Contao\StringUtil;
 
-class Keyword {
+class Keyword
+{
 
-    protected $objSynonyms;
+    protected Synonyms $objSynonyms;
 
     protected array $arrKeywordData = [];
 
-    public function __construct() {
+    public function __construct()
+    {
 
         $this->objSynonyms = new Synonyms();
     }
 
-    public function setKeywords($strKeywords, $arrOptions=[]) {
+    public function setKeywords($strKeywords, $arrOptions = [])
+    {
 
         $strToken = Text::tokenize($strKeywords);
         $strToken = strtolower($strToken);
 
         $arrTypes = $arrOptions['categories'] ?? [];
-        // $arrTypes = $this->convertSynonyms($arrTypes);
 
         $strSynonym = $this->objSynonyms->predict($strToken);
         $strQuery = $strSynonym;
@@ -42,7 +44,8 @@ class Keyword {
         ];
     }
 
-    public function convertSynonyms($arrWords) {
+    public function convertSynonyms($arrWords): array
+    {
 
         $arrReturn = [];
 
@@ -59,7 +62,8 @@ class Keyword {
         return $arrReturn;
     }
 
-    public function getKeywords() {
+    public function getKeywords(): array
+    {
 
         return $this->arrKeywordData;
     }

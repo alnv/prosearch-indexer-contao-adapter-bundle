@@ -11,6 +11,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\FAQPage;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Product;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Person;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Event;
+use Contao\ArrayUtil;
 
 /**
  * Microdata
@@ -33,7 +34,7 @@ $GLOBALS['TL_MODELS']['tl_indices'] = IndicesModel::class;
 /**
  * Backend modules
  */
-array_insert($GLOBALS['BE_MOD'], 3, [
+ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 3, [
     'prosearch-modules' => [
         'searchcredentials' => [
             'name' => 'searchcredentials',
@@ -65,7 +66,7 @@ array_insert($GLOBALS['BE_MOD'], 3, [
 /**
  * Frontend modules
  */
-array_insert($GLOBALS['FE_MOD'], 3, [
+ArrayUtil::arrayInsert($GLOBALS['FE_MOD'], 3, [
     'prosearch-modules' => [
         'elasticsearch_type_ahead' => ElasticsearchTypeAheadModule::class,
         'elasticsearch' => ElasticsearchModule::class

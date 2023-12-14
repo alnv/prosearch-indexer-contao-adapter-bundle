@@ -10,16 +10,9 @@ use Contao\Model;
 class IndicesModel extends Model
 {
 
-    /**
-     * @var string
-     */
     protected static $strTable = 'tl_indices';
 
-    /**
-     * @param string $strUrl
-     * @return IndicesModel|Model|Model[]|Model\Collection|null
-     */
-    public static function findByUrl(string $strUrl)
+    public static function findByUrl(string $strUrl): null|Model
     {
         $t = static::$strTable;
         $arrColumns = ["$t.url=?"];

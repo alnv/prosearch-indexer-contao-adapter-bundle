@@ -1,8 +1,10 @@
 <?php
 
+use Contao\DC_Table;
+
 $GLOBALS['TL_DCA']['tl_microdata'] = [
     'config' => [
-        'dataContainer' => 'Table',
+        'dataContainer' => DC_Table::class,
         'ptable' => 'tl_indices',
         'sql' => [
             'keys' => [

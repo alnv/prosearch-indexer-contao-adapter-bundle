@@ -14,21 +14,24 @@ use Contao\CoreBundle\Controller\AbstractController;
 use Contao\Input;
 use Contao\ModuleModel;
 use Contao\PageModel;
+use Contao\FrontendTemplate;
+use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\Routing\Annotation\Route;
 
-/**
- *
- * @Route("/elastic", defaults={"_scope" = "frontend", "_token_check" = false})
- */
+
+#[Route(
+    path: 'elastic',
+    name: 'elastic-controller',
+    defaults: ['_scope' => 'frontend']
+)]
 class ElasticsearchController extends AbstractController
 {
 
-    /**
-     *
-     * @Route("/search/results", methods={"POST", "GET"}, name="get-search-results")
-     */
+    #[Route(
+        path: '/search/results',
+        methods: ["POST", "GET"]
+    )]
     public function getSearchResults(): JsonResponse
     {
 
@@ -143,39 +146,6 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        /*
-        foreach ($arrHits as $arrHit) {
-
-            $objEntity = new Result();
-            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
-                'types' => $arrHit['_source']['types'],
-                'score' => $arrHit['_score'],
-                'keywords' => $arrKeywords,
-                'elasticOptions' => $arrElasticOptions,
-            ]);
-
-            if ($arrResult = $objEntity->getResult()) {
-                $arrResults['results']['hits'][] = $arrResult;
-            }
-        }
-        */
-
-        /*
-        foreach (($arrResults['results']['hits'] ?? []) as $index => $arrResult) {
-            $objTemplate = new \FrontendTemplate($strSearchResultsTemplate);
-            $objTemplate->setData($arrResult);
-            $arrMicroData = [];
-            foreach ($arrResults['results']['hits'][$index]['microdata'] as $strType => $arrEntities) {
-                $arrMicroData[$strType] = [];
-                foreach ($arrEntities as $objEntity) {
-                    $arrMicroData[$strType][] = $objEntity->getJsonLdScriptsData();
-                }
-            }
-            $arrResults['results']['hits'][$index]['microdata'] = $arrMicroData;
-            $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
-        }
-        */
-
         Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])));
 
         return new JsonResponse($arrResults);
@@ -202,7 +172,7 @@ class ElasticsearchController extends AbstractController
     protected function addTemplate($strTemplate, $arrHit, &$arrGlobalRichSnippets = []): array
     {
 
-        $objTemplate = new \FrontendTemplate($strTemplate);
+        $objTemplate = new FrontendTemplate($strTemplate);
         $objTemplate->setData($arrHit);
         $arrMicroData = [];
 
@@ -227,16 +197,18 @@ class ElasticsearchController extends AbstractController
             }
         }
 
+        $objParser = System::getContainer()->get('contao.insert_tag.parser');
+
         $arrHit['microdata'] = $arrMicroData;
-        $arrHit['template'] = \Controller::replaceInsertTags($objTemplate->parse());
+        $arrHit['template'] = $objParser->replaceInline($objTemplate->parse());
 
         return $arrHit;
     }
 
-    /**
-     *
-     * @Route("/search/autocompletion", methods={"POST", "GET"}, name="get-search-autocompletion")
-     */
+    #[Route(
+        path: '/search/autocompletion',
+        methods: ["POST", "GET"]
+    )]
     public function getAutoCompletion(): JsonResponse
     {
 
@@ -307,10 +279,10 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setRootPageId($strRootPageId);
         $objElasticOptions->setPerPage($objModule->perPage);
         $objElasticOptions->setAnalyzer($strAnalyzer);
-        $objElasticOptions->setFuzzy((bool)$objModule->fuzzy);
+        $objElasticOptions->setFuzzy($objModule->fuzzy);
         $objElasticOptions->setUseRichSnippets((bool)$objModule->psUseRichSnippets);
         $objElasticOptions->setOpenDocumentsInBrowser((bool)$objModule->psOpenDocumentInBrowser);
-        $objElasticOptions->setMinKeywordLength((int)$objModule->minKeywordLength);
+        $objElasticOptions->setMinKeywordLength($objModule->minKeywordLength);
         $objElasticOptions->setDomain();
 
         return $objElasticOptions->getOptions();

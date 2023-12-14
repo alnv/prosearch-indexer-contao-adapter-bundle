@@ -6,22 +6,22 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
 use Contao\CoreBundle\Controller\AbstractController;
 use Contao\Input;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
+use Symfony\Component\Routing\Annotation\Route;
 
-/**
- *
- * @Route("/stat", defaults={"_scope" = "frontend", "_token_check" = false})
- */
+#[Route(
+    path: 'stat',
+    name: 'elastic-stat-controller',
+    defaults: ['_scope' => 'frontend']
+)]
 class StatController extends AbstractController
 {
 
-    /**
-     *
-     * @Route("/click", methods={"POST"}, name="state-click")
-     */
-    public function stateClick()
+    #[Route(
+        path: '/click',
+        methods: ["POST"]
+    )]
+    public function stateClick(): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();
 

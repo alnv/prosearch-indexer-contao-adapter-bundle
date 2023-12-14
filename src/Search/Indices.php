@@ -3,9 +3,11 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Contao\CoreBundle\Search\Indexer\IndexerException;
-use Contao\System;
+use Contao\FilesModel;
+use Contao\StringUtil;
 use Fusonic\OpenGraph\Consumer;
 use Contao\Validator;
+use Contao\PageModel;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
@@ -63,14 +65,14 @@ class Indices extends Searcher
         ];
 
         $strUrl = $document->getUri()->__toString();
-        $strUrl = \StringUtil::decodeEntities($strUrl);
+        $strUrl = StringUtil::decodeEntities($strUrl);
         $strUrl = strtok($strUrl, '?');
 
         $arrCanonicalUrls = $this->objCrawler->filterXpath("//link[@rel='canonical']")->extract(['href']);
         if (is_array($arrCanonicalUrls) && !empty($arrCanonicalUrls) && isset($arrCanonicalUrls[0])) {
 
             $strCanonicalUrl = $arrCanonicalUrls[0];
-            $strCanonicalUrl = \StringUtil::decodeEntities($strCanonicalUrl);
+            $strCanonicalUrl = StringUtil::decodeEntities($strCanonicalUrl);
             $strCanonicalUrl = strtok($strCanonicalUrl, '?');
 
             if (Validator::isUrl($strCanonicalUrl) && $strUrl !== $strCanonicalUrl) {
@@ -97,8 +99,8 @@ class Indices extends Searcher
                 continue;
             }
             $arrFragments = parse_url($objImage->url);
-            if ($objFile = \FilesModel::findByPath(ltrim($arrFragments['path'], '/'))) {
-                $strUuid = \StringUtil::binToUuid($objFile->uuid);
+            if ($objFile = FilesModel::findByPath(ltrim($arrFragments['path'], '/'))) {
+                $strUuid = StringUtil::binToUuid($objFile->uuid);
                 if (in_array($strUuid, $arrImages)) {
                     continue;
                 }
@@ -106,7 +108,7 @@ class Indices extends Searcher
             }
         }
 
-        $objPage = \PageModel::findByPk($meta['pageId']);
+        $objPage = PageModel::findByPk($meta['pageId']);
         $objPage->loadDetails();
 
         $objIndicesModel->url = $strUrl;
@@ -133,7 +135,7 @@ class Indices extends Searcher
         (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
     }
 
-    protected function getDescription($objPageObject)
+    protected function getDescription($objPageObject): string
     {
 
         if ($objPageObject->description) {
@@ -148,7 +150,7 @@ class Indices extends Searcher
         return '';
     }
 
-    protected function getTitle($objPageObject)
+    protected function getTitle($objPageObject): string
     {
 
         if ($objPageObject->title) {

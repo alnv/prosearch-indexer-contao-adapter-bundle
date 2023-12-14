@@ -3,6 +3,7 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Models;
 
 use Contao\Model;
+use Contao\Model\Collection;
 
 /**
  *
@@ -10,17 +11,9 @@ use Contao\Model;
 class MicrodataModel extends Model
 {
 
-    /**
-     * @var string
-     */
     protected static $strTable = 'tl_microdata';
 
-    /**
-     * @param string $strChecksum
-     * @param int $intPid
-     * @return MicrodataModel|Model|Model[]|Model\Collection|null
-     */
-    public static function findByChecksumAndPid(string $strChecksum, int $intPid)
+    public static function findByChecksumAndPid(string $strChecksum, int $intPid): Model|null
     {
 
         $t = static::$strTable;
@@ -29,7 +22,7 @@ class MicrodataModel extends Model
         return static::findOneBy($arrColumns, [$strChecksum, $intPid], []);
     }
 
-    public static function findByPid(int $intPid)
+    public static function findByPid(int $intPid): Collection|null
     {
 
         $t = static::$strTable;
@@ -41,7 +34,7 @@ class MicrodataModel extends Model
         ]);
     }
 
-    public static function findByPidAndType(int $intPid, string $strType)
+    public static function findByPidAndType(int $intPid, string $strType): Collection|null
     {
 
         $t = static::$strTable;

@@ -2,9 +2,8 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
-/**
- *
- */
+use Contao\Environment;
+
 class Options
 {
     /**
@@ -100,7 +99,7 @@ class Options
     public function setDomain(string $strDomain = ""): void
     {
 
-        $this->domain = $strDomain ?: \Environment::get('host');
+        $this->domain = $strDomain ?: Environment::get('host');
     }
 
     /**

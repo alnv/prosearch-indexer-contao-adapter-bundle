@@ -2,7 +2,8 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
-class States {
+class States
+{
 
     public const DELETE = 'delete';
     public const ACTIVE = 'active';

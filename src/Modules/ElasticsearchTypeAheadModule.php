@@ -2,22 +2,26 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Modules;
 
+use Contao\BackendTemplate;
 use Contao\Combiner;
 use Contao\Input;
 use Contao\Module;
+use Contao\PageModel;
 use Contao\StringUtil;
+use Contao\FrontendTemplate;
+use Contao\System;
 
 class ElasticsearchTypeAheadModule extends Module
 {
 
     protected $strTemplate = 'mod_elasticsearch_type_ahead';
 
-    public function generate()
+    public function generate(): string
     {
 
-        if (\System::getContainer()->get('request_stack')->getCurrentRequest()->get('_scope') == 'backend') {
+        if (System::getContainer()->get('request_stack')->getCurrentRequest()->get('_scope') == 'backend') {
 
-            $objTemplate = new \BackendTemplate('be_wildcard');
+            $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->id = $this->id;
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
@@ -48,13 +52,13 @@ class ElasticsearchTypeAheadModule extends Module
         $this->Template->keyword = StringUtil::specialchars($strKeywords);
         $this->Template->action = $this->getActionUrl();
 
-        $this->Template->categories = \StringUtil::deserialize($this->psSearchCategories, true);
+        $this->Template->categories = StringUtil::deserialize($this->psSearchCategories, true);
         $this->Template->elementId = $this->getElementId();
 
         $this->getJsScript();
     }
 
-    protected function isResultsPage()
+    protected function isResultsPage(): bool
     {
 
         global $objPage;
@@ -62,22 +66,22 @@ class ElasticsearchTypeAheadModule extends Module
         return $objPage->id === $this->jumpTo;
     }
 
-    protected function getRedirectUrl()
+    protected function getRedirectUrl(): string
     {
 
         $strRedirect = '';
 
-        if ($objPage = \PageModel::findByPk($this->jumpTo)) {
+        if ($objPage = PageModel::findByPk($this->jumpTo)) {
             $strRedirect = $objPage->getFrontendUrl();
         }
 
         return $strRedirect;
     }
 
-    protected function getActionUrl()
+    protected function getActionUrl(): string
     {
 
-        if ($objJump = \PageModel::findByPk($this->jumpTo)) {
+        if ($objJump = PageModel::findByPk($this->jumpTo)) {
             return $objJump->getFrontendUrl();
         }
 
@@ -85,24 +89,24 @@ class ElasticsearchTypeAheadModule extends Module
         return $objPage->getFrontendUrl();
     }
 
-    protected function getJsScript()
+    protected function getJsScript(): void
     {
 
         $this->loadAssets();
 
-        $objTemplate = new \FrontendTemplate('js_elasticsearch_type_ahead');
+        $objTemplate = new FrontendTemplate('js_elasticsearch_type_ahead');
         $objTemplate->setData($this->Template->getData());
 
         $this->Template->script = $objTemplate->parse();
     }
 
-    private function getElementId()
+    private function getElementId(): string
     {
 
         return 'id_search_' . uniqid() . $this->id;
     }
 
-    protected function loadAssets()
+    protected function loadAssets(): void
     {
 
         $objCombiner = new Combiner();

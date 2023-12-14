@@ -2,27 +2,28 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
+use Contao\CoreBundle\Exception\AccessDeniedException;
+use Contao\Input;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Contao\System;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Events\LicenceCheckEvent;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\Routing\Annotation\Route;
+use Contao\Environment;
 
-/**
- *
- * @Route("/proxy", defaults={"_scope" = "frontend", "_token_check" = false})
- */
+#[Route(
+    path: 'proxy',
+    name: 'elastic-proxy-controller',
+    defaults: ['_scope' => 'frontend']
+)]
 class ElasticsearchProxyController extends AbstractController
 {
 
-
-    /**
-     *
-     * @Route("/search/results", methods={"POST"}, name="proxy-search-results")
-     */
+    #[Route(
+        path: '/search/results',
+        methods: ["POST"]
+    )]
     public function search()
     {
         $this->container->get('contao.framework')->initialize();
@@ -35,12 +36,11 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse($objElasticsearch->search($arrBody['keywords'], $arrBody['index']));
     }
 
-
-    /**
-     *
-     * @Route("/search/autocompletion", methods={"POST"}, name="proxy-search-autocompletion")
-     */
-    public function autocompletion()
+    #[Route(
+        path: '/search/autocompletion',
+        methods: ["POST"]
+    )]
+    public function autocompletion(): JsonResponse
     {
 
         $this->container->get('contao.framework')->initialize();
@@ -53,21 +53,20 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse($objElasticsearch->autocompltion($arrBody['keywords'], $arrBody['index']));
     }
 
-
-    /**
-     *
-     * @Route("/search/index", methods={"POST"}, name="proxy-search-index")
-     */
-    public function index()
+    #[Route(
+        path: '/search/index',
+        methods: ["POST"]
+    )]
+    public function index(): JsonResponse
     {
 
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $strLicence = \Input::post('licence') ?: \Input::get('licence');
+        $strLicence = Input::post('licence') ?: Input::get('licence');
 
         if (!(new LicenceCheckEvent())->isValidLicence($strLicence)) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+            throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
@@ -77,12 +76,11 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse([]);
     }
 
-
-    /**
-     *
-     * @Route("/search/delete", methods={"POST"}, name="proxy-search-delete")
-     */
-    public function delete()
+    #[Route(
+        path: '/search/delete',
+        methods: ["POST"]
+    )]
+    public function delete(): JsonResponse
     {
 
         $this->container->get('contao.framework')->initialize();
@@ -96,12 +94,11 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse([]);
     }
 
-
-    /**
-     *
-     * @Route("/search/mapping", methods={"POST"}, name="proxy-search-mapping")
-     */
-    public function mapping()
+    #[Route(
+        path: '/search/mapping',
+        methods: ["POST"]
+    )]
+    public function mapping(): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();
 

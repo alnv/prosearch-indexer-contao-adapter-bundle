@@ -6,18 +6,21 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Contao\Combiner;
 use Contao\Module;
 use Contao\StringUtil;
+use Contao\System;
+use Contao\FrontendTemplate;
+use Contao\BackendTemplate;
 
 class ElasticsearchModule extends Module
 {
 
     protected $strTemplate = 'mod_elasticsearch';
 
-    public function generate()
+    public function generate(): string
     {
 
-        if (\System::getContainer()->get('request_stack')->getCurrentRequest()->get('_scope') == 'backend') {
+        if (System::getContainer()->get('request_stack')->getCurrentRequest()->get('_scope') == 'backend') {
 
-            $objTemplate = new \BackendTemplate('be_wildcard');
+            $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->id = $this->id;
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
@@ -46,18 +49,18 @@ class ElasticsearchModule extends Module
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
 
-        $objTemplate = new \FrontendTemplate('js_elasticsearch');
+        $objTemplate = new FrontendTemplate('js_elasticsearch');
         $objTemplate->setData($this->Template->getData());
         $this->Template->script = $objTemplate->parse();
     }
 
-    protected function getElementId()
+    protected function getElementId(): string
     {
 
         return 'id_search_' . uniqid() . $this->id;
     }
 
-    protected function loadAssets()
+    protected function loadAssets(): void
     {
 
         $objCombiner = new Combiner();
