@@ -25,7 +25,8 @@ _* Contao 5 Version kommt Mitte/Ende November 23_
 oder mit composer.json
 
 ``
-composer require alnv/prosearch-indexer-contao-adapter-bundle
+composer require alnv/prosearch-indexer-contao-adapter-bundle --with-all-dependencies
+vendor/bin/contao-console contao:migrate
 ``
 
 ## Setup
