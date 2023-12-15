@@ -1,3 +1,5 @@
-elasticsearch:
-  resource: "@AlnvProSearchIndexerContaoAdapterBundle/Controller"
-  type: annotation
+controllers:
+  resource:
+    path: ../../Controller/
+    namespace: Alnv\ProSearchIndexerContaoAdapterBundle\Controller
+  type: attribute

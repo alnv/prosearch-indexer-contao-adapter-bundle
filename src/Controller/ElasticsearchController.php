@@ -23,7 +23,7 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route(
     path: 'elastic',
     name: 'elastic-controller',
-    defaults: ['_scope' => 'frontend']
+    defaults: ['_scope' => 'frontend', '_token_check' => false]
 )]
 class ElasticsearchController extends AbstractController
 {

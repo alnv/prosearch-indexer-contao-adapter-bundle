@@ -21,7 +21,7 @@
                     }
                     let self = this;
                     let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
-                    let fetchUrl = '/elastic/search/'+type+'?query=';
+                    let fetchUrl = '/elastic/search/'+ type +'?query=';
                     this.autoCompleteJS = new autoComplete({
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
@@ -38,11 +38,12 @@
                                     headers.append('Content-Type', 'application/json');
                                     const source = await fetch(fetchUrl+query, {
                                         method: "POST",
+                                        mode: "cors",
                                         headers: headers,
                                         cache: "no-cache",
                                         redirect: "follow",
                                         credentials: "same-origin",
-                                        referrerPolicy: "no-referrer",
+                                        referrerPolicy: "same-origin",
                                         body: JSON.stringify({
                                             categories: self.categories,
                                             module: "<?= $this->id ?>",

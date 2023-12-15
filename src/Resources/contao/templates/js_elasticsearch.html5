@@ -68,7 +68,6 @@
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.views.didYouMean[0];
-                    // this.autoCompleteJS.start(this.keywords);
                 },
                 setFaqRichSnippets: function () {
                     this.richSnippets['faq'] = {};
@@ -128,42 +127,6 @@
                     }
 
                     return group;
-
-                    /*
-                    let groups = {
-                        '': {
-                            hits: [],
-                            value: '',
-                            label: ''
-                        }
-                    };
-                    let categories = {};
-                    let onlyCategories = <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>;
-                    for (let i=0;i<hits.length;i++) {
-                        let hit = hits[i];
-                        let types = hit.types.length > 0 ? hit.types : [''];
-                        for (let j=0;j<types.length;j++) {
-                            let type = types[j];
-                            if ((this.categories.length && this.categories.indexOf(type) === -1) || (onlyCategories.length && onlyCategories.indexOf(type) === -1)) {
-                                continue;
-                            }
-                            let label = this.options.categories[type] ? this.options.categories[type]['label'] : type;
-                            groups[label] = groups[label] || {
-                                hits: [],
-                                value: type,
-                                label: label
-                            };
-                            if (type && this.options.categories[type]) {
-                                categories[label] = categories[label] || this.options.categories[type];
-                            }
-                            groups[label]['hits'].push(hit);
-                        }
-                    }
-                    if (!this.resultsOnly) {
-                        this.views.categories = this.sortObject(categories);
-                    }
-                    return this.sortObject(groups);
-                    */
                 },
                 sortObject: function (obj) {
                     let s = {};
