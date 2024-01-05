@@ -133,9 +133,7 @@ class ElasticsearchController extends AbstractController
 
         } else {
 
-
             foreach ($arrHits as $arrHit) {
-
                 $arrParsedHit = $this->parseHit($arrHit, $arrKeywords, $arrElasticOptions);
 
                 if (empty($arrParsedHit)) {

@@ -99,13 +99,16 @@ class Indices extends Searcher
                 continue;
             }
             $arrFragments = parse_url($objImage->url);
-            if ($objFile = FilesModel::findByPath(ltrim($arrFragments['path'], '/'))) {
+            $strPath = ltrim($arrFragments['path'], '/');
+            if ($objFile = FilesModel::findByPath($strPath)) {
                 $strUuid = StringUtil::binToUuid($objFile->uuid);
-                if (in_array($strUuid, $arrImages)) {
-                    continue;
-                }
-                $arrImages[] = $strUuid;
+            } else {
+                $strUuid = $strPath;
             }
+            if (in_array($strUuid, $arrImages)) {
+                continue;
+            }
+            $arrImages[] = $strUuid;
         }
 
         $objPage = PageModel::findByPk($meta['pageId']);

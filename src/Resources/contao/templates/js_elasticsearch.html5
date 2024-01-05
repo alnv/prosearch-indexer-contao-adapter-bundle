@@ -16,7 +16,7 @@
                 globalRichSnippets: {}
             },
             options: {
-                categories: <?= json_encode($this->categoryOptions, null, 512) ?>
+                categories: <?= \json_encode($this->categoryOptions, null, 512) ?>
             },
             richSnippets: {
                 faq: {}
@@ -64,6 +64,7 @@
                         this.setFaqRichSnippets();
                         this.loading = false;
                         this.resultsOnly = false;
+                        this.clickOutside();
                     }.bind(this));
                 },
                 setDidYouMeanToKeyword: function () {
@@ -92,40 +93,33 @@
                     this.$forceUpdate();
                 },
                 groupResults: function (hits) {
-
                     if (Object.keys(hits).length) {
                         this.hasResults = true;
                     } else {
                         this.categories = [];
                         return {}
                     }
-
                     let group = {};
                     let categories = {};
-                    let onlyCategories = <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>;
-
+                    let onlyCategories = <?= \json_encode((empty($this->categories)?[]:$this->categories)) ?>;
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
-
                             let val = hits[type]['value'];
                             let label = hits[type]['label'];
-
                             if ((this.categories.length && this.categories.indexOf(val) === -1) || (onlyCategories.length && onlyCategories.indexOf(val) === -1)) {
                                 continue;
                             }
-
                             if (type) {
+                                let category = this.options.categories[val];
+                                category['count'] = Array.isArray(hits[type]['hits']) ? hits[type]['hits'].length : 0;
                                 categories[label] = categories[label] || this.options.categories[val];
                             }
-
                             group[type] = hits[type];
                         }
                     }
-
                     if (!this.resultsOnly) {
                         this.views.categories = this.sortObject(categories);
                     }
-
                     return group;
                 },
                 sortObject: function (obj) {
@@ -183,6 +177,18 @@
                     ).then(function (res) {
                         //
                     });
+                },
+                clickOutside: function () {
+                    window.addEventListener('click', function () {
+                        this.close();
+                    }.bind(this));
+                    this.$refs['elasticsearchContainerInside'].addEventListener('click', function(e){
+                        e.stopPropagation();
+                    });
+                },
+                close: function () {
+                    this.hasResults = false;
+                    this.keywords = "";
                 },
                 setAutoComplete: function () {
                     let self = this;
