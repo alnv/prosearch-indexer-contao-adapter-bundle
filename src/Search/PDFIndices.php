@@ -142,7 +142,7 @@ class PDFIndices extends Searcher
 
                 System::getContainer()
                     ->get('monolog.logger.contao')
-                    ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                    ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
             }
         }
     }

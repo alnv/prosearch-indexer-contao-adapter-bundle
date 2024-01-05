@@ -62,7 +62,7 @@ class Elasticsearch extends Adapter
                 } catch (\Exception $objError) {
                     System::getContainer()
                         ->get('monolog.logger.contao')
-                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
                 }
                 break;
             case 'elasticsearch_cloud':
@@ -74,7 +74,7 @@ class Elasticsearch extends Adapter
                 } catch (\Exception $objError) {
                     System::getContainer()
                         ->get('monolog.logger.contao')
-                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                        ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
                     exit;
                 }
                 break;
@@ -92,7 +92,7 @@ class Elasticsearch extends Adapter
 
             System::getContainer()
                 ->get('monolog.logger.contao')
-                ->log(LogLevel::ERROR, 'No connection to the server could be established', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                ->log(LogLevel::ERROR, 'No connection to the server could be established', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
         }
     }
 
@@ -158,7 +158,7 @@ class Elasticsearch extends Adapter
 
         System::getContainer()
             ->get('monolog.logger.contao')
-            ->log(LogLevel::DEBUG, 'Index (' . $strIndex . ') document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+            ->log(LogLevel::DEBUG, 'Index (' . $strIndex . ') document with ID ' . $strIndicesId . ' was deleted.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
 
         $objIndicesModel->delete();
     }
@@ -364,7 +364,7 @@ class Elasticsearch extends Adapter
 
             System::getContainer()
                 ->get('monolog.logger.contao')
-                ->log(LogLevel::DEBUG, 'Mapping for Index ' . $arrParams['index'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ACCESS)]);
+                ->log(LogLevel::DEBUG, 'Mapping for Index ' . $arrParams['index'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
         }
     }
 
@@ -401,7 +401,7 @@ class Elasticsearch extends Adapter
 
                 System::getContainer()
                     ->get('monolog.logger.contao')
-                    ->log(LogLevel::ERROR, $e->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_ERROR)]);
+                    ->log(LogLevel::ERROR, $e->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
 
                 return;
             }
@@ -431,19 +431,19 @@ class Elasticsearch extends Adapter
                 ]);
                 System::getContainer()
                     ->get('monolog.logger.contao')
-                    ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was updated.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+                    ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was updated.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
             } else {
                 $this->getClient()->index($arrParams);
                 System::getContainer()
                     ->get('monolog.logger.contao')
-                    ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+                    ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
             }
 
         } catch (\Exception $objError) {
 
             System::getContainer()
                 ->get('monolog.logger.contao')
-                ->log(LogLevel::DEBUG, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__, TL_CRON)]);
+                ->log(LogLevel::DEBUG, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
 
             return;
         }
