@@ -143,39 +143,6 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        /*
-        foreach ($arrHits as $arrHit) {
-
-            $objEntity = new Result();
-            $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
-                'types' => $arrHit['_source']['types'],
-                'score' => $arrHit['_score'],
-                'keywords' => $arrKeywords,
-                'elasticOptions' => $arrElasticOptions,
-            ]);
-
-            if ($arrResult = $objEntity->getResult()) {
-                $arrResults['results']['hits'][] = $arrResult;
-            }
-        }
-        */
-
-        /*
-        foreach (($arrResults['results']['hits'] ?? []) as $index => $arrResult) {
-            $objTemplate = new \FrontendTemplate($strSearchResultsTemplate);
-            $objTemplate->setData($arrResult);
-            $arrMicroData = [];
-            foreach ($arrResults['results']['hits'][$index]['microdata'] as $strType => $arrEntities) {
-                $arrMicroData[$strType] = [];
-                foreach ($arrEntities as $objEntity) {
-                    $arrMicroData[$strType][] = $objEntity->getJsonLdScriptsData();
-                }
-            }
-            $arrResults['results']['hits'][$index]['microdata'] = $arrMicroData;
-            $arrResults['results']['hits'][$index]['template'] = \Controller::replaceInsertTags($objTemplate->parse());
-        }
-        */
-
         Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])));
 
         return new JsonResponse($arrResults);

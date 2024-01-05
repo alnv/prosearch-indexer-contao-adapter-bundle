@@ -1,59 +1,68 @@
 <?php $this->extend('block_unsearchable'); ?>
 <?php $this->block('content'); ?>
 
-<div id="<?= $this->elementId ?>" class="elasticsearch-container">
-    <form method="GET">
-        <div class="elasticsearch-search-panel">
-            <div class="elasticsearch-input">
-                <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" v-model="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
-                <button @click.stop.prevent="search">
-                    <img v-if="!loading" src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>">
-                    <img v-else src="/system/themes/flexible/icons/loading.svg" alt="">
-                </button>
+<div id="<?= $this->elementId ?>" class="elasticsearch-container" v-bind:class="{results_open: hasResults}">
+    <div class="elasticsearch-container-inside" ref="elasticsearchContainerInside">
+        <form method="GET">
+            <div class="elasticsearch-search-panel">
+                <div class="elasticsearch-input">
+                    <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" v-model="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
+                    <button @click.stop.prevent="search">
+                        <img v-if="!loading" src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>">
+                        <img v-else src="/system/themes/flexible/icons/loading.svg" alt="">
+                    </button>
+                </div>
             </div>
-        </div>
-    </form>
-    <div class="elasticsearch-results-panel" v-if="hasResults">
-        <div class="suggest-results" v-if="views.didYouMean.length && views.didYouMean[0] !== keywords">
-            <p><?= $this->didYouMeanLabel ?> <a @click.stop.prevent="setDidYouMeanToKeyword"><span>{{ views.didYouMean[0] }}</span></a>?</p>
-        </div>
-        <div class="categories-results" v-if="Object.keys(views.categories).length">
-            <div class="categories-headline">
-                <p><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?></p>
-            </div>
-            <nav>
-                <ul>
-                    <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
-                        <button @click.stop.prevent="setCategory(category.key)" class="category-item-button" v-html="category.label"></button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-        <div v-if="Object.keys(views.results).length" class="search-results">
+        </form>
 
-            <div v-if="Object.keys(views.globalRichSnippets).length && views.globalRichSnippets.hasOwnProperty('FAQPage')" class="search-rich-snippets">
-                <div class="faq-rich-snippet" v-if="Object.keys(richSnippets['faq']).length">
-                    <div v-for="(faq,name) in richSnippets['faq']" class="faq-container" v-bind:class="{active:faq.active}">
-                        <div class="faq-question" @click="toggleFaqSnippet(name)">
-                            <p><strong>{{ faq.question }}</strong></p>
-                        </div>
-                        <div class="faq-answer" v-show="faq.active">
-                            <p>{{ faq.answer }}</p>
+        <div class="elasticsearch-results-panel" v-if="hasResults">
+
+            <div class="close-results">
+                <button @click.stop.prevent="close" class="close button"><span><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCloseButtonLabel'] ?></span></button>
+            </div>
+
+            <div class="suggest-results" v-if="views.didYouMean.length && views.didYouMean[0] !== keywords">
+                <p><?= $this->didYouMeanLabel ?> <a @click.stop.prevent="setDidYouMeanToKeyword"><span>{{ views.didYouMean[0] }}</span></a>?</p>
+            </div>
+
+            <div class="categories-results" v-if="Object.keys(views.categories).length">
+                <div class="categories-headline">
+                    <p><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?></p>
+                </div>
+                <nav>
+                    <ul>
+                        <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
+                            <button @click.stop.prevent="setCategory(category.key)" class="category-item-button"><span v-html="category.label"></span><i v-if="category.count">({{ category.count }})</i></button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <div v-if="Object.keys(views.results).length" class="search-results">
+
+                <div v-if="Object.keys(views.globalRichSnippets).length && views.globalRichSnippets.hasOwnProperty('FAQPage')" class="search-rich-snippets">
+                    <div class="faq-rich-snippet" v-if="Object.keys(richSnippets['faq']).length">
+                        <div v-for="(faq,name) in richSnippets['faq']" class="faq-container" v-bind:class="{active:faq.active}">
+                            <div class="faq-question" @click="toggleFaqSnippet(name)">
+                                <p><strong>{{ faq.question }}</strong></p>
+                            </div>
+                            <div class="faq-answer" v-show="faq.active">
+                                <p>{{ faq.answer }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div v-for="result in views.results" class="results-group" v-if="result.hits.length">
-                <div class="result-category" v-if="result.label">
-                    <p class="category-name">{{ result.label }} <span class="category-count">({{ result.hits.length }})</span></p>
+                <div v-for="result in views.results" class="results-group" v-if="result.hits.length">
+                    <div class="result-category" v-if="result.label">
+                        <p class="category-name">{{ result.label }} <span class="category-count">({{ result.hits.length }})</span></p>
+                    </div>
+                    <div class="result-hit" v-for="hit in result.hits" v-html="hit.template" @click="sendStat"></div>
                 </div>
-                <div class="result-hit" v-for="hit in result.hits" v-html="hit.template" @click="sendStat"></div>
             </div>
         </div>
-    </div>
-    <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
-        <p><?= $GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?></p>
+        <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
+            <p><?= $GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?></p>
+        </div>
     </div>
 </div>
 
