@@ -66,7 +66,7 @@ class Result
             if ($objFile) {
                 $arrImage = $objFile->row();
                 $arrImage['icon'] = false;
-                $arrImage['pid'] = StringUtil::binToUuid($arrImage['pid']);
+                $arrImage['pid'] = $arrImage['pid'] ? StringUtil::binToUuid($arrImage['pid']) : '';
                 $arrImage['uuid'] = StringUtil::binToUuid($arrImage['uuid']);
                 $arrImage['meta'] = StringUtil::deserialize($arrImage['meta'], true);
                 $arrImages[] = $arrImage;
