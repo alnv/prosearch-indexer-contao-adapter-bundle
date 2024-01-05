@@ -19,18 +19,11 @@
   "autoload": {
     "psr-4": {
       "Alnv\\ProSearchIndexerContaoAdapterBundle\\": "src/"
-    },
-    "classmap": [
-      "src/Resources/contao/"
-    ],
-    "exclude-from-classmap": [
-      "src/Resources/contao/config/",
-      "src/Resources/contao/dca/"
-    ]
+    }
   },
   "require": {
-    "php": "^7.4 || ^8.0",
-    "contao/core-bundle": "~4.13 || ~5.0",
+    "php": "^8.0",
+    "contao/core-bundle": "~5.0",
     "fusonic/opengraph": "^2.2",
     "smalot/pdfparser": "^2.4",
     "guzzlehttp/guzzle": "^7.7",
@@ -41,11 +34,6 @@
     "preferred-install": "dist"
   },
   "extra": {
-    "contao": {
-      "sources": {
-        "": "system/modules/prosearch-indexer-contao-adapter-bundle"
-      }
-    },
     "contao-manager-plugin": "Alnv\\ProSearchIndexerContaoAdapterBundle\\ContaoManager\\Plugin"
   }
 }

@@ -1,5 +1,5 @@
-controllers:
+prosearchindexcontroller:
   resource:
-    path: ../../Controller/
+    path: ../../src/Controller/
     namespace: Alnv\ProSearchIndexerContaoAdapterBundle\Controller
   type: attribute
