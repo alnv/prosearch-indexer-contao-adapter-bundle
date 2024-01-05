@@ -3,7 +3,8 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Contao\CoreBundle\Search\Indexer\IndexerException;
-use Contao\System;
+use Contao\FilesModel;
+use Contao\StringUtil;
 use Fusonic\OpenGraph\Consumer;
 use Contao\Validator;
 use Contao\CoreBundle\Search\Document;
@@ -63,14 +64,14 @@ class Indices extends Searcher
         ];
 
         $strUrl = $document->getUri()->__toString();
-        $strUrl = \StringUtil::decodeEntities($strUrl);
+        $strUrl = StringUtil::decodeEntities($strUrl);
         $strUrl = strtok($strUrl, '?');
 
         $arrCanonicalUrls = $this->objCrawler->filterXpath("//link[@rel='canonical']")->extract(['href']);
         if (is_array($arrCanonicalUrls) && !empty($arrCanonicalUrls) && isset($arrCanonicalUrls[0])) {
 
             $strCanonicalUrl = $arrCanonicalUrls[0];
-            $strCanonicalUrl = \StringUtil::decodeEntities($strCanonicalUrl);
+            $strCanonicalUrl = StringUtil::decodeEntities($strCanonicalUrl);
             $strCanonicalUrl = strtok($strCanonicalUrl, '?');
 
             if (Validator::isUrl($strCanonicalUrl) && $strUrl !== $strCanonicalUrl) {
@@ -97,13 +98,16 @@ class Indices extends Searcher
                 continue;
             }
             $arrFragments = parse_url($objImage->url);
-            if ($objFile = \FilesModel::findByPath(ltrim($arrFragments['path'], '/'))) {
-                $strUuid = \StringUtil::binToUuid($objFile->uuid);
-                if (in_array($strUuid, $arrImages)) {
-                    continue;
-                }
-                $arrImages[] = $strUuid;
+            $strPath = ltrim($arrFragments['path'], '/');
+            if ($objFile = FilesModel::findByPath($strPath)) {
+                $strUuid = StringUtil::binToUuid($objFile->uuid);
+            } else {
+                $strUuid = $strPath;
             }
+            if (in_array($strUuid, $arrImages)) {
+                continue;
+            }
+            $arrImages[] = $strUuid;
         }
 
         $objPage = \PageModel::findByPk($meta['pageId']);
