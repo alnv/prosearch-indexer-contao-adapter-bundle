@@ -23,7 +23,7 @@
   },
   "require": {
     "php": "^8.0",
-    "contao/core-bundle": "~5.0",
+    "contao/core-bundle": "~4.13 || ~5.0",
     "fusonic/opengraph": "^2.2",
     "smalot/pdfparser": "^2.4",
     "guzzlehttp/guzzle": "^7.7",

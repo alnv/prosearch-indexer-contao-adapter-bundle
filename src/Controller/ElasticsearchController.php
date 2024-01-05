@@ -20,18 +20,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 
-#[Route(
-    path: 'elastic',
-    name: 'elastic-controller',
-    defaults: ['_scope' => 'frontend', '_token_check' => false]
-)]
+#[Route(path: 'elastic', name: 'elastic-controller', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class ElasticsearchController extends AbstractController
 {
 
-    #[Route(
-        path: '/search/results',
-        methods: ["POST", "GET"]
-    )]
+    #[Route(path: '/search/results', methods: ["POST", "GET"])]
     public function getSearchResults(): JsonResponse
     {
 
@@ -203,10 +196,7 @@ class ElasticsearchController extends AbstractController
         return $arrHit;
     }
 
-    #[Route(
-        path: '/search/autocompletion',
-        methods: ["POST", "GET"]
-    )]
+    #[Route(path: '/search/autocompletion', methods: ["POST", "GET"])]
     public function getAutoCompletion(): JsonResponse
     {
 
