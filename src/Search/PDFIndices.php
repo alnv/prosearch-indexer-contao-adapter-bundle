@@ -124,7 +124,7 @@ class PDFIndices extends Searcher
                 $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
                 $objIndicesModel->document = serialize($arrDocument);
                 $objIndicesModel->domain = $document->getUri()->getHost();
-                $objIndicesModel->title = (($strMetaTitle ?: $strNodeContent) ?: $strFilename);
+                $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr?:$strNodeContent)) ?: $strFilename);
                 $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
