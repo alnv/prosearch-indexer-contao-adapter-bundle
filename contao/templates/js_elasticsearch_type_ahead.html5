@@ -105,7 +105,7 @@
                                             break;
                                         case 13:
                                             event.preventDefault()
-                                            self.submit(objState.autoCompleteJS);
+                                            self.submit();
                                             objState.autoCompleteJS.close();
                                             break;
                                     }
@@ -169,8 +169,9 @@
                     }
                     this.sendHrefStat(href);
                 },
-                submit: function (autoCompleteJS) {
-                    let match = autoCompleteJS.feedback && autoCompleteJS.feedback.hasOwnProperty('cursor') ? autoCompleteJS.feedback.matches[autoCompleteJS.feedback.cursor] : null;
+                submit: function () {
+                    let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
+                    this.keywords = this.autoCompleteJS.input ? this.autoCompleteJS.input.value : this.keywords;
                     if (match) {
                         const link = document.createElement("div");
                         link.innerHTML = match.value;
@@ -180,7 +181,6 @@
                             window.location.href = a.href;
                             return;
                         }
-                        this.keywords = match.value;
                         this.getSearchResults()
                     } else {
                         this.getSearchResults()
