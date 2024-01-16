@@ -20,11 +20,11 @@
                 <div class="suggest-results" v-if="views.didYouMean.length && views.didYouMean[0] !== keywords">
                     <p><?= $this->didYouMeanLabel ?> <a @click.stop.prevent="setDidYouMeanToKeyword"><span>{{ views.didYouMean[0] }}</span></a>?</p>
                 </div>
-                <div class="categories-results" v-if="Object.keys(views.categories).length">
+                <div class="categories-results">
                     <div class="categories-headline">
                         <p><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?></p>
                     </div>
-                    <nav>
+                    <nav v-if="Object.keys(views.categories).length">
                         <ul>
                             <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
                                 <button @click.stop.prevent="setCategory(category.key)" class="category-item-button"><span v-html="category.label"></span><i v-if="category.count">({{ category.count }})</i></button>

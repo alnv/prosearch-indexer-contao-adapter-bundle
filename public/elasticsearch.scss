@@ -12,6 +12,7 @@
         backdrop-filter: blur(10px);
         background: rgba(0, 0, 0, .6);
       }
+
       .elasticsearch-results-panel,
       form {
         position: relative;
@@ -54,13 +55,16 @@
   .close-results {
     width: 100%;
     min-height: 50px;
+
     button {
       position: absolute;
       right: 0;
       top: 0;
+
       span {
         display: none;
       }
+
       &:after {
         color: #000;
         display: block;
@@ -169,27 +173,33 @@
   background: #f9f9f9;
   padding: 20px;
   margin-bottom: 20px;
+
   .faq-container {
     margin-bottom: 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid #fff;
+
     &:last-child {
       margin-bottom: 0;
       padding-bottom: 0;
       border-bottom: 0;
     }
+
     .faq-answer {
       margin-top: 10px;
     }
+
     .faq-question {
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
+
       p {
         margin: 0;
         line-height: 1.1;
       }
+
       &:after {
         content: '';
         border: solid black;
@@ -201,6 +211,7 @@
         transform: rotate(45deg);
       }
     }
+
     &.active {
       .faq-question {
         &:after {

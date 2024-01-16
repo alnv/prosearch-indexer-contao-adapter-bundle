@@ -9,18 +9,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(
-    path: 'stat',
-    name: 'elastic-stat-controller',
-    defaults: ['_scope' => 'frontend']
-)]
+#[Route(path: 'stat', name: 'elastic-stat-controller', defaults: ['_scope' => 'frontend'])]
 class StatController extends AbstractController
 {
 
-    #[Route(
-        path: '/click',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/click', methods: ["POST"])]
     public function stateClick(): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();

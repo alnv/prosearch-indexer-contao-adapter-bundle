@@ -189,6 +189,7 @@
                 close: function () {
                     this.hasResults = false;
                     this.keywords = "";
+                    this.categories = []
                 },
                 setAutoComplete: function () {
                     let self = this;

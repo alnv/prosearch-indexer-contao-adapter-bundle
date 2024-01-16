@@ -13,8 +13,15 @@
         <?php endif; ?>
         <div class="text">
             <p class="title"><strong><?= $this->title ?></strong></p>
-            <p class="description"><?= $this->summary ?></p>
-            <p class="url"><?= $this->usedUrl ?></p>
+            <?php if ($this->description): ?>
+                <p class="description"><?= $this->description ?></p>
+            <?php endif; ?>
+            <?php if ($this->summary): ?>
+                <p class="summary"><?= $this->summary ?></p>
+            <?php endif; ?>
+            <?php if ($this->usedUrl): ?>
+                <p class="url"><?= $this->usedUrl ?></p>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 </a>
