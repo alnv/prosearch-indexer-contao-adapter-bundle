@@ -114,6 +114,10 @@ class ElasticsearchTypeAheadModule extends Module
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/autoComplete.min.js');
         $GLOBALS['TL_HEAD']['autoComplete'] = '<script src="' . $objCombiner->getCombinedFile() . '"></script>';
 
+        if ($this->psPreventCssLoading) {
+            return;
+        }
+
         $objCombiner = new Combiner();
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/autoComplete.scss');
         $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/default.scss');
