@@ -47,7 +47,7 @@ class ElasticsearchModule extends Module
         $this->Template->categories = StringUtil::deserialize($this->psSearchCategories, true);
         $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
-        $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
+        // $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
 
         $objTemplate = new FrontendTemplate('js_elasticsearch');
         $objTemplate->setData($this->Template->getData());

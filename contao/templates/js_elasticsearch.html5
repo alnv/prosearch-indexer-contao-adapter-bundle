@@ -1,4 +1,5 @@
 <script>
+    window.elasticInstaces = window.elasticInstaces || [];
     (function () {
         let objState = {
             keywords: '',
@@ -22,7 +23,7 @@
                 faq: {}
             }
         };
-        new Vue({
+        let elasticComponent = new Vue({
             el: "#<?= $this->elementId ?>",
             data: function () {
                 return objState
@@ -268,8 +269,9 @@
                 }
             },
             mounted: function () {
-                // this.setAutoComplete();
+                //
             }
-        })
+        });
+        window.elasticInstaces.push(elasticComponent);
     })();
 </script>

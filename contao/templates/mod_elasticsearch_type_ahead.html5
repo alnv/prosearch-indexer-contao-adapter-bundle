@@ -4,13 +4,13 @@
 <div id="<?= $this->elementId ?>" class="elasticsearch-container">
     <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
         <div class="suggest-results">
-            <p v-if="didYouMean.length && didYouMean[0] !== keywords"><?= $this->didYouMeanLabel ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
+            <p v-if="didYouMean.length && didYouMean[0] !== keywords"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
         </div>
         <div class="elasticsearch-input">
             <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" value="<?= $this->keyword ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
             <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>">
-                <img v-if="!loading" src="/bundles/alnvprosearchindexercontaoadapter/search-icon.svg" alt="<?= $this->search ?>">
-                <img v-else src="/system/themes/flexible/icons/loading.svg" alt="">
+                <img v-if="!loading" src="<?= $GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?>" alt="<?= $this->search ?>">
+                <img v-else src="<?= $GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?>" alt="">
             </button>
         </div>
     </form>
