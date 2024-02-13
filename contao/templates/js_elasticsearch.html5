@@ -103,8 +103,10 @@
                     let group = {};
                     let categories = {};
                     let onlyCategories = <?= \json_encode((empty($this->categories)?[]:$this->categories)) ?>;
+                    let sorting = {}
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
+                            let count = 0;
                             let val = hits[type]['value'];
                             let label = hits[type]['label'];
                             if ((this.categories.length && this.categories.indexOf(val) === -1) || (onlyCategories.length && onlyCategories.indexOf(val) === -1)) {
@@ -112,15 +114,25 @@
                             }
                             if (type) {
                                 let category = this.options.categories[val];
-                                category['count'] = Array.isArray(hits[type]['hits']) ? hits[type]['hits'].length : 0;
+                                count = Array.isArray(hits[type]['hits']) ? hits[type]['hits'].length : 0;
+                                category['count'] = count;
                                 categories[label] = categories[label] || this.options.categories[val];
                             }
                             group[type] = hits[type];
+                            sorting[type] = count
                         }
                     }
                     if (!this.resultsOnly) {
                         this.views.categories = this.sortObject(categories);
                     }
+                    try {
+                        let g = {};
+                        let c = Object.keys(sorting).sort(function(a,b){return sorting[b]-sorting[a]});
+                        for (let i=0;i<c.length;i++) {
+                            g[c[i]] = group[c[i]];
+                        }
+                        return g;
+                    } catch (e) {}
                     return group;
                 },
                 sortObject: function (obj) {
