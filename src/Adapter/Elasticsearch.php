@@ -167,7 +167,6 @@ class Elasticsearch extends Adapter
 
         Database::getInstance()->prepare('DELETE FROM tl_indices')->execute();
         Database::getInstance()->prepare('DELETE FROM tl_microdata')->execute();
-        Database::getInstance()->prepare('DELETE FROM tl_ps_categories')->execute();
     }
 
     public function deleteDatabase($strIndex): void
@@ -175,7 +174,7 @@ class Elasticsearch extends Adapter
 
         $objCurl = curl_init();
 
-        curl_setopt($objCurl, CURLOPT_URL, "https://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
+        curl_setopt($objCurl, CURLOPT_URL, "http://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
         curl_setopt($objCurl, CURLOPT_CUSTOMREQUEST, 'DELETE');
 
         if ($this->arrCredentials['username'] && $this->arrCredentials['password']) {
