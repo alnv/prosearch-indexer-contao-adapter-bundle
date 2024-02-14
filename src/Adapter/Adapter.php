@@ -54,4 +54,9 @@ abstract class Adapter
      * @return void
      */
     abstract public function deleteIndex($strIndicesId): void;
+
+    /**
+     * @return void
+     */
+    abstract public function deleteDatabases(): void;
 }

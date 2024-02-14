@@ -7,9 +7,10 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
-use Contao\System;
+use Contao\Database;
 use Contao\PageModel;
 use Contao\StringUtil;
+use Contao\System;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
 
@@ -20,6 +21,8 @@ class Elasticsearch extends Adapter
     public const INDEX = 'contao_search';
 
     private string $strSignature = "";
+
+    private array $arrCredentials = [];
 
     protected array $arrAnalyzer = [
         "german" => [
@@ -42,22 +45,22 @@ class Elasticsearch extends Adapter
     public function connect()
     {
 
-        $arrCredentials = (new Credentials())->getCredentials();
+        $this->arrCredentials = (new Credentials())->getCredentials();
 
-        if ($arrCredentials === false) {
+        if ($this->arrCredentials === false) {
 
             return;
         }
 
-        $this->strSignature = $arrCredentials['signature'] ?? '';
+        $this->strSignature = $this->arrCredentials['signature'] ?? '';
 
-        switch ($arrCredentials['type']) {
+        switch ($this->arrCredentials['type']) {
             case 'elasticsearch':
                 try {
                     $this->objClient = ClientBuilder::create()
-                        ->setHosts([$arrCredentials['host'] . ($arrCredentials['port'] ? ':' . $arrCredentials['port'] : '')])
-                        ->setBasicAuthentication($arrCredentials['username'], $arrCredentials['password'])
-                        ->setCABundle($arrCredentials['cert'])
+                        ->setHosts([$this->arrCredentials['host'] . ($this->arrCredentials['port'] ? ':' . $this->arrCredentials['port'] : '')])
+                        ->setBasicAuthentication($this->arrCredentials['username'], $this->arrCredentials['password'])
+                        ->setCABundle($this->arrCredentials['cert'])
                         ->build();
                 } catch (\Exception $objError) {
                     System::getContainer()
@@ -68,8 +71,8 @@ class Elasticsearch extends Adapter
             case 'elasticsearch_cloud':
                 try {
                     $this->objClient = ClientBuilder::create()
-                        ->setElasticCloudId($arrCredentials['cloudid'])
-                        ->setApiKey($arrCredentials['key'])
+                        ->setElasticCloudId($this->arrCredentials['cloudid'])
+                        ->setApiKey($this->arrCredentials['key'])
                         ->build();
                 } catch (\Exception $objError) {
                     System::getContainer()
@@ -79,7 +82,7 @@ class Elasticsearch extends Adapter
                 }
                 break;
             case 'licence':
-                $this->strLicense = $arrCredentials['key'] ?? '';
+                $this->strLicense = $this->arrCredentials['key'] ?? '';
                 return;
         }
 
@@ -126,6 +129,63 @@ class Elasticsearch extends Adapter
         return $this->objClient;
     }
 
+    public function deleteDatabases(): void
+    {
+
+        $this->connect();
+
+        $objRoots = PageModel::findPublishedRootPages();
+
+        if (!$objRoots) {
+            return;
+        }
+
+        while ($objRoots->next()) {
+
+            try {
+
+                $strIndex = $this->getIndexName($objRoots->id);
+
+                if (!$this->getClient()) {
+
+                    if ((new Proxy($this->strLicense))->deleteDatabase($strIndex) === false) {
+                        return;
+                    }
+
+                } else {
+
+                    $this->deleteDatabase($strIndex);
+                }
+
+            } catch (\Exception $objError) {
+
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+            }
+        }
+
+        Database::getInstance()->prepare('DELETE FROM tl_indices')->execute();
+        Database::getInstance()->prepare('DELETE FROM tl_microdata')->execute();
+        Database::getInstance()->prepare('DELETE FROM tl_ps_categories')->execute();
+    }
+
+    public function deleteDatabase($strIndex): void
+    {
+
+        $objCurl = curl_init();
+
+        curl_setopt($objCurl, CURLOPT_URL, "https://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
+        curl_setopt($objCurl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+
+        if ($this->arrCredentials['username'] && $this->arrCredentials['password']) {
+            curl_setopt($objCurl, CURLOPT_HTTPHEADER, array('Authorization:Basic ' . base64_encode($this->arrCredentials['username'] . ':' . $this->arrCredentials['password'])));
+        }
+
+        curl_exec($objCurl);
+        curl_close($objCurl);
+    }
+
     public function deleteIndex($strIndicesId): void
     {
         $this->connect();
@@ -163,7 +223,7 @@ class Elasticsearch extends Adapter
         $objIndicesModel->delete();
     }
 
-    public function clientDelete($strIndex, $strIndicesId)
+    public function clientDelete($strIndex, $strIndicesId): void
     {
 
         if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
@@ -419,14 +479,14 @@ class Elasticsearch extends Adapter
         }
 
         try {
-            
+
             if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
                 unset($arrParams['body']['id']);
                 $this->getClient()->update([
                     'index' => $arrParams['index'],
                     'id' => $arrParams['id'],
                     'body' => [
-                        'doc'  => $arrParams['body']
+                        'doc' => $arrParams['body']
                     ]
                 ]);
                 System::getContainer()

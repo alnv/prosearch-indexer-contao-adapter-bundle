@@ -24,7 +24,7 @@ class ElasticsearchProxyController extends AbstractController
         path: '/search/results',
         methods: ["POST"]
     )]
-    public function search()
+    public function search(): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();
 
@@ -107,6 +107,21 @@ class ElasticsearchProxyController extends AbstractController
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
         $objElasticsearch->clientMapping($arrBody['body'] ?? []);
+
+        return new JsonResponse([]);
+    }
+
+    #[Route(
+        path: '/delete/database/{index}',
+        methods: ["POST"]
+    )]
+    public function deleteDatabase($index): JsonResponse
+    {
+        $this->container->get('contao.framework')->initialize();
+
+        $objElasticsearch = new Elasticsearch((new Options())->getOptions());
+        $objElasticsearch->connect();
+        $objElasticsearch->deleteDatabase($index);
 
         return new JsonResponse([]);
     }
