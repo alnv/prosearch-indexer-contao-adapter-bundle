@@ -8,22 +8,15 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Events\LicenceCheckEvent;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Symfony\Component\Routing\Annotation\Route;
 use Contao\Environment;
 
-#[Route(
-    path: 'proxy',
-    name: 'elastic-proxy-controller',
-    defaults: ['_scope' => 'frontend']
-)]
+#[Route(path: 'proxy', name: 'elastic-proxy-controller', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class ElasticsearchProxyController extends AbstractController
 {
 
-    #[Route(
-        path: '/search/results',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/search/results', methods: ["POST"])]
     public function search(): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();
@@ -36,10 +29,7 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse($objElasticsearch->search($arrBody['keywords'], $arrBody['index']));
     }
 
-    #[Route(
-        path: '/search/autocompletion',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/search/autocompletion', methods: ["POST"])]
     public function autocompletion(): JsonResponse
     {
 
@@ -53,10 +43,7 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse($objElasticsearch->autocompltion($arrBody['keywords'], $arrBody['index']));
     }
 
-    #[Route(
-        path: '/search/index',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/search/index', methods: ["POST"])]
     public function index(): JsonResponse
     {
 
@@ -65,7 +52,7 @@ class ElasticsearchProxyController extends AbstractController
         $arrBody = \json_decode(file_get_contents('php://input'), true);
         $strLicence = Input::post('licence') ?: Input::get('licence');
 
-        if (!(new LicenceCheckEvent())->isValidLicence($strLicence)) {
+        if (!(new Authorization())->isValid($strLicence)) {
             throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
         }
 
@@ -76,10 +63,7 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse([]);
     }
 
-    #[Route(
-        path: '/search/delete',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/search/delete', methods: ["POST"])]
     public function delete(): JsonResponse
     {
 
@@ -94,15 +78,17 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse([]);
     }
 
-    #[Route(
-        path: '/search/mapping',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/search/mapping', methods: ["POST"])]
     public function mapping(): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();
 
+        $strLicence = Input::post('licence') ?: Input::get('licence');
         $arrBody = \json_decode(file_get_contents('php://input'), true);
+
+        if (!(new Authorization())->isValid($strLicence)) {
+            throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
+        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
@@ -111,10 +97,7 @@ class ElasticsearchProxyController extends AbstractController
         return new JsonResponse([]);
     }
 
-    #[Route(
-        path: '/delete/database/{index}',
-        methods: ["POST"]
-    )]
+    #[Route(path: '/delete/database/{index}', methods: ["POST"])]
     public function deleteDatabase($index): JsonResponse
     {
         $this->container->get('contao.framework')->initialize();

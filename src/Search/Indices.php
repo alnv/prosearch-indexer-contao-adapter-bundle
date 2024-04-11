@@ -135,6 +135,8 @@ class Indices extends Searcher
         $objOptions->setLanguage($strLanguage);
         $objOptions->setRootPageId($objPage->rootId);
 
+        // set domain to options?
+
         (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
     }
 

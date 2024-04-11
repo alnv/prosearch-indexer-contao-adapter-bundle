@@ -3,12 +3,13 @@
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
-use Contao\DataContainer;
-use Contao\Message;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Contao\Database;
-use Contao\Input;
-use Contao\System;
+use Contao\DataContainer;
 use Contao\DC_Table;
+use Contao\Input;
+use Contao\Message;
+use Contao\System;
 
 $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
@@ -38,10 +39,10 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             switch ($dataContainer->activeRecord->type) {
                 case 'elasticsearch':
                 case 'elasticsearch_cloud':
-                    $objElasticsearchAdapter= new Elasticsearch((new Options())->getOptions());
+                    $objElasticsearchAdapter = new Elasticsearch((new Options())->getOptions());
                     $objElasticsearchAdapter->connect();
                     if (!$objElasticsearchAdapter->getClient()) {
-                       Message::addError('No connection to the server could be established');
+                        Message::addError('No connection to the server could be established');
                     }
                     break;
                 case 'licence':
@@ -71,7 +72,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'delete' => [
                 'href' => 'act=delete',
                 'icon' => 'delete.svg',
-                'attributes' => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm']??'') . '\'))return false;Backend.getScrollOffset()"'
+                'attributes' => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? '') . '\'))return false;Backend.getScrollOffset()"'
             ],
             'show' => [
                 'href' => 'act=show',
@@ -82,7 +83,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'palettes' => [
         '__selector__' => ['type'],
         'default' => 'signature,type',
-        'licence' => 'signature,type,key',
+        'licence' => 'signature,type,authToken,keys',
         'elasticsearch' => 'signature,type,host,port,username,password',
         'elasticsearch_cloud' => 'signature,type,signature,cloudid,key'
     ],
@@ -98,7 +99,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'inputType' => 'text',
             'eval' => [
                 'maxlength' => 32,
-                'tl_class' => 'clr long',
+                'tl_class' => 'w50',
                 'mandatory' => true,
                 'readonly' => true
             ],
@@ -156,12 +157,53 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'key' => [
             'inputType' => 'text',
             'eval' => [
-                'maxlength' => 255,
-                'tl_class' => 'w50',
                 'mandatory' => true,
+                'tl_class' => 'w50 clr',
+                'decodeEntities' => true
+            ],
+            'sql' => "varchar(128) NOT NULL default ''"
+        ],
+        'authToken' => [
+            'inputType' => 'text',
+            'eval' => [
+                'mandatory' => true,
+                'tl_class' => 'w50 clr',
                 'decodeEntities' => true
             ],
             'sql' => "varchar(255) NOT NULL default ''"
+        ],
+        'keys' => [
+            'inputType' => 'multiColumnWizard',
+            'eval' => [
+                'mandatory' => true,
+                'tl_class' => 'long clr',
+                'decodeEntities' => true,
+                'columnFields' => [
+                    'key' => [
+                        'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['key'],
+                        'inputType' => 'text',
+                        'eval' => ['style' => 'width:100%']
+                    ],
+                    'domain' => [
+                        'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['domain'],
+                        'inputType' => 'text',
+                        'eval' => ['style' => 'width:100%'],
+                        'save_callback' => [[Authorization::class, 'parseDomain']]
+                    ]
+                ]
+            ],
+            'save_callback' => [function ($varValue, DataContainer $dc) {
+                $arrKeys = StringUtil::deserialize($varValue, true);
+                foreach ($arrKeys as $arrKey) {
+                    $strKey = (new Authorization())->encodeLicense(($arrKey['key']??''), ($arrKey['domain']??''), $dc->activeRecord->authToken);
+                    $blnValid = (new Authorization())->isValid($strKey);
+                    if (!$blnValid) {
+                        throw new Exception('Licence for domain '. ($arrKey['domain']??'') .' is invalid! You can purchase a licence at this address: https://app.sineos.de');
+                    }
+                }
+                return $varValue;
+            }],
+            'sql' => "blob NULL"
         ],
         'cloudid' => [
             'inputType' => 'text',

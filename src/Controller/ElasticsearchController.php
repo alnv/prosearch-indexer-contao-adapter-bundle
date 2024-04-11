@@ -61,23 +61,20 @@ class ElasticsearchController extends AbstractController
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
-
                 $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
                 $objElasticsearchAdapter->connect();
 
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->search($arrKeywords);
                 }
-
                 break;
-            case 'licence':
 
+            case 'licence':
                 $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
                 $objElasticsearchAdapter->connect();
 
                 $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
                 $arrResults['results'] = $objProxy->search($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrElasticOptions);
-
                 break;
         }
 

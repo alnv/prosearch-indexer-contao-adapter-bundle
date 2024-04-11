@@ -2,12 +2,14 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\Database;
+use Contao\Environment;
 use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
@@ -42,13 +44,12 @@ class Elasticsearch extends Adapter
         ]
     ];
 
-    public function connect()
+    public function connect(): void
     {
 
         $this->arrCredentials = (new Credentials())->getCredentials();
 
         if ($this->arrCredentials === false) {
-
             return;
         }
 
@@ -82,17 +83,23 @@ class Elasticsearch extends Adapter
                 }
                 break;
             case 'licence':
-                $this->strLicense = $this->arrCredentials['key'] ?? '';
+                $objAuthorization = new Authorization;
+                $strDomain = Environment::get('httpHost');
+                $arrLicenseKeys = StringUtil::deserialize($this->arrCredentials['keys'], true);
+                if (empty($arrLicenseKeys)) {
+                    $strLicense = $this->arrCredentials['key'] ?? '';
+                } else {
+                    $strLicense = $objAuthorization->pluckKeyFromKeysGlobalByDomain(StringUtil::deserialize($this->arrCredentials['keys'], true), $strDomain);
+                }
+                $this->strLicense = $objAuthorization->encodeLicense($strLicense, $strDomain, ($this->arrCredentials['authToken']??''));
                 return;
         }
 
         if (!$this->strSignature) {
-
             $this->objClient = null;
         }
 
         if (!$this->objClient) {
-
             System::getContainer()
                 ->get('monolog.logger.contao')
                 ->log(LogLevel::ERROR, 'No connection to the server could be established', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
@@ -103,13 +110,10 @@ class Elasticsearch extends Adapter
     {
 
         if ($objIndicesModel = IndicesModel::findByPk($strIndicesId)) {
-
             $objPage = PageModel::findByPk($objIndicesModel->pageId);
 
             if ($objPage) {
-
                 $objPage->loadDetails();
-
                 return $objPage->rootId;
             }
         }
@@ -515,7 +519,7 @@ class Elasticsearch extends Adapter
      * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    public function indexDocuments($strIndicesId)
+    public function indexDocuments($strIndicesId): void
     {
 
         if (!$strIndicesId) {
@@ -532,7 +536,7 @@ class Elasticsearch extends Adapter
         }
     }
 
-    public function createDocument($strIndicesId)
+    public function createDocument($strIndicesId): bool|array
     {
 
         $objIndices = IndicesModel::findByPk($strIndicesId);

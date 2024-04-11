@@ -44,12 +44,8 @@ class Proxy
     public function deleteDocument($strIndex, $strDocumentId): bool
     {
 
-        if (!$this->strLicence) {
-            return false;
-        }
-
         $objClient = new Client();
-        $objClient->request('POST', $this->strProxyDomain . '/search/delete?licence=' . $this->strLicence, [
+        $objClient->request('POST', $this->strProxyDomain . '/search/delete', [
             'json' => [
                 'body' => [
                     'index' => $strIndex,

@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(path: 'stat', name: 'elastic-stat-controller', defaults: ['_scope' => 'frontend'])]
+#[Route(path: 'stat', name: 'elastic-stat-controller', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class StatController extends AbstractController
 {
 

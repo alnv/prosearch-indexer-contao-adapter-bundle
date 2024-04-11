@@ -139,7 +139,6 @@ class PDFIndices extends Searcher
                 (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
 
             } catch (\Exception $exception) {
-
                 System::getContainer()
                     ->get('monolog.logger.contao')
                     ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
