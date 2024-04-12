@@ -2,6 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
@@ -10,6 +11,8 @@ use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\System;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
+use Contao\StringUtil;
+use Contao\Environment;
 
 // https://github.com/elastic/elasticsearch-php
 class Elasticsearch extends Adapter
@@ -18,6 +21,8 @@ class Elasticsearch extends Adapter
     public const INDEX = 'contao_search';
 
     private string $strSignature = "";
+
+    private array $arrCredentials = [];
 
     protected array $arrAnalyzer = [
         "german" => [
@@ -40,22 +45,22 @@ class Elasticsearch extends Adapter
     public function connect()
     {
 
-        $arrCredentials = (new Credentials())->getCredentials();
+        $this->arrCredentials = (new Credentials())->getCredentials();
 
-        if ($arrCredentials === false) {
+        if ($this->arrCredentials === false) {
 
             return;
         }
 
-        $this->strSignature = $arrCredentials['signature'] ?? '';
+        $this->strSignature = $this->arrCredentials['signature'] ?? '';
 
-        switch ($arrCredentials['type']) {
+        switch ($this->arrCredentials['type']) {
             case 'elasticsearch':
                 try {
                     $this->objClient = ClientBuilder::create()
-                        ->setHosts([$arrCredentials['host'] . ($arrCredentials['port'] ? ':' . $arrCredentials['port'] : '')])
-                        ->setBasicAuthentication($arrCredentials['username'], $arrCredentials['password'])
-                        ->setCABundle($arrCredentials['cert'])
+                        ->setHosts([$this->strSignature['host'] . ($this->strSignature['port'] ? ':' . $this->strSignature['port'] : '')])
+                        ->setBasicAuthentication($this->strSignature['username'], $this->strSignature['password'])
+                        ->setCABundle($this->strSignature['cert'])
                         ->build();
                 } catch (\Exception $objError) {
                     System::getContainer()
@@ -66,8 +71,8 @@ class Elasticsearch extends Adapter
             case 'elasticsearch_cloud':
                 try {
                     $this->objClient = ClientBuilder::create()
-                        ->setElasticCloudId($arrCredentials['cloudid'])
-                        ->setApiKey($arrCredentials['key'])
+                        ->setElasticCloudId($this->strSignature['cloudid'])
+                        ->setApiKey($this->strSignature['key'])
                         ->build();
                 } catch (\Exception $objError) {
                     System::getContainer()
@@ -77,12 +82,19 @@ class Elasticsearch extends Adapter
                 }
                 break;
             case 'licence':
-                $this->strLicense = $arrCredentials['key'] ?? '';
+                $objAuthorization = new Authorization;
+                $strDomain = Environment::get('httpHost');
+                $arrLicenseKeys = StringUtil::deserialize($this->arrCredentials['keys'], true);
+                if (empty($arrLicenseKeys)) {
+                    $strLicense = $this->arrCredentials['key'] ?? '';
+                } else {
+                    $strLicense = $objAuthorization->pluckKeyFromKeysGlobalByDomain(StringUtil::deserialize($this->arrCredentials['keys'], true), $strDomain);
+                }
+                $this->strLicense = $objAuthorization->encodeLicense($strLicense, $strDomain, ($this->arrCredentials['authToken']??''));
                 return;
         }
 
         if (!$this->strSignature) {
-
             $this->objClient = null;
         }
 
@@ -102,18 +114,30 @@ class Elasticsearch extends Adapter
     {
 
         if ($objIndicesModel = IndicesModel::findByPk($strIndicesId)) {
-
             $objPage = \PageModel::findByPk($objIndicesModel->pageId);
 
             if ($objPage) {
-
                 $objPage->loadDetails();
-
                 return $objPage->rootId;
             }
         }
 
         return '';
+    }
+
+    public function deleteDatabase($strIndex): void
+    {
+
+        $objCurl = curl_init();
+        curl_setopt($objCurl, CURLOPT_URL, "http://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
+        curl_setopt($objCurl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+
+        if ($this->arrCredentials['username'] && $this->arrCredentials['password']) {
+            curl_setopt($objCurl, CURLOPT_HTTPHEADER, array('Authorization:Basic ' . base64_encode($this->arrCredentials['username'] . ':' . $this->arrCredentials['password'])));
+        }
+
+        curl_exec($objCurl);
+        curl_close($objCurl);
     }
 
     public function getIndexName($strRootId): string
@@ -495,7 +519,7 @@ class Elasticsearch extends Adapter
             return false;
         }
 
-        $arrDomDocument = \StringUtil::deserialize($objIndices->document, true);
+        $arrDomDocument = StringUtil::deserialize($objIndices->document, true);
 
         $arrDocument = [
             'id' => $strIndicesId,
@@ -506,7 +530,7 @@ class Elasticsearch extends Adapter
             'language' => $objIndices->language
         ];
 
-        $arrTypes = \StringUtil::deserialize($objIndices->types, true);
+        $arrTypes = StringUtil::deserialize($objIndices->types, true);
         $objMicroData = MicrodataModel::findByPid($strIndicesId);
 
         if ($objMicroData) {

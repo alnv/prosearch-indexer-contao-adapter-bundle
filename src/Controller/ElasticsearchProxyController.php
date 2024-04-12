@@ -6,10 +6,11 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Contao\System;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Events\LicenceCheckEvent;
+use Contao\CoreBundle\Exception\AccessDeniedException;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Contao\Environment;
 
 /**
  *
@@ -66,8 +67,8 @@ class ElasticsearchProxyController extends AbstractController
         $arrBody = \json_decode(file_get_contents('php://input'), true);
         $strLicence = \Input::post('licence') ?: \Input::get('licence');
 
-        if (!(new LicenceCheckEvent())->isValidLicence($strLicence)) {
-            throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+        if (!(new Authorization())->isValid($strLicence)) {
+            throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
         }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
@@ -105,7 +106,12 @@ class ElasticsearchProxyController extends AbstractController
     {
         $this->container->get('contao.framework')->initialize();
 
+        $strLicence = \Input::post('licence') ?: \Input::get('licence');
         $arrBody = \json_decode(file_get_contents('php://input'), true);
+
+        if (!(new Authorization())->isValid($strLicence)) {
+            throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
+        }
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());
         $objElasticsearch->connect();
