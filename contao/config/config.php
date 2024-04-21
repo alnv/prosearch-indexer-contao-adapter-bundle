@@ -12,6 +12,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\FAQPage;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Product;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Person;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Event;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Backend;
 use Contao\ArrayUtil;
 
 /**
@@ -41,6 +42,13 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 3, [
             'name' => 'searchcredentials',
             'tables' => [
                 'tl_search_credentials'
+            ]
+        ],
+        'indices' => [
+            'name' => 'indices',
+            'reindexIndex' => [Backend::class, 'reIndexSite'],
+            'tables' => [
+                'tl_indices'
             ]
         ],
         'categories' => [

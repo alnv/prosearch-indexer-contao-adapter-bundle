@@ -9,23 +9,11 @@ use Contao\FilesModel;
 use Contao\StringUtil;
 use Contao\Validator;
 
-/**
- *
- */
 class Result
 {
-    /**
-     * @var array
-     */
     protected array $arrHit;
 
-    /**
-     * @param string $strId
-     * @param array $arrHighlights
-     * @param array $arrSource
-     * @return void
-     */
-    public function addHit(string $strId, array $arrHighlights, array $arrSource = [])
+    public function addHit(string $strId, array $arrHighlights, array $arrSource = []): void
     {
 
         $this->arrHit = [
@@ -49,6 +37,11 @@ class Result
         }
 
         if ($objDocument->state == States::DELETE) {
+            return;
+        }
+
+        $arrSettings = StringUtil::deserialize($objDocument->settings, true);
+        if (in_array('doNotShow', $arrSettings)) {
             return;
         }
 

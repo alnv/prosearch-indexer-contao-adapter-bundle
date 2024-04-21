@@ -67,7 +67,7 @@ class Categories
         return $arrCategories;
     }
 
-    public function setCategories()
+    public function setCategories(): void
     {
 
         $arrCategories = [];

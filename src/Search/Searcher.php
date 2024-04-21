@@ -29,7 +29,7 @@ abstract class Searcher
      * @param $strContent
      * @return array|string|string[]
      */
-    public function parseContent($strContent)
+    public function parseContent($strContent): string
     {
 
         $strContent = str_replace(["\n", "\r", "\t", '&#160;', '&nbsp;', '&shy;'], [' ', ' ', ' ', ' ', ' ', ''], $strContent);

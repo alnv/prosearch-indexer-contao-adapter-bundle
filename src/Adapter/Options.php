@@ -51,14 +51,12 @@ class Options
      */
     protected int $perPage = 100;
 
-
     /**
      * @param string $strAnalyzer
      * @return void
      */
     public function setAnalyzer(string $strAnalyzer = 'contao'): void
     {
-
         $this->analyzer = $strAnalyzer;
     }
 
@@ -68,7 +66,6 @@ class Options
      */
     public function setLanguage(string $strLanguage = ''): void
     {
-
         $this->language = $strLanguage;
     }
 
@@ -78,7 +75,6 @@ class Options
      */
     public function setRootPageId($strRootId): void
     {
-
         $this->rootPageId = $strRootId;
     }
 
@@ -88,7 +84,6 @@ class Options
      */
     public function setPerPage(int $strPerPage = 100): void
     {
-
         $this->perPage = $strPerPage;
     }
 
@@ -108,7 +103,6 @@ class Options
      */
     public function setFuzzy(bool $blnFuzzy): void
     {
-
         $this->fuzzy = $blnFuzzy;
     }
 
@@ -118,7 +112,6 @@ class Options
      */
     public function setUseRichSnippets(bool $blnUseRichSnippets): void
     {
-
         $this->useUseRichSnippets = $blnUseRichSnippets;
     }
 
@@ -128,7 +121,6 @@ class Options
      */
     public function setOpenDocumentsInBrowser(bool $blnOpenDocumentsInBrowser = true): void
     {
-
         $this->openDocumentsInBrowser = $blnOpenDocumentsInBrowser;
     }
 
@@ -138,7 +130,6 @@ class Options
      */
     public function setMinKeywordLength(int $wordLength = 4): void
     {
-
         $this->minKeywordLength = $wordLength;
     }
 

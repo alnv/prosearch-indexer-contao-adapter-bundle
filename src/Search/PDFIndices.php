@@ -108,14 +108,26 @@ class PDFIndices extends Searcher
                 }
 
                 $strUrl = $strDomain . '/' . $objFile->path;
-                $objIndicesModel = IndicesModel::findByUrl($strUrl);
 
+                $objIndicesModel = IndicesModel::findByUrl($strUrl);
                 if (!$objIndicesModel) {
                     $objIndicesModel = new IndicesModel();
                 }
 
+                $arrSettings = StringUtil::deserialize($objIndicesModel->settings, true);
+
+                if (in_array('preventIndex', $arrSettings)) {
+                    return;
+                }
+
                 $objPage = PageModel::findByPk($meta['pageId']);
                 $objPage->loadDetails();
+
+                if (!in_array('preventIndexMetadata', $arrSettings)) {
+                    $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
+                    $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr?:$strNodeContent)) ?: $strFilename);
+                    $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
+                }
 
                 $objIndicesModel->tstamp = time();
                 $objIndicesModel->url = $strUrl;
@@ -124,11 +136,8 @@ class PDFIndices extends Searcher
                 $objIndicesModel->language = $strLanguage;
                 $objIndicesModel->types = ['pdf'];
                 $objIndicesModel->pageId = $objPage->id;
-                $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
                 $objIndicesModel->document = serialize($arrDocument);
                 $objIndicesModel->domain = $document->getUri()->getHost();
-                $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr?:$strNodeContent)) ?: $strFilename);
-                $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
 

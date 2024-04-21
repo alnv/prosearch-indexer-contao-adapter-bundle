@@ -80,8 +80,6 @@ class Indices extends Searcher
             }
         }
 
-        $objIndicesModel = IndicesModel::findByUrl($strUrl);
-
         $arrSearchTypes = [];
         foreach ($this->objCrawler->filterXpath("//meta[@name='search:type']")->extract(['content']) as $strType) {
             foreach (explode(',', $strType) as $strCategoryType) {
@@ -89,30 +87,48 @@ class Indices extends Searcher
             }
         }
 
+        $objIndicesModel = IndicesModel::findByUrl($strUrl);
         if (!$objIndicesModel) {
             $objIndicesModel = new IndicesModel();
         }
 
+        $arrSettings = StringUtil::deserialize($objIndicesModel->settings, true);
+
+        if (in_array('preventIndex', $arrSettings)) {
+            return;
+        }
+
         $arrImages = [];
         foreach ($objPageObject->images as $objImage) {
+
             if (!$objImage->url) {
                 continue;
             }
+
             $arrFragments = parse_url($objImage->url);
             $strPath = ltrim($arrFragments['path'], '/');
+
             if ($objFile = FilesModel::findByPath($strPath)) {
                 $strUuid = StringUtil::binToUuid($objFile->uuid);
             } else {
                 $strUuid = $strPath;
             }
+
             if (in_array($strUuid, $arrImages)) {
                 continue;
             }
+
             $arrImages[] = $strUuid;
         }
 
         $objPage = PageModel::findByPk($meta['pageId']);
         $objPage->loadDetails();
+
+        if (!in_array('preventIndexMetadata', $arrSettings)) {
+            $objIndicesModel->images = serialize($arrImages);
+            $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
+            $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
+        }
 
         $objIndicesModel->url = $strUrl;
         $objIndicesModel->tstamp = time();
@@ -120,11 +136,8 @@ class Indices extends Searcher
         $objIndicesModel->language = $strLanguage;
         $objIndicesModel->types = $arrSearchTypes;
         $objIndicesModel->pageId = $objPage->id;
-        $objIndicesModel->images = serialize($arrImages);
         $objIndicesModel->document = serialize($arrDocument);
         $objIndicesModel->domain = $document->getUri()->getHost();
-        $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
-        $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
         $objIndicesModel->doc_type = 'page';
         $objIndicesModel->origin_url = '';
         $objIndicesModel->save();
@@ -134,8 +147,6 @@ class Indices extends Searcher
         $objOptions = new Options();
         $objOptions->setLanguage($strLanguage);
         $objOptions->setRootPageId($objPage->rootId);
-
-        // set domain to options?
 
         (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
     }

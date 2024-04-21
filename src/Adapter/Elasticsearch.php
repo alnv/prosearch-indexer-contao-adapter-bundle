@@ -194,7 +194,6 @@ class Elasticsearch extends Adapter
         $this->connect();
 
         $strIndex = $this->getIndexName($this->getRootIdFromIndicesId($strIndicesId));
-
         $objIndicesModel = IndicesModel::findByPk($strIndicesId);
         $objMicrodataModel = MicrodataModel::findByPid($strIndicesId);
 
@@ -203,13 +202,11 @@ class Elasticsearch extends Adapter
         }
 
         if (!$this->getClient()) {
-
             if ((new Proxy($this->strLicense))->deleteDocument($strIndex, $strIndicesId) === false) {
                 return;
             }
 
         } else {
-
             $this->clientDelete($strIndex, $strIndicesId);
         }
 
@@ -274,7 +271,7 @@ class Elasticsearch extends Adapter
         return $arrDocuments;
     }
 
-    protected function createMapping()
+    protected function createMapping(): void
     {
 
         $this->connect();
@@ -410,7 +407,7 @@ class Elasticsearch extends Adapter
         }
     }
 
-    public function clientMapping($arrParams)
+    public function clientMapping($arrParams): void
     {
 
         if (!$this->getClient()) {
@@ -431,7 +428,7 @@ class Elasticsearch extends Adapter
         }
     }
 
-    public function indexByDocument($arrDocument)
+    public function indexByDocument($arrDocument): void
     {
 
         $objIndicesModel = IndicesModel::findByPk($arrDocument['id']);
@@ -512,13 +509,6 @@ class Elasticsearch extends Adapter
         }
     }
 
-    /**
-     * @param $strIndicesId
-     * @return void
-     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
-     * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
-     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
-     */
     public function indexDocuments($strIndicesId): void
     {
 
@@ -577,6 +567,9 @@ class Elasticsearch extends Adapter
             }
             $arrDocument[$strField] = $varValues;
         }
+
+        $objIndices->last_indexed = time();
+        $objIndices->save();
 
         return $arrDocument;
     }
@@ -855,19 +848,16 @@ class Elasticsearch extends Adapter
 
     public function getAnalyzer(): array
     {
-
         return $this->arrAnalyzer;
     }
 
     protected function getSizeValue()
     {
-
         return $this->arrOptions['perPage'] ?: 100;
     }
 
     public function getLicense(): string
     {
-
         return $this->strLicense;
     }
 }

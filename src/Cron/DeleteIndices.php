@@ -15,7 +15,6 @@ class DeleteIndices
         $objIndices = Database::getInstance()->prepare('SELECT * FROM tl_indices WHERE state=? ORDER BY RAND()')->limit(50)->execute(States::DELETE);
 
         while ($objIndices->next()) {
-
             $objElasticsearch->deleteIndex($objIndices->id);
         }
     }

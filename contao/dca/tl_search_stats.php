@@ -23,6 +23,13 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
             'fields' => ['keywords', 'types', 'count', 'clicks', 'hits'],
             'showColumns' => true
         ],
+        'global_operations' => [
+            'all' => [
+                'href' => 'act=select',
+                'class' => 'header_edit_all',
+                'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"'
+            ]
+        ],
         'operations' => [
             'delete' => [
                 'href' => 'act=delete',
