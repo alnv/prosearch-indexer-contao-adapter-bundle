@@ -24,22 +24,16 @@ class Backend
             Controller::redirect('contao/main.php?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
         }
 
-        $objPage = PageModel::findByPk($objIndicesModel->pageId);
-        if (!$objPage) {
-            Message::addInfo('Etwas ist schiefgelaufen');
-            Controller::redirect('contao/main.php?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
+        $objOptions = new Options();
+
+        if ($objPage = PageModel::findByPk($objIndicesModel->pageId)) {
+            $objPage->loadDetails();
+            $objOptions->setRootPageId($objPage->rootId);
         }
 
-        $objPage->loadDetails();
-
-        $objOptions = new Options();
         $objOptions->setLanguage($objIndicesModel->language);
-        $objOptions->setRootPageId($objPage->rootId);
-
         (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
-
         Message::addInfo('Seite wurde indexiert');
-
         Controller::redirect('contao/main.php?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
     }
 }

@@ -44,13 +44,6 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 3, [
                 'tl_search_credentials'
             ]
         ],
-        'indices' => [
-            'name' => 'indices',
-            'reindexIndex' => [Backend::class, 'reIndexSite'],
-            'tables' => [
-                'tl_indices'
-            ]
-        ],
         'categories' => [
             'name' => 'categories',
             'tables' => [
@@ -67,6 +60,13 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 3, [
             'name' => 'stats',
             'tables' => [
                 'tl_search_stats'
+            ]
+        ],
+        'indices' => [
+            'name' => 'indices',
+            'reindexIndex' => [Backend::class, 'reIndexSite'],
+            'tables' => [
+                'tl_indices'
             ]
         ]
     ]

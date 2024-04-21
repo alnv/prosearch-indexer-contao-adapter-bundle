@@ -17,88 +17,91 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
-        'onload_callback' => [
-            function (DataContainer $objDataContainer) {
+        'onload_callback' => [function (DataContainer $objDataContainer) {
 
+            $strAct = Input::get('act') ?: '';
+            $blnIsSavin = Input::post('FORM_SUBMIT') === $objDataContainer->table;
 
-                $strAct = Input::get('act') ?: '';
-                $blnIsSavin = Input::post('FORM_SUBMIT') === $objDataContainer->table;
-
-                if ($strAct != 'edit') {
-                    return;
-                }
-
-                $objIndices = IndicesModel::findByPk($objDataContainer->id);
-                if (!$objIndices) {
-                    return;
-                }
-
-                $varSettings = Input::post('settings') ?: $objIndices->settings;
-                $arrSettings = StringUtil::deserialize($varSettings, true);
-
-                if (!in_array('preventIndexMetadata', $arrSettings) && !in_array('preventIndex', $arrSettings)) {
-                    $GLOBALS['TL_DCA']['tl_indices']['fields']['title']['eval']['readonly'] = true;
-                    $GLOBALS['TL_DCA']['tl_indices']['fields']['description']['eval']['readonly'] = true;
-                    PaletteManipulator::create()->removeField('images')->applyToPalette('default', 'tl_indices');
-                }
-
-                $arrPalettes = [];
-                $strFieldPrefix = 'indices_';
-
-                foreach (Toolkit::parseDocumentIndex($objIndices->document) as $strField => $varData) {
-
-                    $strField = $strFieldPrefix . $strField;
-                    Input::setPost('__' . $strField . '__', $varData);
-
-                    $arrField = [
-                        'label' => &$GLOBALS['TL_LANG']['tl_indices'][$strField],
-                        'inputType' => 'listWizard',
-                        'eval' => [
-                            'alwaysSave' => true,
-                            'doNotSaveEmpty' => true,
-                            'decodeEntities' => true,
-                            'doNotCopy' => true,
-                            'tl_class' => 'clr'
-                        ],
-                        'load_callback' => [function ($strValue, DataContainer $objDataContainer) {
-                            return Input::post('__' . $objDataContainer->inputName . '__');
-                        }],
-                        'save_callback' => [function ($strValue, DataContainer $objDataContainer) {
-                            Input::setPost($objDataContainer->inputName, StringUtil::deserialize($strValue, true));
-                            return '';
-                        }]
-                    ];
-
-                    if (!in_array('preventIndex', $arrSettings)) {
-                        $arrField['eval']['readonly'] = true;
-                    }
-
-                    if ($blnIsSavin) {
-                        unset($arrField['load_callback']);
-                    }
-
-                    $arrPalettes[] = $strField;
-                    $GLOBALS['TL_DCA']['tl_indices']['fields'][$strField] = $arrField;
-                }
-
-                $strPrevField = $arrPalettes[0] ?? '';
-                $objPaletteManipulator = PaletteManipulator::create();
-                $objPaletteManipulator->addLegend('document_legend');
-                $objPaletteManipulator->addField($strPrevField, 'document_legend');
-
-                foreach ($arrPalettes as $index => $strField) {
-
-                    if (!$index) {
-                        continue;
-                    }
-
-                    $objPaletteManipulator->addField($strField, $strPrevField);
-                    $strPrevField = $strField;
-                }
-
-                $objPaletteManipulator->applyToPalette('default', 'tl_indices');
+            if ($strAct != 'edit') {
+                return;
             }
-        ],
+
+            $objIndices = IndicesModel::findByPk($objDataContainer->id);
+            if (!$objIndices) {
+                return;
+            }
+
+            $varSettings = Input::post('settings') ?: $objIndices->settings;
+            $arrSettings = StringUtil::deserialize($varSettings, true);
+
+            if (!in_array('preventIndexMetadata', $arrSettings) && !in_array('preventIndex', $arrSettings)) {
+                $GLOBALS['TL_DCA']['tl_indices']['fields']['title']['eval']['readonly'] = true;
+                $GLOBALS['TL_DCA']['tl_indices']['fields']['description']['eval']['readonly'] = true;
+                PaletteManipulator::create()->removeField('images')->applyToPalette('default', 'tl_indices');
+            }
+
+            $arrPalettes = [];
+            $strFieldPrefix = 'indices_';
+
+            foreach (Toolkit::parseDocumentIndex($objIndices->document) as $strField => $varData) {
+
+                $strFieldname = $strFieldPrefix . $strField;
+
+                $arrField = [
+                    'label' => &$GLOBALS['TL_LANG']['tl_indices'][$strFieldname],
+                    'inputType' => 'listWizard',
+                    'eval' => [
+                        'alwaysSave' => true,
+                        'doNotSaveEmpty' => true,
+                        'decodeEntities' => true,
+                        'doNotCopy' => true,
+                        'tl_class' => 'clr'
+                    ],
+                    'load_callback' => [function ($strValue, DataContainer $objDataContainer) {
+                        return Input::post('__' . $objDataContainer->inputName . '__');
+                    }],
+                    'save_callback' => [function ($strValue, DataContainer $objDataContainer) {
+                        Input::setPost($objDataContainer->inputName, StringUtil::deserialize($strValue, true));
+                        return '';
+                    }]
+                ];
+
+                if (!in_array('preventIndex', $arrSettings)) {
+                    $arrField['eval']['readonly'] = true;
+                }
+
+                if ($blnIsSavin) {
+                    unset($arrField['load_callback']);
+                }
+
+                if ($strField == 'text' || $strField == 'document') {
+                    $arrField['inputType'] = 'textarea';
+                    $varData = implode(' ', $varData);
+                }
+
+                Input::setPost('__' . $strFieldname . '__', $varData);
+
+                $arrPalettes[] = $strFieldname;
+                $GLOBALS['TL_DCA']['tl_indices']['fields'][$strFieldname] = $arrField;
+            }
+
+            $strPrevField = $arrPalettes[0] ?? '';
+            $objPaletteManipulator = PaletteManipulator::create();
+            $objPaletteManipulator->addLegend('document_legend');
+            $objPaletteManipulator->addField($strPrevField, 'document_legend');
+
+            foreach ($arrPalettes as $index => $strField) {
+
+                if (!$index) {
+                    continue;
+                }
+
+                $objPaletteManipulator->addField($strField, $strPrevField);
+                $strPrevField = $strField;
+            }
+
+            $objPaletteManipulator->applyToPalette('default', 'tl_indices');
+        }],
         'onsubmit_callback' => [function (DataContainer $objDataContainer) {
 
             $objIndices = IndicesModel::findByPk($objDataContainer->id);
@@ -163,7 +166,7 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ]
     ],
     'palettes' => [
-        'default' => '{types_legend},types;{meta_legend},title,description,images;{page_legend},domain,url,language,pageId;{settings_legend},settings;'
+        'default' => '{settings_legend},settings;{types_legend},types;{page_legend},domain,url,language,pageId;{meta_legend},title,description,images'
     ],
     'fields' => [
         'id' => [
@@ -249,16 +252,7 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'inputType' => 'text',
             'eval' => [
                 'tl_class' => 'w50',
-                'inputType' => 'fileTree',
-                'eval' => [
-                    'files' => true,
-                    'multiple' => true,
-                    'mandatory' => true,
-                    'filesOnly' => true,
-                    'tl_class' => 'clr',
-                    'fieldType' => 'checkbox',
-                    'extensions' => ($GLOBALS['TL_CONFIG']['validImageTypes'] ?? '')
-                ]
+                'mandatory' => true
             ],
             'sql' => "varchar(12) NOT NULL default ''"
         ],
@@ -275,9 +269,9 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         'pageId' => [
             'inputType' => 'pageTree',
             'eval' => [
-                'mandatory' => true,
                 'dcaPicker' => true,
                 'doNotCopy' => true,
+                'mandatory' => true,
                 'decodeEntities' => true,
                 'tl_class' => 'w50 wizard'
             ],

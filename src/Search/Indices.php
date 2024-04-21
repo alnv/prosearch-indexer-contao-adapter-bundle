@@ -16,19 +16,9 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
-/**
- *
- */
 class Indices extends Searcher
 {
 
-    /**
-     * @param Document $document
-     * @param array $meta
-     * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
-     * @throws \Elastic\Elasticsearch\Exception\MissingParameterException
-     * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
-     */
     public function __construct(Document $document, array $meta = [])
     {
 
@@ -70,7 +60,6 @@ class Indices extends Searcher
 
         $arrCanonicalUrls = $this->objCrawler->filterXpath("//link[@rel='canonical']")->extract(['href']);
         if (is_array($arrCanonicalUrls) && !empty($arrCanonicalUrls) && isset($arrCanonicalUrls[0])) {
-
             $strCanonicalUrl = $arrCanonicalUrls[0];
             $strCanonicalUrl = StringUtil::decodeEntities($strCanonicalUrl);
             $strCanonicalUrl = strtok($strCanonicalUrl, '?');
@@ -143,6 +132,10 @@ class Indices extends Searcher
         $objIndicesModel->save();
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
+
+        if ($objIndicesModel->last_indexed && strtotime('+3 hours', $objIndicesModel->last_indexed) > time()) {
+            return;
+        }
 
         $objOptions = new Options();
         $objOptions->setLanguage($strLanguage);

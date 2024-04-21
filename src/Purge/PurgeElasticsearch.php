@@ -8,7 +8,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 class PurgeElasticsearch
 {
 
-    public function deleteAllDatabases()
+    public function deleteAllDatabases(): void
     {
 
         $objElasticsearch = new Elasticsearch((new Options())->getOptions());

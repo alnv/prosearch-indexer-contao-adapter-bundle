@@ -19,17 +19,9 @@ use Smalot\PdfParser\Parser;
 use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 
-/**
- *
- */
 class PDFIndices extends Searcher
 {
 
-    /**
-     * @param Document $document
-     * @param array $meta
-     * @throws \Exception
-     */
     public function __construct(Document $document, array $meta = [])
     {
 
@@ -140,6 +132,10 @@ class PDFIndices extends Searcher
                 $objIndicesModel->domain = $document->getUri()->getHost();
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
+
+                if ($objIndicesModel->last_indexed && strtotime('+3 hours', $objIndicesModel->last_indexed) > time()) {
+                    return;
+                }
 
                 $objOptions = new Options();
                 $objOptions->setLanguage($strLanguage);

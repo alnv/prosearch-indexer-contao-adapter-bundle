@@ -147,22 +147,16 @@ class Elasticsearch extends Adapter
         while ($objRoots->next()) {
 
             try {
-
                 $strIndex = $this->getIndexName($objRoots->id);
-
                 if (!$this->getClient()) {
-
                     if ((new Proxy($this->strLicense))->deleteDatabase($strIndex) === false) {
                         return;
                     }
-
                 } else {
-
                     $this->deleteDatabase($strIndex);
                 }
 
             } catch (\Exception $objError) {
-
                 System::getContainer()
                     ->get('monolog.logger.contao')
                     ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
