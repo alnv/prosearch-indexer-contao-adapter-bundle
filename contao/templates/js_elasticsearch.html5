@@ -30,7 +30,7 @@
             },
             methods: {
                 fetch: function () {
-                    if (this.keywords.length && this.keywords.length < <?= $this->minKeywordLength ?>) {
+                    if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength?:'0') ?>) {
                         return;
                     }
                     this.loading = true;
