@@ -8,6 +8,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
+use Contao\Database;
+use Contao\PageModel;
 use Contao\System;
 use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
@@ -123,6 +125,40 @@ class Elasticsearch extends Adapter
         }
 
         return '';
+    }
+
+    public function deleteDatabases(): void
+    {
+
+        $this->connect();
+
+        $objRoots = PageModel::findPublishedRootPages();
+
+        if (!$objRoots) {
+            return;
+        }
+
+        while ($objRoots->next()) {
+
+            try {
+                $strIndex = $this->getIndexName($objRoots->id);
+                if (!$this->getClient()) {
+                    if ((new Proxy($this->strLicense))->deleteDatabase($strIndex) === false) {
+                        return;
+                    }
+                } else {
+                    $this->deleteDatabase($strIndex);
+                }
+
+            } catch (\Exception $objError) {
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+            }
+        }
+
+        Database::getInstance()->prepare('DELETE FROM tl_indices')->execute();
+        Database::getInstance()->prepare('DELETE FROM tl_microdata')->execute();
     }
 
     public function deleteDatabase($strIndex): void

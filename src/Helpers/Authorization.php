@@ -47,10 +47,23 @@ class Authorization
         return '';
     }
 
+    /**
+     *
+     * Diese Lizenzen nur für Testzwecke verwenden!
+     */
+    private function testKeys4DevOnly($strLicense): bool
+    {
+        return in_array($strLicense, ['ck-23-kiel', 'alpha-test']);
+    }
+
     public function isValid(string $strLicenseIdentifier): bool
     {
         if (!$strLicenseIdentifier) {
             return false;
+        }
+
+        if ($this->testKeys4DevOnly($strLicenseIdentifier)) {
+            return true;
         }
 
         $arrLicenseFragments = $this->decodeLicense($strLicenseIdentifier);
@@ -59,7 +72,7 @@ class Authorization
             return false;
         }
 
-        if (in_array($arrLicenseFragments['license'], ['ck-23-kiel', 'alpha-test'])) {
+        if ($this->testKeys4DevOnly($arrLicenseFragments['license'])) {
             return true;
         }
 
