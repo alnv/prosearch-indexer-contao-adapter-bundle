@@ -14,6 +14,8 @@ Mit stetig wachsenden Online-Inhalten wird es immer anspruchsvoller, relevanten 
 - Durchsuchen von PDF Dokumenten
 - Synonyme
 
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/MFjcACLUUbQ/0.jpg)](https://www.youtube.com/watch?v=MFjcACLUUbQ)
+
 Mehr Details: https://www.sineos.de/contao/contao-search-pro
 
 ## Installation
