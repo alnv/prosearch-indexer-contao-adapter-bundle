@@ -76,7 +76,9 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
 
                 if ($strField == 'text' || $strField == 'document') {
                     $arrField['inputType'] = 'textarea';
-                    $varData = implode(' ', $varData);
+                    if (is_array($varData)) {
+                        $varData = implode(' ', $varData);
+                    }
                 }
 
                 Input::setPost('__' . $strFieldname . '__', $varData);
