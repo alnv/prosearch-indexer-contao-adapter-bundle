@@ -13,6 +13,4 @@ $GLOBALS['TL_LANG']['tl_search_credentials']['cert'] = ['Cert-Path', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['signature'] = ['Signatur', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['authToken'] = ['API-Token', ''];
 
-$GLOBALS['TL_LANG']['tl_search_credentials']['elasticsearch'] = ['Elasticsearch', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['licence'] = ['API-Key', ''];
-$GLOBALS['TL_LANG']['tl_search_credentials']['elasticsearch_cloud'] = ['Elasticsearch-Cloud', ''];

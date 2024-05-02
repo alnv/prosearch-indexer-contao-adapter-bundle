@@ -83,9 +83,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'palettes' => [
         '__selector__' => ['type'],
         'default' => 'signature,type',
-        'licence' => 'signature,type,authToken,keys',
-        'elasticsearch' => 'signature,type,host,port,username,password',
-        'elasticsearch_cloud' => 'signature,type,signature,cloudid,key'
+        'licence' => 'signature,type,authToken,keys'
     ],
     'fields' => [
         'id' => [
@@ -108,14 +106,14 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'type' => [
             'inputType' => 'select',
             'eval' => [
-                'maxlength' => 16,
+                'maxlength' => 32,
                 'tl_class' => 'w50',
                 'submitOnChange' => true,
                 'includeBlankOption' => true
             ],
-            'options' => ['licence'], // 'elasticsearch', 'elasticsearch_cloud'
+            'options' => ['licence'],
             'reference' => &$GLOBALS['TL_LANG']['tl_search_credentials'],
-            'sql' => "varchar(16) NOT NULL default ''"
+            'sql' => "varchar(32) NOT NULL default ''"
         ],
         'host' => [
             'inputType' => 'text',
@@ -157,15 +155,17 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'key' => [
             'inputType' => 'text',
             'eval' => [
+                'maxlength' => 255,
                 'mandatory' => true,
                 'tl_class' => 'w50 clr',
                 'decodeEntities' => true
             ],
-            'sql' => "varchar(128) NOT NULL default ''"
+            'sql' => "varchar(255) NOT NULL default ''"
         ],
         'authToken' => [
             'inputType' => 'text',
             'eval' => [
+                'maxlength' => 255,
                 'mandatory' => true,
                 'tl_class' => 'w50 clr',
                 'decodeEntities' => true
