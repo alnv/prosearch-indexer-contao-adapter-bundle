@@ -45,9 +45,6 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                         Message::addError('No connection to the server could be established');
                     }
                     break;
-                case 'licence':
-                    // todo
-                    break;
             }
         }],
         'sql' => [
@@ -204,16 +201,6 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                 return $varValue;
             }],
             'sql' => "blob NULL"
-        ],
-        'cloudid' => [
-            'inputType' => 'text',
-            'eval' => [
-                'maxlength' => 255,
-                'tl_class' => 'w50',
-                'mandatory' => true,
-                'decodeEntities' => true
-            ],
-            'sql' => "varchar(255) NOT NULL default ''"
         ],
         'cert' => [
             'inputType' => 'text',

@@ -147,6 +147,7 @@
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.didYouMean[0];
+                    this.didYouMean = [];
                     this.autoCompleteJS.start(this.keywords);
                 },
                 sendHrefStat: function (href) {

@@ -82,7 +82,7 @@ class Result
         }
 
         $strSummary = (!empty($arrHighlights) ? implode(' ', $arrHighlights) : $objDocument->description);
-        $strSummary = StringUtil::substr($strSummary, 250, '…');
+        $strSummary = StringUtil::substrHtml($strSummary, 250, '…');
 
         $blnOpenDocumentsInBrowser = $this->arrHit['source']['elasticOptions']['openDocumentsInBrowser'] ?? false;
         $blnUseUseRichSnippets = $this->arrHit['source']['elasticOptions']['useUseRichSnippets'] ?? false;

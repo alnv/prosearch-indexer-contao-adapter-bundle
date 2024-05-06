@@ -37,8 +37,8 @@
                     this.initial = false;
                     if (!this.keywords) {
                         this.hasResults = false;
-                        this.views.results = {};
-                        this.views.didYouMean = {}
+                        this.views.results = [];
+                        this.views.didYouMean = []
                         this.loading = false;
                         return;
                     }
@@ -70,6 +70,7 @@
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.views.didYouMean[0];
+                    this.views.didYouMean = [];
                 },
                 setFaqRichSnippets: function () {
                     this.richSnippets['faq'] = {};
@@ -280,8 +281,17 @@
                     });
                 }
             },
-            mounted: function () {
-                //
+            watch: {
+                'hasResults': {
+                    handler: function (val) {
+                        let objBody = document.querySelector('body');
+                        if (val) {
+                            objBody.classList.add('search-panel-open');
+                        } else {
+                            objBody.classList.remove('search-panel-open');
+                        }
+                    }
+                }
             }
         });
         window.elasticInstaces.push(elasticComponent);

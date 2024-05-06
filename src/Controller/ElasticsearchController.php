@@ -255,7 +255,7 @@ class ElasticsearchController extends AbstractController
 
         $objModule = ModuleModel::findByPk($strModuleId);
         $objRootPage = PageModel::findByPk($strRootPageId);
-        $objRootPage->loadDetails();
+        $objRootPage?->loadDetails();
 
         $strAnalyzer = $objModule->psAnalyzer ?: $objRootPage->psAnalyzer;
 

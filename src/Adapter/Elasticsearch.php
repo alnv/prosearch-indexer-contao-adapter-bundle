@@ -68,20 +68,19 @@ class Elasticsearch extends Adapter
                         ->get('monolog.logger.contao')
                         ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
                 }
-                break;
+            break;
             case 'elasticsearch_cloud':
                 try {
                     $this->objClient = ClientBuilder::create()
-                        ->setElasticCloudId($this->arrCredentials['cloudid'])
+                        ->setHosts([$this->arrCredentials['host']])
                         ->setApiKey($this->arrCredentials['key'])
                         ->build();
                 } catch (\Exception $objError) {
                     System::getContainer()
                         ->get('monolog.logger.contao')
                         ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
-                    exit;
                 }
-                break;
+            break;
             case 'licence':
                 $objAuthorization = new Authorization;
                 $strDomain = Environment::get('httpHost');
@@ -284,6 +283,8 @@ class Elasticsearch extends Adapter
             "index" => $strIndex,
             "body" => [
                 "settings" => [
+                    "number_of_shards" => 3,
+                    "number_of_replicas" => 2,
                     "analysis" => [
                         "analyzer" => $arrAnalyzer,
                         "filter" => [
