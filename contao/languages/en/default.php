@@ -18,6 +18,7 @@ $GLOBALS['TL_LANG']['MSC']['psAnalyzer'] = [
     'whitespace' => 'Elasticsearch//Whitespace',
     'keyword' => 'Elasticsearch//Keyword',
     'stop' => 'Elasticsearch//Stop',
-    'simple' => 'Elasticsearch//Simple'
+    'simple' => 'Elasticsearch//Simple',
+    'french' => 'lowercase//french_stopwords//french_stemmer'
 ];
 

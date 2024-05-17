@@ -53,6 +53,8 @@ $GLOBALS['TL_HEAD']['search:type'] = '<meta name="search:type" content="news"/>'
 ?>
 ```
 
+Die Kategorien müssen kleingeschrieben und dürfen keine Sonderzeichen enthalten (einschließlich "-", "_").
+
 Der search:type wird erst nach einem erneuten Aufbau des Suchindexes übernommen.
 
 ### Frontend-Modul

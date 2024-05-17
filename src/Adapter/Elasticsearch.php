@@ -14,6 +14,7 @@ use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
 use Elastic\Elasticsearch\ClientBuilder;
+use Elastic\Elasticsearch\Client;
 use Psr\Log\LogLevel;
 
 // https://github.com/elastic/elasticsearch-php
@@ -36,6 +37,11 @@ class Elasticsearch extends Adapter
             "type" => "custom",
             "tokenizer" => "whitespace",
             "filter" => ["lowercase", "english_stopwords", "english_stemmer"]
+        ],
+        "french" => [
+            "type" => "custom",
+            "tokenizer" => "whitespace",
+            "filter" => ["lowercase", "french_stopwords", "french_stemmer"]
         ],
         "contao" => [
             "type" => "custom",
@@ -122,13 +128,11 @@ class Elasticsearch extends Adapter
 
     public function getIndexName($strRootId): string
     {
-
         return Elasticsearch::INDEX . '_' . $this->strSignature . ($strRootId ? '_' . $strRootId : '');
     }
 
-    public function getClient()
+    public function getClient(): Client|null
     {
-
         return $this->objClient;
     }
 
@@ -169,17 +173,17 @@ class Elasticsearch extends Adapter
     public function deleteDatabase($strIndex): void
     {
 
-        $objCurl = curl_init();
+        $objCurl = \curl_init();
 
-        curl_setopt($objCurl, CURLOPT_URL, "http://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
-        curl_setopt($objCurl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        \curl_setopt($objCurl, CURLOPT_URL, "http://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
+        \curl_setopt($objCurl, CURLOPT_CUSTOMREQUEST, 'DELETE');
 
         if ($this->arrCredentials['username'] && $this->arrCredentials['password']) {
-            curl_setopt($objCurl, CURLOPT_HTTPHEADER, array('Authorization:Basic ' . base64_encode($this->arrCredentials['username'] . ':' . $this->arrCredentials['password'])));
+            \curl_setopt($objCurl, CURLOPT_HTTPHEADER, array('Authorization:Basic ' . base64_encode($this->arrCredentials['username'] . ':' . $this->arrCredentials['password'])));
         }
 
-        curl_exec($objCurl);
-        curl_close($objCurl);
+        \curl_exec($objCurl);
+        \curl_close($objCurl);
     }
 
     public function deleteIndex($strIndicesId): void
@@ -297,13 +301,21 @@ class Elasticsearch extends Adapter
                                 "type" => "stemmer",
                                 "language" => "english"
                             ],
+                            "german_stemmer" => [
+                                "type" => "stemmer",
+                                "language" => "german"
+                            ],
+                            "french_stemmer" => [
+                                "type" => "stemmer",
+                                "language" => "french"
+                            ],
                             "english_stopwords" => [
                                 "type" => "stop",
                                 "stopwords" => ["_english_"]
                             ],
-                            "german_stemmer" => [
-                                "type" => "stemmer",
-                                "language" => "german"
+                            "french_stopwords" => [
+                                "type" => "stop",
+                                "stopwords" => ["_french_"]
                             ],
                             "german_stopwords" => [
                                 "type" => "stop",
@@ -393,11 +405,8 @@ class Elasticsearch extends Adapter
         ];
 
         if (!$this->getClient()) {
-
             (new Proxy($this->strLicense))->indexMapping($arrParams);
-
         } else {
-
             $this->clientMapping($arrParams);
         }
     }
@@ -466,7 +475,7 @@ class Elasticsearch extends Adapter
         $objIndicesModel->save();
     }
 
-    public function clientIndex($arrParams)
+    public function clientIndex($arrParams): void
     {
 
         if (!$this->getClient()) {

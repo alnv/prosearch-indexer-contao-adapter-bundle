@@ -2,6 +2,8 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
+use Elastic\Elasticsearch\Client;
+
 /**
  *
  */
@@ -9,9 +11,9 @@ abstract class Adapter
 {
 
     /**
-     * @var
+     * @var Client|null
      */
-    private $objClient;
+    protected Client|null $objClient = null;
 
     /**
      * @var string
@@ -32,14 +34,14 @@ abstract class Adapter
     }
 
     /**
-     * @return mixed
+     * @return void
      */
-    abstract public function connect();
+    abstract public function connect(): void;
 
     /**
-     * @return mixed
+     * @return Client|null
      */
-    abstract public function getClient();
+    abstract public function getClient(): Client|null;
 
     /**
      * @param array $arrKeywords

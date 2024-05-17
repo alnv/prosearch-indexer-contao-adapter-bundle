@@ -23,16 +23,13 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['psSearchCategory'] = [
         'tl_class' => 'w50',
     ],
     'save_callback' => [function($strValue) {
-    
         if (!$strValue) {
             return '';
         }
-
         $strValue = strtolower($strValue);
         $strValue = str_replace('-', '', $strValue);
         $strValue = str_replace('_', '', $strValue);
         $strValue = str_replace('.', '', $strValue);
-
         return str_replace(' ', '', $strValue);
     }],
     'sql' => "varchar(128) NOT NULL default 'page'"
