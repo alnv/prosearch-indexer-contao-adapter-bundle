@@ -33,6 +33,14 @@ class Proxy
         return true;
     }
 
+    public function deleteDatabase($strIndex): bool
+    {
+        $objClient = new Client();
+        $objClient->request('POST', $this->strProxyDomain . '/delete/database/' . $strIndex);
+
+        return true;
+    }
+
     public function deleteDocument($strIndex, $strDocumentId)
     {
 

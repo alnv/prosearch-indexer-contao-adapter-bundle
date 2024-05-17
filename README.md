@@ -82,4 +82,3 @@ Die Bilder für die Suche werden über die Open Graph Meta Tags gepflegt. Am bes
 ``` html
 <meta property=“og:image“ content="url"/>
 ```
-
