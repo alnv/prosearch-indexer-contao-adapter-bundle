@@ -13,13 +13,13 @@ class Keyword
 
     public function __construct()
     {
-
         $this->objSynonyms = new Synonyms();
     }
 
-    public function setKeywords($strKeywords, $arrOptions = [])
+    public function setKeywords($strKeywords, $arrOptions = []): array
     {
 
+        $strKeywords = str_replace('/', '\/', $strKeywords);
         $strToken = Text::tokenize($strKeywords);
         $strToken = strtolower($strToken);
 
@@ -64,7 +64,6 @@ class Keyword
 
     public function getKeywords(): array
     {
-
         return $this->arrKeywordData;
     }
 }
