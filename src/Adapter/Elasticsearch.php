@@ -25,7 +25,7 @@ class Elasticsearch extends Adapter
 
     private string $strSignature = "";
 
-    private array $arrCredentials = [];
+    private array|bool $arrCredentials = [];
 
     protected array $arrAnalyzer = [
         "german" => [
