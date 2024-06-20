@@ -10,6 +10,7 @@ use Contao\DC_Table;
 use Contao\Input;
 use Contao\Message;
 use Contao\System;
+use Contao\StringUtil;
 
 $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
