@@ -76,6 +76,7 @@ class Authorization
             return true;
         }
 
+        $strFileContent = '';
         $strRootDir = System::getContainer()->getParameter('kernel.project_dir');
         $strCacheFolder = $strRootDir . '/var/cache/authorization';
 
@@ -83,7 +84,9 @@ class Authorization
             mkdir($strCacheFolder, 0777, true);
         }
 
-        $strFileContent = file_get_contents($strCacheFolder . '/auth.txt', true);
+        if (file_exists($strCacheFolder . '/auth.txt')) {
+            $strFileContent = file_get_contents($strCacheFolder . '/auth.txt', true);
+        }
 
         if ($strFileContent == $strLicenseIdentifier) {
             return true;
