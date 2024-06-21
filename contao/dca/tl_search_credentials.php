@@ -2,15 +2,15 @@
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
 use Contao\Database;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Contao\Input;
 use Contao\Message;
-use Contao\System;
 use Contao\StringUtil;
+use Contao\System;
 
 $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
@@ -193,10 +193,10 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'save_callback' => [function ($varValue, DataContainer $dc) {
                 $arrKeys = StringUtil::deserialize($varValue, true);
                 foreach ($arrKeys as $arrKey) {
-                    $strKey = (new Authorization())->encodeLicense(($arrKey['key']??''), ($arrKey['domain']??''), $dc->activeRecord->authToken);
+                    $strKey = (new Authorization())->encodeLicense(($arrKey['key'] ?? ''), ($arrKey['domain'] ?? ''), $dc->activeRecord->authToken);
                     $blnValid = (new Authorization())->isValid($strKey);
                     if (!$blnValid) {
-                        throw new Exception('Licence for domain '. ($arrKey['domain']??'') .' is invalid! You can purchase a licence at this address: https://app.sineos.de');
+                        throw new Exception('Licence for domain ' . ($arrKey['domain'] ?? '') . ' is invalid! You can purchase a licence at this address: https://app.sineos.de');
                     }
                 }
                 return $varValue;

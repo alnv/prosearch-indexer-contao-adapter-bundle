@@ -30,7 +30,11 @@ composer require alnv/prosearch-indexer-contao-adapter-bundle
 
 ## Setup
 
-Nach der Installation siehst du im Backend einen weiteren Navigationspunkt "Elasticsearch".  Als Erstes musst du die Zugangsdaten eingeben, klicke hierzu auf Zugangsdaten und wähle unter Paket die Option API-Key aus und trage anschließend in das API-Key-Feld deinen Lizenzschlüssel ein.
+Nach der Installation erscheint im Backend ein neuer Navigationspunkt namens "Elasticsearch". Als erstes musst du die Zugangsdaten eingeben. Klicke dazu auf "Zugangsdaten" und wähle unter "Paket" die Option "API-Key" aus. Trage anschließend deinen API-Token und den Lizenzschlüssel für deine Domain ein.
+
+### Kostenlos testen
+
+**Du kannst die Erweiterung jederzeit kostenlos testen, indem du dir einen Demo-Zugang erstellst: https://app.sineos.de/. Der Zugang ist 30 Tage gültig.**
 
 ### Seitenstruktur
 
