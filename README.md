@@ -89,3 +89,105 @@ Die Bilder für die Suche werden über die Open Graph Meta Tags gepflegt. Am bes
 <meta property=“og:image“ content="url"/>
 ```
 
+
+## Entwickler:innen
+
+### AJAX-Abfrage
+
+Der folgende Code ist ein JavaScript-Skript, das eine Suchanfrage an einen Server sendet und die Ergebnisse im JSON-Format empfängt. Diese Ergebnisse können dann in einer eigenen Frontend-Anwendung verwendet werden. Der Code nutzt `XMLHttpRequest`, um eine POST-Anfrage zu senden und die Antwort zu verarbeiten.
+
+```js
+<script>
+    (function () {
+        // Definieren der Suchanfrage
+        let strQuery = "Meine Anfrage"; // Das ist eure Suchabfrage
+        
+        // Definieren der Parameter für die Anfrage
+        let strParams = "module=28&root=33"; 
+        // Es müssen zwei Parameter übergeben werden:
+        // 1. "module": Die ID des Frontend-Moduls
+        // 2. "root": Die Root-ID in der Seitenstruktur
+        
+        // Erstellen eines neuen XMLHttpRequest-Objekts
+        let objXHttp = new XMLHttpRequest();
+        
+        // Festlegen einer Funktion, die aufgerufen wird, wenn sich der Zustand des XMLHttpRequest-Objekts ändert
+        objXHttp.onreadystatechange = function() {
+            // Überprüfen, ob die Anfrage abgeschlossen ist (readyState === 4) und ob sie erfolgreich war (status === 200)
+            if (this.readyState === 4 && this.status === 200) {
+                // Parsen der JSON-Antwort
+                let json = JSON.parse(this.responseText);
+                // Hier könnt ihr mit den Daten weiterarbeiten ;)
+                console.log(json); // Beispiel: Ausgabe der Daten in der Konsole
+            }
+        };
+        
+        // Öffnen der POST-Anfrage mit der URL und den Query-Parametern
+        objXHttp.open("POST", "/elastic/search/results?query=" + encodeURIComponent(strQuery), true);
+        
+        // Setzen des Content-Type-Headers für die Anfrage
+        objXHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        
+        // Senden der Anfrage mit den Parametern
+        objXHttp.send(strParams);
+    })();
+</script>
+```
+
+1. **Definieren der Suchanfrage und Parameter**:
+
+    ```js
+    let strQuery = "Meine Anfrage";
+    let strParams = "module=28&root=33";
+    ```
+   
+   Hier werden die Suchanfrage und die benötigten Parameter (`module` und `root`) festgelegt.
+
+
+2. **Erstellen des XMLHttpRequest-Objekts**:
+
+    ```js
+    let objXHttp = new XMLHttpRequest();
+    ```
+
+
+3. **Festlegen der Callback-Funktion**:
+
+    ```js
+    objXHttp.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            let json = JSON.parse(this.responseText);
+            console.log(json);
+        }
+    };
+    ```
+   
+   Diese Funktion wird jedes Mal aufgerufen, wenn sich der Zustand des XMLHttpRequest-Objekts ändert. Wenn die Anfrage abgeschlossen ist und erfolgreich war, wird die JSON-Antwort geparst und in der Konsole ausgegeben.
+
+
+4. **Öffnen der POST-Anfrage**:
+
+    ```js
+    objXHttp.open("POST", "/elastic/search/results?query=" + encodeURIComponent(strQuery), true);
+    ```
+   
+   Die Anfrage wird geöffnet, wobei die URL die Suchanfrage als Query-Parameter enthält.
+
+
+5. **Setzen des Content-Type-Headers**:
+
+    ```js
+    objXHttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    ```
+   Der Content-Type-Header wird auf `application/x-www-form-urlencoded` gesetzt.
+
+
+6. **Senden der Anfrage**:
+
+    ```js
+    objXHttp.send(strParams);
+    ```
+   
+   Die Anfrage wird mit den Parametern gesendet.
+
+Mit diesem Skript könnt ihr eine Suchanfrage an den Server senden und die Ergebnisse im JSON-Format laden, um sie in eurer eigenen Frontend-Anwendung zu verwenden.
