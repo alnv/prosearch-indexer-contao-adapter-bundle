@@ -80,7 +80,7 @@ class Stats
 
         while ($objStat->next()) {
 
-            $arrStatTypes = \StringUtil::deserialize($objStat->types, true);
+            $arrStatTypes = StringUtil::deserialize($objStat->types, true);
 
             if (empty(array_diff($arrTypes, $arrStatTypes))) {
 
