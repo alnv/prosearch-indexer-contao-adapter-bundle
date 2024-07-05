@@ -79,9 +79,12 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         ]
     ],
     'palettes' => [
-        '__selector__' => ['type'],
-        'default' => 'signature,type',
-        'licence' => 'signature,type,authToken,keys'
+        '__selector__' => ['type', 'singleDocument'],
+        'default' => 'signature;type',
+        'licence' => 'signature;type;authToken,keys;singleDocument'
+    ],
+    'subpalettes' => [
+        'singleDocument' => 'analyzer'
     ],
     'fields' => [
         'id' => [
@@ -140,6 +143,14 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             ],
             'sql' => "varchar(128) NOT NULL default ''"
         ],
+        'singleDocument' => [
+            'inputType' => 'checkbox',
+            'eval' => [
+                'tl_class' => 'clr',
+                'submitOnChange' => true
+            ],
+            'sql' => "char(1) NOT NULL default ''"
+        ],
         'password' => [
             'inputType' => 'text',
             'eval' => [
@@ -165,7 +176,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'eval' => [
                 'maxlength' => 255,
                 'mandatory' => true,
-                'tl_class' => 'w50 clr',
+                'tl_class' => 'long clr',
                 'decodeEntities' => true
             ],
             'sql' => "varchar(255) NOT NULL default ''"
@@ -210,6 +221,28 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                 'tl_class' => 'w50'
             ],
             'sql' => "varchar(255) NOT NULL default ''"
+        ],
+        'analyzer' => [
+            'inputType' => 'select',
+            'default' => 'contao',
+            'eval' => [
+                'chosen' => true,
+                'tl_class' => 'w50',
+                'mandatory' => true,
+                'includeBlankOption' => true
+            ],
+            'options_callback' => function() {
+                $objAdapter = new Elasticsearch((new Options())->getOptions());
+                $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
+                $arrAnalyzer[] = 'whitespace';
+                $arrAnalyzer[] = 'standard';
+                $arrAnalyzer[] = 'keyword';
+                $arrAnalyzer[] = 'simple';
+                $arrAnalyzer[] = 'stop';
+                return $arrAnalyzer;
+            },
+            'reference' => &$GLOBALS['TL_LANG']['MSC']['psAnalyzer'],
+            'sql' => "varchar(64) NOT NULL default 'contao'"
         ]
     ]
 ];

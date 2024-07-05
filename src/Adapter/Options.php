@@ -2,10 +2,17 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Contao\Environment;
 
 class Options
 {
+
+    /**
+     * @var array
+     */
+    protected array $arrCredentials = [];
+
     /**
      * @var string
      */
@@ -34,7 +41,7 @@ class Options
     /**
      * @var bool
      */
-    protected bool $useUseRichSnippets = false;
+    protected bool $useRichSnippets = false;
 
     /**
      * @var int
@@ -51,12 +58,23 @@ class Options
      */
     protected int $perPage = 100;
 
+
+    public function __construct()
+    {
+        $objCredentials = new Credentials();
+        $this->arrCredentials = $objCredentials->getCredentials();
+    }
+
     /**
      * @param string $strAnalyzer
      * @return void
      */
-    public function setAnalyzer(string $strAnalyzer = 'contao'): void
+    public function setAnalyzer(string $strAnalyzer = ''): void
     {
+        if (!$strAnalyzer) {
+            $strAnalyzer = $this->arrCredentials['analyzer'] ?? '';
+        }
+
         $this->analyzer = $strAnalyzer;
     }
 
@@ -73,8 +91,14 @@ class Options
      * @param $strRootId
      * @return void
      */
-    public function setRootPageId($strRootId): void
+    public function setRootPageId($strRootId = null): void
     {
+
+        $strUseSingleDocument = (bool)($this->arrCredentials['singleDocument'] ?? '');
+        if ($strUseSingleDocument) {
+            return;
+        }
+
         $this->rootPageId = $strRootId;
     }
 
@@ -93,6 +117,10 @@ class Options
      */
     public function setDomain(string $strDomain = ""): void
     {
+        $strUseSingleDocument = (bool)($this->arrCredentials['singleDocument'] ?? '');
+        if ($strUseSingleDocument) {
+            return;
+        }
 
         $this->domain = $strDomain ?: Environment::get('host');
     }
@@ -112,7 +140,7 @@ class Options
      */
     public function setUseRichSnippets(bool $blnUseRichSnippets): void
     {
-        $this->useUseRichSnippets = $blnUseRichSnippets;
+        $this->useRichSnippets = $blnUseRichSnippets;
     }
 
     /**
@@ -146,7 +174,7 @@ class Options
             'perPage' => $this->perPage,
             'fuzzy' => $this->fuzzy,
             'openDocumentsInBrowser' => $this->openDocumentsInBrowser,
-            'useUseRichSnippets' => $this->useUseRichSnippets,
+            'useRichSnippets' => $this->useRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
             'domain' => $this->domain
         ];

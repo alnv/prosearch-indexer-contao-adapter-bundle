@@ -49,7 +49,7 @@ class ElasticsearchModule extends Module
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         // $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
 
-        $objTemplate = new FrontendTemplate('js_elasticsearch');
+        $objTemplate = new FrontendTemplate('j_elasticsearch');
         $objTemplate->setData($this->Template->getData());
         $this->Template->script = $objTemplate->parse();
     }

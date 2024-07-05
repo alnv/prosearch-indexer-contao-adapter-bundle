@@ -11,10 +11,10 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Contao\CoreBundle\Controller\AbstractController;
+use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\ModuleModel;
 use Contao\PageModel;
-use Contao\FrontendTemplate;
 use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -250,24 +250,29 @@ class ElasticsearchController extends AbstractController
         return new JsonResponse($arrResults);
     }
 
-    protected function getOptionsByModuleAndRootId($strModuleId, $strRootPageId): array
+    protected function getOptionsByModuleAndRootId($strModuleId, $strRootPageId = null): array
     {
 
+        $objRootPage = null;
         $objModule = ModuleModel::findByPk($strModuleId);
-        $objRootPage = PageModel::findByPk($strRootPageId);
-        $objRootPage?->loadDetails();
 
-        $strAnalyzer = $objModule->psAnalyzer ?: $objRootPage->psAnalyzer;
+        if ($strRootPageId) {
+            $objRootPage = PageModel::findByPk($strRootPageId);
+            $objRootPage?->loadDetails();
+        }
+
+        $strAnalyzer = $objModule?->psAnalyzer ? $objModule->psAnalyzer : ($objRootPage?->psAnalyzer ?? '');
+        $strLanguage = $objModule?->psLanguage ? $objModule->psLanguage : ($objRootPage?->language ?? '');
 
         $objElasticOptions = new Options();
-        $objElasticOptions->setLanguage($objRootPage->language);
+        $objElasticOptions->setLanguage($strLanguage);
         $objElasticOptions->setRootPageId($strRootPageId);
-        $objElasticOptions->setPerPage($objModule->perPage);
+        $objElasticOptions->setPerPage($objModule?->perPage ?: 50);
         $objElasticOptions->setAnalyzer($strAnalyzer);
-        $objElasticOptions->setFuzzy($objModule->fuzzy);
-        $objElasticOptions->setUseRichSnippets((bool)$objModule->psUseRichSnippets);
-        $objElasticOptions->setOpenDocumentsInBrowser((bool)$objModule->psOpenDocumentInBrowser);
-        $objElasticOptions->setMinKeywordLength($objModule->minKeywordLength);
+        $objElasticOptions->setFuzzy((bool)$objModule?->fuzzy);
+        $objElasticOptions->setUseRichSnippets((bool)$objModule?->psUseRichSnippets);
+        $objElasticOptions->setOpenDocumentsInBrowser(((bool)$objModule?->psOpenDocumentInBrowser));
+        $objElasticOptions->setMinKeywordLength(($objModule?->minKeywordLength ?: 3));
         $objElasticOptions->setDomain();
 
         return $objElasticOptions->getOptions();

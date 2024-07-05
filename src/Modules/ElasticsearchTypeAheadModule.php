@@ -94,7 +94,7 @@ class ElasticsearchTypeAheadModule extends Module
 
         $this->loadAssets();
 
-        $objTemplate = new FrontendTemplate('js_elasticsearch_type_ahead');
+        $objTemplate = new FrontendTemplate('j_elasticsearch_type_ahead');
         $objTemplate->setData($this->Template->getData());
 
         $this->Template->script = $objTemplate->parse();
@@ -102,7 +102,6 @@ class ElasticsearchTypeAheadModule extends Module
 
     private function getElementId(): string
     {
-
         return 'id_search_' . uniqid() . $this->id;
     }
 

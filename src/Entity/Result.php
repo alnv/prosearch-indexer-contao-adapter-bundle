@@ -85,7 +85,7 @@ class Result
         $strSummary = StringUtil::substrHtml($strSummary, 250, '…');
 
         $blnOpenDocumentsInBrowser = $this->arrHit['source']['elasticOptions']['openDocumentsInBrowser'] ?? false;
-        $blnUseUseRichSnippets = $this->arrHit['source']['elasticOptions']['useUseRichSnippets'] ?? false;
+        $blnUseRichSnippets = $this->arrHit['source']['elasticOptions']['useRichSnippets'] ?? false;
 
         $arrReturn = [
             'images' => $arrImages,
@@ -106,7 +106,7 @@ class Result
             'rich_snippet' => ''
         ];
 
-        if (($objMicroData = MicrodataModel::findAll(['column' => ['pid=?'], 'value' => [$this->arrHit['id']]])) && $blnUseUseRichSnippets) {
+        if (($objMicroData = MicrodataModel::findAll(['column' => ['pid=?'], 'value' => [$this->arrHit['id']]])) && $blnUseRichSnippets) {
 
             $arrMicrodata = [];
 

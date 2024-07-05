@@ -13,8 +13,8 @@ use Contao\Environment;
 use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
-use Elastic\Elasticsearch\ClientBuilder;
 use Elastic\Elasticsearch\Client;
+use Elastic\Elasticsearch\ClientBuilder;
 use Psr\Log\LogLevel;
 
 // https://github.com/elastic/elasticsearch-php
@@ -74,7 +74,7 @@ class Elasticsearch extends Adapter
                         ->get('monolog.logger.contao')
                         ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
                 }
-            break;
+                break;
             case 'elasticsearch_cloud':
                 try {
                     $this->objClient = ClientBuilder::create()
@@ -86,7 +86,7 @@ class Elasticsearch extends Adapter
                         ->get('monolog.logger.contao')
                         ->log(LogLevel::ERROR, $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
                 }
-            break;
+                break;
             case 'licence':
                 $objAuthorization = new Authorization;
                 $strDomain = Environment::get('httpHost');
@@ -96,7 +96,7 @@ class Elasticsearch extends Adapter
                 } else {
                     $strLicense = $objAuthorization->pluckKeyFromKeysGlobalByDomain(StringUtil::deserialize($this->arrCredentials['keys'], true), $strDomain);
                 }
-                $this->strLicense = $objAuthorization->encodeLicense($strLicense, $strDomain, ($this->arrCredentials['authToken']??''));
+                $this->strLicense = $objAuthorization->encodeLicense($strLicense, $strDomain, ($this->arrCredentials['authToken'] ?? ''));
                 return;
         }
 
@@ -111,24 +111,38 @@ class Elasticsearch extends Adapter
         }
     }
 
-    protected function getRootIdFromIndicesId($strIndicesId): string
+    protected function getRootIdentifierFromIndicesId($strIndicesId): string
     {
 
-        if ($objIndicesModel = IndicesModel::findByPk($strIndicesId)) {
-            $objPage = PageModel::findByPk($objIndicesModel->pageId);
-
-            if ($objPage) {
-                $objPage->loadDetails();
-                return $objPage->rootId;
-            }
+        $objIndicesModel = IndicesModel::findByPk($strIndicesId);
+        if (!$objIndicesModel) {
+            return '';
         }
 
-        return '';
+        if (!$objIndicesModel->pageId) {
+            return '';
+        }
+
+        $objPage = PageModel::findByPk($objIndicesModel->pageId);
+        if (!$objPage) {
+            return '';
+        }
+
+        $objPage->loadDetails();
+
+        return $objPage->rootId;
     }
 
-    public function getIndexName($strRootId): string
+    public function getIndexName($strRootIdentifier): string
     {
-        return Elasticsearch::INDEX . '_' . $this->strSignature . ($strRootId ? '_' . $strRootId : '');
+
+        $blnUseSingleDocument = (bool)$this->arrCredentials['singleDocument'];
+
+        if ($blnUseSingleDocument) {
+            $strRootIdentifier = 'single';
+        }
+
+        return Elasticsearch::INDEX . '_' . $this->strSignature . ($strRootIdentifier ? '_' . $strRootIdentifier : '');
     }
 
     public function getClient(): Client|null
@@ -190,7 +204,7 @@ class Elasticsearch extends Adapter
     {
         $this->connect();
 
-        $strIndex = $this->getIndexName($this->getRootIdFromIndicesId($strIndicesId));
+        $strIndex = $this->getIndexName($this->getRootIdentifierFromIndicesId($strIndicesId));
         $objIndicesModel = IndicesModel::findByPk($strIndicesId);
         $objMicrodataModel = MicrodataModel::findByPid($strIndicesId);
 
@@ -436,12 +450,11 @@ class Elasticsearch extends Adapter
     {
 
         $objIndicesModel = IndicesModel::findByPk($arrDocument['id']);
-
         if (!$objIndicesModel) {
             return;
         }
 
-        $strIndex = $this->getIndexName($this->getRootIdFromIndicesId($arrDocument['id']));
+        $strIndex = $this->getIndexName($this->getRootIdentifierFromIndicesId($arrDocument['id']));
 
         $arrParams = [
             'index' => $strIndex,
@@ -525,7 +538,6 @@ class Elasticsearch extends Adapter
         $this->createMapping();
 
         foreach ($arrDocuments as $arrDocument) {
-
             $this->indexByDocument($arrDocument);
         }
     }
@@ -798,19 +810,23 @@ class Elasticsearch extends Adapter
             }
         }
 
-        $params['body']['query']['bool']['filter'][] = [
-            'term' => [
-                'language' => $this->arrOptions['language'],
-            ]
-        ];
+        if (isset($this->arrOptions['language']) && $this->arrOptions['language']) {
+            $params['body']['query']['bool']['filter'][] = [
+                'term' => [
+                    'language' => $this->arrOptions['language'],
+                ]
+            ];
+        }
 
-        $params['body']['query']['bool']['filter'][] = [
-            'term' => [
-                'domain' => $this->arrOptions['domain']
-            ]
-        ];
+        if (isset($this->arrOptions['domain']) && $this->arrOptions['domain']) {
+            $params['body']['query']['bool']['filter'][] = [
+                'term' => [
+                    'domain' => $this->arrOptions['domain']
+                ]
+            ];
+        }
 
-        if (isset($arrKeywords['types']) && is_array($arrKeywords['types']) && !empty($arrKeywords['types'])) {
+        if (!empty($arrKeywords['types']) && is_array($arrKeywords['types'])) {
             $arrLowerCaseTypes = array_map(function ($strType) {
                 return strtolower($strType);
             }, $arrKeywords['types']);

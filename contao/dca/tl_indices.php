@@ -273,7 +273,6 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'eval' => [
                 'dcaPicker' => true,
                 'doNotCopy' => true,
-                'mandatory' => true,
                 'decodeEntities' => true,
                 'tl_class' => 'w50 wizard'
             ],

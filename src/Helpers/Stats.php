@@ -74,7 +74,6 @@ class Stats
         $objStat = Database::getInstance()->prepare('SELECT * FROM tl_search_stats WHERE `keywords`=?')->execute($strKeyWord);
 
         if (!$objStat->numRows) {
-
             return false;
         }
 
@@ -83,7 +82,6 @@ class Stats
             $arrStatTypes = StringUtil::deserialize($objStat->types, true);
 
             if (empty(array_diff($arrTypes, $arrStatTypes))) {
-
                 return $objStat->row();
             }
         }
