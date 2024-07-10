@@ -3,7 +3,6 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
-use Contao\Environment;
 
 class Options
 {
@@ -82,7 +81,7 @@ class Options
      * @param string $strLanguage
      * @return void
      */
-    public function setLanguage(string $strLanguage = ''): void
+    public function setLanguage(string $strLanguage = 'de'): void
     {
         $this->language = $strLanguage;
     }
@@ -115,14 +114,9 @@ class Options
      * @param string $strDomain
      * @return void
      */
-    public function setDomain(string $strDomain = ""): void
+    public function setDomain(string $strDomains = ""): void
     {
-        $strUseSingleDocument = (bool)($this->arrCredentials['singleDocument'] ?? '');
-        if ($strUseSingleDocument) {
-            return;
-        }
-
-        $this->domain = $strDomain ?: Environment::get('host');
+        $this->domain = $strDomains ?: '';
     }
 
     /**

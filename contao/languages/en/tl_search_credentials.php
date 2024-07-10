@@ -13,6 +13,6 @@ $GLOBALS['TL_LANG']['tl_search_credentials']['cert'] = ['Cert-Path', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['signature'] = ['Signatur', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['authToken'] = ['API-Token', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['analyzer'] = ['Analyzer', ''];
-$GLOBALS['TL_LANG']['tl_search_credentials']['singleDocument'] = ['Alle Dokumente in einer einzigen Datenbank sammeln', 'Alle deine Seiten (Domains) landen in derselben Datenbank (auch externe Seiten), dadurch ist es möglich alle die Seiten unabhängig der Domain durchsuchen.'];
+$GLOBALS['TL_LANG']['tl_search_credentials']['singleDocument'] = ['Alle Dokumente in einer einzigen Datenbank sammeln', 'Alle deine Seiten (Domains) landen in derselben Datenbank (auch externe Seiten), dadurch ist es möglich alle Seiten unabhängig von der Domain durchzusuchen.'];
 
 $GLOBALS['TL_LANG']['tl_search_credentials']['licence'] = ['API-Key', ''];

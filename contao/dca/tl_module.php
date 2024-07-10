@@ -4,11 +4,12 @@ use Contao\CoreBundle\Util\LocaleUtil;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
+use Contao\Environment;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAutoCompletionType,psAnalyzer,psLanguage,psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psAutoCompletionType,psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';
@@ -83,6 +84,16 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psLanguage'] = [
         }
     ],
     'sql' => "varchar(64) NOT NULL default ''"
+];
+
+$GLOBALS['TL_DCA']['tl_module']['fields']['psDomains'] = [
+    'inputType' => 'text',
+    'default' => Environment::get('host'),
+    'eval' => [
+        'decodeEntities' => true,
+        'tl_class' => 'clr long'
+    ],
+    'sql' => "blob NULL"
 ];
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['psOpenDocumentInBrowser'] = [

@@ -818,10 +818,10 @@ class Elasticsearch extends Adapter
             ];
         }
 
-        if (isset($this->arrOptions['domain']) && $this->arrOptions['domain']) {
+        if ($strDomains = $this->arrOptions['domain'] ?? '') {
             $params['body']['query']['bool']['filter'][] = [
-                'term' => [
-                    'domain' => $this->arrOptions['domain']
+                'terms' => [
+                    'domain' => explode(',', str_replace(' ', '', $strDomains))
                 ]
             ];
         }

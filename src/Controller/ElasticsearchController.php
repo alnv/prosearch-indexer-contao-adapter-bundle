@@ -11,6 +11,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Contao\CoreBundle\Controller\AbstractController;
+use Contao\Environment;
 use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\ModuleModel;
@@ -226,24 +227,18 @@ class ElasticsearchController extends AbstractController
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'elasticsearch_cloud':
-
                 $objElasticsearchAdapter = new Elasticsearch($this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId));
                 $objElasticsearchAdapter->connect();
-
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->autocompltion($arrKeywords);
                 }
-
                 break;
             case 'licence':
-
                 $arrOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
                 $objElasticsearchAdapter = new Elasticsearch($arrOptions);
                 $objElasticsearchAdapter->connect();
-
                 $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
                 $arrResults['results'] = $objProxy->autocompletion($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrOptions);
-
                 break;
         }
 
@@ -253,16 +248,11 @@ class ElasticsearchController extends AbstractController
     protected function getOptionsByModuleAndRootId($strModuleId, $strRootPageId = null): array
     {
 
-        $objRootPage = null;
         $objModule = ModuleModel::findByPk($strModuleId);
 
-        if ($strRootPageId) {
-            $objRootPage = PageModel::findByPk($strRootPageId);
-            $objRootPage?->loadDetails();
-        }
-
-        $strAnalyzer = $objModule?->psAnalyzer ? $objModule->psAnalyzer : ($objRootPage?->psAnalyzer ?? '');
-        $strLanguage = $objModule?->psLanguage ? $objModule->psLanguage : ($objRootPage?->language ?? '');
+        $strAnalyzer = $objModule?->psAnalyzer ? $objModule->psAnalyzer : '';
+        $strLanguage = $objModule?->psLanguage ? $objModule->psLanguage : '';
+        $strDomains = $objModule?->psDomains ? $objModule->psDomains : ''; // Environment::get('host');
 
         $objElasticOptions = new Options();
         $objElasticOptions->setLanguage($strLanguage);
@@ -273,7 +263,7 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setUseRichSnippets((bool)$objModule?->psUseRichSnippets);
         $objElasticOptions->setOpenDocumentsInBrowser(((bool)$objModule?->psOpenDocumentInBrowser));
         $objElasticOptions->setMinKeywordLength(($objModule?->minKeywordLength ?: 3));
-        $objElasticOptions->setDomain();
+        $objElasticOptions->setDomain($strDomains);
 
         return $objElasticOptions->getOptions();
     }
