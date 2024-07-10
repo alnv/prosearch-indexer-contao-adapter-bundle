@@ -23,7 +23,8 @@
             },
             richSnippets: {
                 faq: {}
-            }
+            },
+            urls: []
         };
         let elasticComponent = new Vue({
             el: "#<?= $this->elementId ?>",
@@ -71,7 +72,9 @@
                             for (let name in gResults) {
                                 if (this.views.results.hasOwnProperty(name)) {
                                     for (let i=0;i<gResults[name]['hits'].length;i++) {
-                                        this.views.results[name]['hits'].push(gResults[name]['hits'][i]);
+                                        if (!this.urls.includes(gResults[name]['hits'][i]['url'])) {
+                                            this.views.results[name]['hits'].push(gResults[name]['hits'][i]);
+                                        }
                                     }
                                 } else {
                                     this.views.results[name] = gResults[name];
@@ -145,6 +148,9 @@
                             }
                             group[type] = hits[type];
                             this.lastSort = hits[type]['hits'].length ? hits[type]['hits'][hits[type]['hits'].length-1]['sort'].join() : '';
+                            for (let i=0;i<hits[type]['hits'].length;i++) {
+                                this.urls.push(hits[type]['hits'][i]['url']);
+                            }
                         }
                     }
 
@@ -204,6 +210,7 @@
                     return index !== -1;
                 },
                 search: function () {
+                    this.loadMoreButton = true;
                     clearTimeout(this.timeout);
                     this.timeout = setTimeout(function () {
                         this.fetch({});

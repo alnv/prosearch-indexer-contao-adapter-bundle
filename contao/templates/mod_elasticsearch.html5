@@ -59,8 +59,7 @@
                         </div>
                         <div class="result-hit" v-for="hit in result.hits" v-html="hit.template" @click="sendStat"></div>
                     </div>
-                    <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></button>
-
+                    <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
                 </div>
             </div>
             <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
