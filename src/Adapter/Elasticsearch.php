@@ -180,8 +180,8 @@ class Elasticsearch extends Adapter
             }
         }
 
-        Database::getInstance()->prepare('DELETE FROM tl_indices')->execute();
-        Database::getInstance()->prepare('DELETE FROM tl_microdata')->execute();
+        // Database::getInstance()->prepare('DELETE FROM tl_indices')->execute();
+        // Database::getInstance()->prepare('DELETE FROM tl_microdata')->execute();
     }
 
     public function deleteDatabase($strIndex): void

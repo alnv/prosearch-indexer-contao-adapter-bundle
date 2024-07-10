@@ -76,6 +76,12 @@ class ProSearchIndexer implements IndexerInterface
             return;
         }
 
+        $arrSettings = StringUtil::deserialize($objIndices->settings, true);
+
+        if (in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
+            return;
+        }
+
         $objIndices->state = States::DELETE;
         $objIndices->save();
     }
@@ -89,6 +95,12 @@ class ProSearchIndexer implements IndexerInterface
         }
 
         while ($objIndices->next()) {
+
+            $arrSettings = StringUtil::deserialize($objIndices->settings, true);
+            if (in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
+                continue;
+            }
+
             $objIndices->state = States::DELETE;
             $objIndices->save();
         }
