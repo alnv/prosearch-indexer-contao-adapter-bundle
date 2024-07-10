@@ -8,8 +8,8 @@
                     <div class="elasticsearch-input">
                         <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" @search="search" v-model="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocomplete="off" autocapitalize="off">
                         <button @click.stop.prevent="search" class="elasticsearch-input-button">
-                            <img v-if="!loading" src="<?= $GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?>" alt="<?= $this->search ?>" class="button-search-icon">
-                            <img v-else src="<?= $GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?>" alt="" class="button-loading-icon">
+                            <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>" class="button-search-icon">
+                            <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="" class="button-loading-icon">
                         </button>
                     </div>
                 </div>
@@ -18,17 +18,17 @@
             <div class="elasticsearch-results-panel" v-if="hasResults">
 
                 <div class="close-results">
-                    <button @click.stop.prevent="close" class="close button"><span><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCloseButtonLabel'] ?></span></button>
+                    <button @click.stop.prevent="close" class="close button"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsCloseButtonLabel'] ?? '') ?></span></button>
                 </div>
 
                 <div class="suggest-results">
-                    <p v-if="keywords" class="suggest-results-for"><?= $GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?><span>{{ keywords }}</span></p>
-                    <p v-if="views.didYouMean.length" class="suggest-results-mean"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" v-for="didYouMean in views.didYouMean" v-if="didYouMean !== keywords"><span>{{ didYouMean }}</span></a></p>
+                    <p v-if="keywords" class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
+                    <p v-if="views.didYouMean.length" class="suggest-results-mean"><?= ($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?? '') ?> <a @click.stop.prevent="setDidYouMeanToKeyword" v-for="didYouMean in views.didYouMean" v-if="didYouMean !== keywords"><span>{{ didYouMean }}</span></a></p>
                 </div>
 
                 <div class="categories-results">
                     <div class="categories-headline">
-                        <p><?= $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?></p>
+                        <p><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?? '') ?></p>
                     </div>
                     <nav v-if="Object.keys(views.categories).length">
                         <ul>
@@ -59,11 +59,12 @@
                         </div>
                         <div class="result-hit" v-for="hit in result.hits" v-html="hit.template" @click="sendStat"></div>
                     </div>
+                    <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></button>
 
                 </div>
             </div>
             <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
-                <p><?= $GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?></p>
+                <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
             </div>
         </div>
     </div>

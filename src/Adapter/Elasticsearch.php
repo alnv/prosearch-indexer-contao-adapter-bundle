@@ -688,31 +688,41 @@ class Elasticsearch extends Adapter
             $strIndexName = $this->getIndexName($strRootPageId);
         }
 
+        $intSize = $this->getSizeValue();
+
         $params = [
-            'index' => $strIndexName,
-            'body' => [
-                "size" => $this->getSizeValue(),
-                'query' => [
+            "index" => $strIndexName,
+            "body" => [
+                "size" => $intSize,
+                "query" => [
                     'bool' => []
                 ],
-                'highlight' => [
-                    'pre_tags' => '<strong>',
-                    'post_tags' => '</strong>',
-                    'fields' => [
-                        'text' => new \stdClass(),
-                        'document' => new \stdClass()
+                "sort" => [
+                    [
+                        "_score" => "desc"
                     ],
-                    'require_field_match' => true,
-                    'type' => 'plain',
-                    'fragment_size' => 150,
-                    'number_of_fragments' => 3,
-                    'fragmenter' => 'span'
+                    [
+                        "id" => "asc"
+                    ]
                 ],
-                'suggest' => [
-                    'didYouMean' => [
-                        'text' => $arrKeywords['query'],
-                        'phrase' => [
-                            'field' => "autocomplete",
+                "highlight" => [
+                    "pre_tags" => '<strong>',
+                    "post_tags" => '</strong>',
+                    "fields" => [
+                        "text" => new \stdClass(),
+                        "document" => new \stdClass()
+                    ],
+                    "require_field_match" => true,
+                    "type" => "plain",
+                    "fragment_size" => 150,
+                    "number_of_fragments" => 3,
+                    "fragmenter" => "span"
+                ],
+                "suggest" => [
+                    "didYouMean" => [
+                        "text" => $arrKeywords['query'],
+                        "phrase" => [
+                            "field" => "autocomplete",
                             "size" => 1,
                             "gram_size" => 3,
                             "analyzer" => $strAnalyzer,
@@ -731,6 +741,10 @@ class Elasticsearch extends Adapter
                 ]
             ]
         ];
+
+        if (isset($this->arrOptions['search_after']) && $this->arrOptions['search_after']) {
+            $params['body']['search_after'] = explode(',', $this->arrOptions['search_after']);
+        }
 
         if (isset($arrKeywords['query']) && $arrKeywords['query']) {
 
@@ -842,8 +856,8 @@ class Elasticsearch extends Adapter
         }
 
         $response = $this->getClient()->search($params);
-
         $arrResults['hits'] = $response['hits']['hits'] ?? [];
+        $arrResults['max_score'] = $response['hits']['max_score'] ?? 0;
 
         foreach (($response['suggest']['didYouMean'] ?? []) as $arrSuggest) {
             if (isset($arrSuggest['options']) && is_array($arrSuggest['options'])) {
@@ -873,7 +887,7 @@ class Elasticsearch extends Adapter
 
     protected function getSizeValue()
     {
-        return $this->arrOptions['perPage'] ?: 100;
+        return $this->arrOptions['perPage'] ?: 1000;
     }
 
     public function getLicense(): string

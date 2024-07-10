@@ -2,7 +2,7 @@
     window.elasticInstaces = window.elasticInstaces || [];
     (function () {
         let objState = {
-            keywords: '',
+            keywords: '<?= $this->keywords ?>',
             initial: true,
             timeout: null,
             categories: [],
@@ -10,6 +10,8 @@
             hasResults: false,
             resultsOnly: false,
             autoCompleteJS: null,
+            loadMoreButton: true,
+            lastSort: '',
             views: {
                 results: [],
                 didYouMean: [],
@@ -29,7 +31,7 @@
                 return objState
             },
             methods: {
-                fetch: function () {
+                fetch: function (params) {
                     if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength?:'0') ?>) {
                         return;
                     }
@@ -42,7 +44,8 @@
                         this.loading = false;
                         return;
                     }
-                    this.$http.post('/elastic/search/results?query=' + this.keywords, {
+                    let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
+                    this.$http.post('/elastic/search/results?query=' + this.keywords + searchAfter, {
                             categories: this.categories,
                             module:"<?= $this->id ?>",
                             root: "<?= $this->rootPageId ?>",
@@ -59,14 +62,50 @@
                             }
                         }
                     ).then(function (res) {
-                        this.views.results = this.groupResults(res.body.results['hits'] ? res.body.results['hits'] : []);
-                        this.views.didYouMean = res.body.results['didYouMean'];
+
+                        let results = res.body.results['hits'] ? res.body.results['hits'] : [];
+                        let gResults = this.groupResults(results);
+
+                        if (params && params.hasOwnProperty('merge') && params.merge)
+                        {
+                            for (let name in gResults) {
+                                if (this.views.results.hasOwnProperty(name)) {
+                                    for (let i=0;i<gResults[name]['hits'].length;i++) {
+                                        this.views.results[name]['hits'].push(gResults[name]['hits'][i]);
+                                    }
+                                } else {
+                                    this.views.results[name] = gResults[name];
+                                }
+                            }
+                        } else {
+                            this.views.results = gResults;
+                            this.views.didYouMean = res.body.results['didYouMean'];
+                        }
+
+                        if (!Object.keys(results).length) {
+                            this.loadMoreButton = false;
+                        }
+
+                        if (Object.keys(this.views.results).length) {
+                            this.hasResults = true;
+                        } else {
+                            this.categories = [];
+                        }
+
+                        this.countResults();
                         this.views.globalRichSnippets = res.body.globalRichSnippets;
+                        this.maxScore = res.body.results['max_score'];
                         this.setFaqRichSnippets();
                         this.loading = false;
                         this.resultsOnly = false;
                         this.clickOutside();
                     }.bind(this));
+                },
+                loadMoreResults: function () {
+                    this.fetch({
+                        'searchAfter': this.lastSort,
+                        'merge': true
+                    })
                 },
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.views.didYouMean[0];
@@ -95,46 +134,51 @@
                     this.$forceUpdate();
                 },
                 groupResults: function (hits) {
-                    if (Object.keys(hits).length) {
-                        this.hasResults = true;
-                    } else {
-                        this.categories = [];
-                        return {}
-                    }
                     let group = {};
-                    let categories = {};
                     let onlyCategories = <?= \json_encode((empty($this->categories)?[]:$this->categories)) ?>;
-                    let sorting = {}
+
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
-                            let count = 0;
                             let val = hits[type]['value'];
-                            let label = hits[type]['label'];
                             if ((this.categories.length && this.categories.indexOf(val) === -1) || (onlyCategories.length && onlyCategories.indexOf(val) === -1)) {
                                 continue;
                             }
-                            if (type) {
-                                let category = this.options.categories[val];
-                                count = Array.isArray(hits[type]['hits']) ? hits[type]['hits'].length : 0;
-                                category['count'] = count;
-                                categories[label] = categories[label] || this.options.categories[val];
-                            }
                             group[type] = hits[type];
-                            sorting[type] = count
+                            this.lastSort = hits[type]['hits'].length ? hits[type]['hits'][hits[type]['hits'].length-1]['sort'].join() : '';
                         }
                     }
-                    if (!this.resultsOnly) {
-                        this.views.categories = this.sortObject(categories);
+
+                    return group;
+                },
+                countResults: function () {
+                    let categories = {};
+                    let sorting = {}
+                    for (let type in this.views.results) {
+                        let count = 0;
+                        if (!type) {
+                            continue;
+                        }
+                        let val = this.views.results[type]['value'];
+                        let label = this.views.results[type]['label'];
+                        let category = this.options.categories[val];
+                        count = Array.isArray(this.views.results[type]['hits']) ? this.views.results[type]['hits'].length : 0;
+                        category['count'] = Array.isArray(this.views.results[type]['hits']) ? this.views.results[type]['hits'].length : 0;
+                        sorting[type] = count
+                        categories[label] = categories[label] || this.options.categories[val];
                     }
+
                     try {
                         let g = {};
                         let c = Object.keys(sorting).sort(function(a,b){return sorting[b]-sorting[a]});
                         for (let i=0;i<c.length;i++) {
-                            g[c[i]] = group[c[i]];
+                            g[c[i]] = this.views.results[c[i]];
                         }
-                        return g;
+                        this.views.results = g;
                     } catch (e) {}
-                    return group;
+
+                    if (!this.resultsOnly) {
+                        this.views.categories = this.sortObject(categories);
+                    }
                 },
                 sortObject: function (obj) {
                     let s = {};
@@ -153,7 +197,7 @@
                     } else {
                         this.categories.splice(index, 1);
                     }
-                    this.fetch();
+                    this.fetch({});
                 },
                 activeCategory: function (category) {
                     let index = this.categories.indexOf(category);
@@ -162,17 +206,17 @@
                 search: function () {
                     clearTimeout(this.timeout);
                     this.timeout = setTimeout(function () {
-                        this.fetch();
+                        this.fetch({});
                     }.bind(this), 600);
                 },
                 submit: function () {
                     let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
                     if (match) {
                         this.keywords = match.value;
-                        this.fetch()
+                        this.fetch({})
                     } else {
                         this.keywords = '';
-                        this.fetch()
+                        this.fetch({})
                     }
                 },
                 sendStat: function (e) {
@@ -250,7 +294,7 @@
                             input: {
                                 selection: (event) => {
                                     self.keywords = event.detail.selection.value;
-                                    self.fetch();
+                                    self.fetch({});
                                 },
                                 keydown(event) {
                                     switch (event.keyCode) {
@@ -291,6 +335,11 @@
                             objBody.classList.remove('search-panel-open');
                         }
                     }
+                }
+            },
+            mounted: function () {
+                if (this.keywords) {
+                    this.fetch({});
                 }
             }
         });

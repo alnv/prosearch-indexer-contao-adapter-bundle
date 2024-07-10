@@ -77,6 +77,9 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psLanguage'] = [
     ],
     'save_callback' => [
         static function ($value) {
+            if (!$value) {
+                return '';
+            }
             if (!preg_match('/^[a-z]{2,}/i', $value)) {
                 throw new RuntimeException($GLOBALS['TL_LANG']['ERR']['language']);
             }

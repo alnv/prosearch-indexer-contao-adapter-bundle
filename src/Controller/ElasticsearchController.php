@@ -44,6 +44,7 @@ class ElasticsearchController extends AbstractController
         $strRootPageId = Input::post('root') ?: (Input::get('root') ?? '');
         $blnGroup = (bool)(Input::post('group') ?: (Input::get('group') ?? false));
         $strQuery = Input::get('query') ?? '';
+        $strSearchAfter = Input::get('search_after') ?? '';
 
         $objKeyword = new Keyword();
         $arrKeywords = $objKeyword->setKeywords($strQuery, ['categories' => $arrCategories]);
@@ -58,6 +59,7 @@ class ElasticsearchController extends AbstractController
         ];
 
         $arrElasticOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
+        $arrElasticOptions['search_after'] = $strSearchAfter;
 
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
@@ -147,6 +149,7 @@ class ElasticsearchController extends AbstractController
         $objEntity->addHit($arrHit['_source']['id'], ($arrHit['highlight'] ?? []), [
             'types' => $arrHit['_source']['types'],
             'score' => $arrHit['_score'],
+            'sort' => $arrHit['sort'] ?? [],
             'keywords' => $arrKeywords,
             'elasticOptions' => $arrElasticOptions,
         ]);

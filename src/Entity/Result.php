@@ -102,6 +102,7 @@ class Result
             'mainImage' => $arrImages[0] ?? [],
             'types' => $this->arrHit['source']['types'] ?? [],
             'score' => $this->arrHit['source']['score'] ?? 0,
+            'sort' => $this->arrHit['source']['sort'] ?? 0,
             'microdata' => [],
             'rich_snippet' => ''
         ];
