@@ -21,7 +21,7 @@ class Backend
         $objIndicesModel = IndicesModel::findByPk($objDataContainer->id);
         if (!$objIndicesModel) {
             Message::addInfo('Etwas ist schiefgelaufen');
-            Controller::redirect('contao/main.php?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
+            Controller::redirect('contao?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
         }
 
         $objOptions = new Options();
@@ -34,6 +34,6 @@ class Backend
         $objOptions->setLanguage($objIndicesModel->language);
         (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
         Message::addInfo('Seite wurde indexiert');
-        Controller::redirect('contao/main.php?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
+        Controller::redirect('contao?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
     }
 }
