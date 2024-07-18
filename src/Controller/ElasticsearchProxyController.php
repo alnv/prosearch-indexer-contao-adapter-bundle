@@ -40,7 +40,7 @@ class ElasticsearchProxyController extends AbstractController
         $objElasticsearch = new Elasticsearch($arrBody['options']);
         $objElasticsearch->connect();
 
-        return new JsonResponse($objElasticsearch->autocompltion($arrBody['keywords'], $arrBody['index']));
+        return new JsonResponse($objElasticsearch->autoCompilation($arrBody['keywords'], $arrBody['index']));
     }
 
     #[Route(path: '/search/index', methods: ["POST"])]

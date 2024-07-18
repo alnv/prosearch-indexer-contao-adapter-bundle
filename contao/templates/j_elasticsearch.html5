@@ -114,6 +114,7 @@
                 setDidYouMeanToKeyword: function () {
                     this.keywords = this.views.didYouMean[0];
                     this.views.didYouMean = [];
+                    this.fetch({})
                 },
                 setFaqRichSnippets: function () {
                     this.richSnippets['faq'] = {};

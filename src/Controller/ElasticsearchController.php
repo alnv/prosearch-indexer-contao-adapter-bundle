@@ -232,7 +232,7 @@ class ElasticsearchController extends AbstractController
                 $objElasticsearchAdapter = new Elasticsearch($this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId));
                 $objElasticsearchAdapter->connect();
                 if ($objElasticsearchAdapter->getClient()) {
-                    $arrResults['results'] = $objElasticsearchAdapter->autocompltion($arrKeywords);
+                    $arrResults['results'] = $objElasticsearchAdapter->autoCompilation($arrKeywords);
                 }
                 break;
             case 'licence':

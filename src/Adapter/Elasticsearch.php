@@ -301,8 +301,8 @@ class Elasticsearch extends Adapter
             "index" => $strIndex,
             "body" => [
                 "settings" => [
-                    "number_of_shards" => 3,
-                    "number_of_replicas" => 2,
+                    "number_of_shards" => 1,
+                    "number_of_replicas" => 1,
                     "analysis" => [
                         "analyzer" => $arrAnalyzer,
                         "filter" => [
@@ -417,6 +417,12 @@ class Elasticsearch extends Adapter
                 ]
             ]
         ];
+
+        if (isset($GLOBALS['TL_HOOKS']['psCreateMapping']) && is_array($GLOBALS['TL_HOOKS']['psCreateMapping'])) {
+            foreach ($GLOBALS['TL_HOOKS']['psCreateMapping'] as $arrCallback) {
+                System::importStatic($arrCallback[0])->{$arrCallback[1]}($arrParams, $this->arrOptions, $this);
+            }
+        }
 
         if (!$this->getClient()) {
             (new Proxy($this->strLicense))->indexMapping($arrParams);
@@ -590,7 +596,7 @@ class Elasticsearch extends Adapter
         return $arrDocument;
     }
 
-    public function autocompltion($arrKeywords, string $strIndexName = ''): array
+    public function autoCompilation($arrKeywords, string $strIndexName = ''): array // autocompltion
     {
 
         $arrResults = [
@@ -650,6 +656,12 @@ class Elasticsearch extends Adapter
                 ]
             ]
         ];
+
+        if (isset($GLOBALS['TL_HOOKS']['psAutoCompilation']) && is_array($GLOBALS['TL_HOOKS']['psAutoCompilation'])) {
+            foreach ($GLOBALS['TL_HOOKS']['psAutoCompilation'] as $arrCallback) {
+                System::importStatic($arrCallback[0])->{$arrCallback[1]}($params, $arrKeywords, $this->arrOptions, $this);
+            }
+        }
 
         $response = $this->getClient()->search($params);
 
@@ -757,7 +769,8 @@ class Elasticsearch extends Adapter
                                     'query' => $arrKeywords['query'],
                                     'analyzer' => $strAnalyzer,
                                     'type' => 'phrase_prefix',
-                                    'fields' => ['description', 'text', 'document']
+                                    'slop' => 1,
+                                    'fields' => ['description', 'text', 'document', 'title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                                 ]
                             ]
                         ],
@@ -767,7 +780,7 @@ class Elasticsearch extends Adapter
                                     'query' => $arrKeywords['query'],
                                     'analyzer' => $strAnalyzer,
                                     'type' => 'phrase_prefix',
-                                    'fields' => ['title^3', 'h1^5', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                                    'fields' => ['title^5', 'h1^3', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                                 ]
                             ]
                         ]
@@ -779,7 +792,10 @@ class Elasticsearch extends Adapter
                             [
                                 'query_string' => [
                                     'query' => '*' . $arrKeywords['query'] . '*',
-                                    'fields' => ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'description', 'text', 'document']
+                                    'allow_leading_wildcard' => true,
+                                    'analyze_wildcard' => true,
+                                    'phrase_slop' => 1,
+                                    'fields' => ['description', 'text', 'document', 'title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                                 ]
                             ]
                         ],
@@ -789,7 +805,8 @@ class Elasticsearch extends Adapter
                                     'query' => $arrKeywords['query'],
                                     'analyzer' => $strAnalyzer,
                                     'type' => 'best_fields',
-                                    'fields' => ['title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
+                                    'slop' => 1,
+                                    'fields' => ['title^5', 'h1^3', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                                 ]
                             ]
                         ]
@@ -799,12 +816,13 @@ class Elasticsearch extends Adapter
                     $params['body']['query']['bool'] = [
                         'must' => [
                             [
-                                'multi_match' => [
-                                    'query' => $arrKeywords['query'],
-                                    'analyzer' => $strAnalyzer,
-                                    'type' => 'best_fields',
+                                'query_string' => [
+                                    'query' => '*' . $arrKeywords['query'] . '*',
+                                    'allow_leading_wildcard' => true,
+                                    'analyze_wildcard' => true,
                                     'fuzziness' => 'AUTO',
-                                    'fields' => ['description', 'text', 'document']
+                                    'phrase_slop' => 1,
+                                    'fields' => ['description', 'text', 'document', 'title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                                 ]
                             ]
                         ],
@@ -815,7 +833,8 @@ class Elasticsearch extends Adapter
                                     'analyzer' => $strAnalyzer,
                                     'type' => 'best_fields',
                                     'fuzziness' => 'AUTO',
-                                    'fields' => ['title', 'h1', 'strong', 'h2^2', 'h3', 'h4', 'h5', 'h6']
+                                    'slop' => 1,
+                                    'fields' => ['title^5', 'h1^3', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong']
                                 ]
                             ]
                         ]
@@ -855,6 +874,12 @@ class Elasticsearch extends Adapter
             return $arrResults;
         }
 
+        if (isset($GLOBALS['TL_HOOKS']['psSearchQuery']) && is_array($GLOBALS['TL_HOOKS']['psSearchQuery'])) {
+            foreach ($GLOBALS['TL_HOOKS']['psSearchQuery'] as $arrCallback) {
+                System::importStatic($arrCallback[0])->{$arrCallback[1]}($params, $arrKeywords, $intTryCounts, $this->arrOptions, $this);
+            }
+        }
+
         $response = $this->getClient()->search($params);
         $arrResults['hits'] = $response['hits']['hits'] ?? [];
         $arrResults['max_score'] = $response['hits']['max_score'] ?? 0;
@@ -887,7 +912,7 @@ class Elasticsearch extends Adapter
 
     protected function getSizeValue()
     {
-        return $this->arrOptions['perPage'] ?: 1000;
+        return $this->arrOptions['perPage'] ?: 500;
     }
 
     public function getLicense(): string

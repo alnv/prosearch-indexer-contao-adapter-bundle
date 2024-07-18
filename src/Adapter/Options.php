@@ -81,7 +81,7 @@ class Options
      * @param string $strLanguage
      * @return void
      */
-    public function setLanguage(string $strLanguage = 'de'): void
+    public function setLanguage(string $strLanguage = ''): void
     {
         $this->language = $strLanguage;
     }
@@ -111,10 +111,10 @@ class Options
     }
 
     /**
-     * @param string $strDomain
+     * @param string $strDomains
      * @return void
      */
-    public function setDomain(string $strDomains = ""): void
+    public function setDomain(string $strDomains = ''): void
     {
         $this->domain = $strDomains ?: '';
     }
