@@ -2,18 +2,30 @@
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Contao\DC_Table;
+use Contao\Controller;
+use Contao\Environment;
 use Contao\Input;
 
 $GLOBALS['TL_DCA']['tl_search_stats'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'closed' => true,
-        'onload_callback' => [function () {
-            if (!Input::get('export')) {
-                return;
+        'onload_callback' => [
+            function () {
+                if (!Input::get('export')) {
+                    return;
+                }
+                Stats::export();
+                Controller::redirect(preg_replace('/&(amp;)?export=[^&]*/i', '', preg_replace( '/&(amp;)?' . preg_quote(Input::get('export'), '/') . '=[^&]*/i', '', Environment::get('request'))));
+            },
+            function () {
+                if (!Input::get('reset')) {
+                    return;
+                }
+                Stats::reset();
+                Controller::redirect(preg_replace('/&(amp;)?reset=[^&]*/i', '', preg_replace( '/&(amp;)?' . preg_quote(Input::get('reset'), '/') . '=[^&]*/i', '', Environment::get('request'))));
             }
-            Stats::export();
-        }],
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -38,6 +50,12 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
                 'href' => 'export=all',
                 'label' => &$GLOBALS['TL_LANG']['tl_search_stats']['export'],
                 'attributes' => 'onclick="Backend.getScrollOffset()"'
+            ],
+            'reset' => [
+                'icon' => 'delete.svg',
+                'href' => 'reset=all',
+                'label' => &$GLOBALS['TL_LANG']['tl_search_stats']['reset'],
+                'attributes' => 'onclick="if(!confirm(\'Wollen Sie die komplette Statistik löschen?\'))return false;Backend.getScrollOffset()"'
             ]
         ],
         'operations' => [

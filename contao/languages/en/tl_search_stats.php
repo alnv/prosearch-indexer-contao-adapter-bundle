@@ -8,3 +8,4 @@ $GLOBALS['TL_LANG']['tl_search_stats']['count'] = ['Anzahl der Suchanfragen', ''
 $GLOBALS['TL_LANG']['tl_search_stats']['urls'] = ['Aufgerufene Seiten', ''];
 $GLOBALS['TL_LANG']['tl_search_stats']['source'] = ['Quelle', ''];
 $GLOBALS['TL_LANG']['tl_search_stats']['export'] = ['Statistik exportieren', ''];
+$GLOBALS['TL_LANG']['tl_search_stats']['reset'] = ['Statistik leeren', ''];

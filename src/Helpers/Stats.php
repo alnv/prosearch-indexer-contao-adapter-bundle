@@ -6,6 +6,7 @@ use Contao\System;
 use Contao\Database;
 use Contao\StringUtil;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Csv;
 
 class Stats
 {
@@ -129,6 +130,11 @@ class Stats
         return false;
     }
 
+    public static function reset(): void
+    {
+        Database::getInstance()->prepare('DELETE FROM tl_search_stats')->execute();
+    }
+
     public static function export(): void
     {
 
@@ -155,7 +161,7 @@ class Stats
             $arrTypes = StringUtil::deserialize($objStats->types, true);
             $arrSources = [];
             foreach (StringUtil::deserialize($objStats->source, true) as $arrSource) {
-                $arrSources[] = $arrSource['source'] . ':' . (int) $arrSource['click'];
+                $arrSources[] = $arrSource['source'] . ' : ' . (int) $arrSource['click'];
             }
 
             $arrStat = [];
@@ -164,8 +170,8 @@ class Stats
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['count'][0] ?? ''] = (int) $objStats->count;
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['hits'][0] ?? ''] = (int) $objStats->hits;
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['clicks'][0] ?? ''] = (int) $objStats->clicks;
-            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['urls'][0] ?? ''] = implode(',', $arrUrls);
-            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['source'][0] ?? ''] = implode(',', $arrSources);
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['urls'][0] ?? ''] = implode(PHP_EOL, $arrUrls);
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['source'][0] ?? ''] = implode(PHP_EOL, $arrSources);
 
             $arrStats[] = $arrStat;
         }
@@ -187,7 +193,7 @@ class Stats
             $numRows++;
         }
 
-        $objXls = new \PhpOffice\PhpSpreadsheet\Writer\Csv($objSpreadsheet);
+        $objXls = new Csv($objSpreadsheet);
 
         $objXls->setDelimiter(';');
         $objXls->setEnclosure('"');
