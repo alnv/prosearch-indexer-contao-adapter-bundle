@@ -38,7 +38,7 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
             'mode' => 2,
             'flag' => 12,
             'fields' => ['count'],
-            'panelLayout' => 'filter;sort,search'
+            'panelLayout' => 'filter,search;sort,limit'
         ],
         'label' => [
             'fields' => ['keywords', 'types', 'count', 'hits', 'clicks'],
