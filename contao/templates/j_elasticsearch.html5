@@ -70,24 +70,27 @@
 
                         if (params && params.hasOwnProperty('merge') && params.merge)
                         {
+                            let hasMatches = false;
                             for (let name in gResults) {
                                 if (this.views.results.hasOwnProperty(name)) {
                                     for (let i=0;i<gResults[name]['hits'].length;i++) {
                                         if (!this.urls.includes(gResults[name]['hits'][i]['url'])) {
                                             this.views.results[name]['hits'].push(gResults[name]['hits'][i]);
+                                            hasMatches = true;
                                         }
                                     }
                                 } else {
                                     this.views.results[name] = gResults[name];
                                 }
                             }
+
+                            if (!hasMatches) {
+                                this.loadMoreButton = false;
+                            }
+
                         } else {
                             this.views.results = gResults;
                             this.views.didYouMean = res.body.results['didYouMean'];
-                        }
-
-                        if (!Object.keys(results).length) {
-                            this.loadMoreButton = false;
                         }
 
                         if (Object.keys(this.views.results).length) {
