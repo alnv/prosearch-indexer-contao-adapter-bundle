@@ -11,11 +11,9 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Contao\CoreBundle\Controller\AbstractController;
-use Contao\Environment;
 use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\ModuleModel;
-use Contao\PageModel;
 use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -32,16 +30,17 @@ class ElasticsearchController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrJsonData = \json_decode(file_get_contents('php://input'), true);
-
         if (!empty($arrJsonData) && is_array($arrJsonData)) {
-            Input::setPost('root', $arrJsonData['root']);
-            Input::setPost('module', $arrJsonData['module']);
-            Input::setPost('categories', $arrJsonData['categories']);
+            Input::setPost('root', ($arrJsonData['root'] ?? 0));
+            Input::setPost('module', ($arrJsonData['module'] ?? 0));
+            Input::setPost('categories', ($arrJsonData['categories'] ?? []));
+            Input::setPost('source', ($arrJsonData['source'] ?? ''));
         }
 
         $arrCategories = Input::post('categories') ?: (Input::get('categories') ?? []);
         $strModuleId = Input::post('module') ?: (Input::get('module') ?? '');
         $strRootPageId = Input::post('root') ?: (Input::get('root') ?? '');
+        $strSource = Input::post('source') ?: (Input::get('source') ?? '');
         $blnGroup = (bool)(Input::post('group') ?: (Input::get('group') ?? false));
         $strQuery = Input::get('query') ?? '';
         $strSearchAfter = Input::get('search_after') ?? '';
@@ -137,7 +136,7 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])));
+        Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])), $strSource);
 
         return new JsonResponse($arrResults);
     }
@@ -255,7 +254,7 @@ class ElasticsearchController extends AbstractController
 
         $strAnalyzer = $objModule?->psAnalyzer ? $objModule->psAnalyzer : '';
         $strLanguage = $objModule?->psLanguage ? $objModule->psLanguage : '';
-        $strDomains = $objModule?->psDomains ? $objModule->psDomains : ''; // Environment::get('host');
+        $strDomains = $objModule?->psDomains ? $objModule->psDomains : '';
 
         $objElasticOptions = new Options();
         $objElasticOptions->setLanguage($strLanguage);

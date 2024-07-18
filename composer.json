@@ -29,7 +29,8 @@
     "smalot/pdfparser": "^2.8",
     "guzzlehttp/guzzle": "^7.8",
     "elasticsearch/elasticsearch": "^8.12",
-    "menatwork/contao-multicolumnwizard-bundle": "^3.6"
+    "menatwork/contao-multicolumnwizard-bundle": "^3.6",
+    "phpoffice/phpspreadsheet": "^1.29"
   },
   "config": {
     "preferred-install": "dist"

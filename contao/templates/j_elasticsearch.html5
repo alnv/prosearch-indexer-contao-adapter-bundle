@@ -50,7 +50,8 @@
                             categories: this.categories,
                             module:"<?= $this->id ?>",
                             root: "<?= $this->rootPageId ?>",
-                            group: true
+                            group: true,
+                            source: window.location.href
                         },
                         {
                             emulateJSON: true,

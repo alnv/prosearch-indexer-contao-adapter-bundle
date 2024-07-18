@@ -1,11 +1,19 @@
 <?php
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
 use Contao\DC_Table;
+use Contao\Input;
 
 $GLOBALS['TL_DCA']['tl_search_stats'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'closed' => true,
+        'onload_callback' => [function () {
+            if (!Input::get('export')) {
+                return;
+            }
+            Stats::export();
+        }],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -17,17 +25,19 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
         'sorting' => [
             'mode' => 2,
             'flag' => 12,
+            'fields' => ['count'],
             'panelLayout' => 'filter;sort,search'
         ],
         'label' => [
-            'fields' => ['keywords', 'types', 'count', 'clicks', 'hits'],
+            'fields' => ['keywords', 'types', 'count', 'hits', 'clicks'],
             'showColumns' => true
         ],
         'global_operations' => [
-            'all' => [
-                'href' => 'act=select',
-                'class' => 'header_edit_all',
-                'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"'
+            'export' => [
+                'icon' => 'theme_import.svg',
+                'href' => 'export=all',
+                'label' => &$GLOBALS['TL_LANG']['tl_search_stats']['export'],
+                'attributes' => 'onclick="Backend.getScrollOffset()"'
             ]
         ],
         'operations' => [
@@ -47,6 +57,7 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
             'sql' => ['type' => 'integer', 'autoincrement' => true, 'notnull' => true, 'unsigned' => true]
         ],
         'tstamp' => [
+            'flag' => 6,
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
         ],
         'keywords' => [
@@ -73,6 +84,10 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
         ],
         'urls' => [
+            'search' => true,
+            'sql' => 'text NULL'
+        ],
+        'source' => [
             'sql' => 'text NULL'
         ]
     ]

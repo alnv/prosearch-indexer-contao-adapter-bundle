@@ -168,7 +168,7 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ]
     ],
     'palettes' => [
-        'default' => '{settings_legend},settings;{types_legend},types;{page_legend},domain,url,language,pageId;{meta_legend},title,description,images'
+        'default' => '{settings_legend},settings,state;{types_legend},types;{page_legend},domain,url,language,pageId;{meta_legend},title,description,images'
     ],
     'fields' => [
         'id' => [
@@ -247,6 +247,14 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
         ],
         'state' => [
+            'inputType' => 'select',
+            'eval' => [
+                'mandatory' => true,
+                'tl_class' => 'w50'
+            ],
+            'options_callback' => function () {
+                return ($GLOBALS['TL_LANG']['tl_indices']['states'] ?? []);
+            },
             'reference' => &$GLOBALS['TL_LANG']['tl_indices']['states'],
             'sql' => "varchar(16) NOT NULL default '" . States::ACTIVE . "'"
         ],

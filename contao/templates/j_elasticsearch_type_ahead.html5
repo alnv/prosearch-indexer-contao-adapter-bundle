@@ -5,9 +5,12 @@
             keywords: '<?= $this->keyword ?>',
             didYouMean: [],
             results: [],
+            lastSort: '',
+            urls: [],
             loading: false,
             submitted: false,
-            autoCompleteJS: null
+            autoCompleteJS: null,
+            loadMoreButton: true
         };
         new Vue({
             el: "#<?= $this->elementId ?>",
@@ -114,20 +117,27 @@
                         }
                     });
                 },
-                getSearchResults: function () {
+                submitSearch: function (event) {
+                    <?php if (!$this->redirect): ?>
+                    event.preventDefault();
+                    this.autoCompleteJS.start(this.keywords);
+                    <?php endif; ?>
+                },
+                getSearchResults: function (params) {
                     this.submitted = true;
-                    <?php if (!$this->isResultPage): ?>
+                    <?php if (!$this->isResultPage && $this->redirect): ?>
                     window.location.href = "<?= $this->redirect ?>?keywords=" + this.keywords;
                     return;
                     <?php endif; ?>
-                    this.results = [];
                     this.didYouMean = [];
                     this.loading = true;
-                    let fetchUrl = '/elastic/search/results?query=' + this.keywords;
+                    let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
+                    let fetchUrl = '/elastic/search/results?query=' + this.keywords + searchAfter;
                     this.$http.post(fetchUrl, {
                             categories: this.categories,
                             module:"<?= $this->id ?>",
-                            root: "<?= $this->rootPageId ?>"
+                            root: "<?= $this->rootPageId ?>",
+                            source: window.location.href
                         },
                         {
                             emulateJSON: true,
@@ -140,9 +150,34 @@
                             }
                         }
                     ).then(function (res) {
+
                         this.loading = false;
-                        this.results = res.body['results']['hits'];
-                        this.didYouMean = res.body['results']['didYouMean'];
+                        let results = res.body.results['hits'] ? res.body.results['hits'] : [];
+
+                        if (params && params.hasOwnProperty('merge') && params.merge) {
+                            for (let i=0;i<results.length;i++) {
+                                if (!this.urls.includes(results[i]['url'])) {
+                                    this.results.push(results[i]);
+                                } else {
+                                    results.pop();
+                                }
+                            }
+
+                        } else {
+                            this.results = [];
+                            for (let i=0;i<results.length;i++) {
+                                this.results.push(results[i]);
+                                this.urls.push(results[i]['url']);
+                            }
+                            this.didYouMean = res.body['results']['didYouMean'];
+                        }
+
+                        if (!results.length) {
+                            this.loadMoreButton = false;
+                        } else {
+                            this.lastSort = results[results.length-1]['sort'].join()
+                        }
+
                     }.bind(this));
                 },
                 setDidYouMeanToKeyword: function () {
@@ -170,6 +205,12 @@
                     }
                     this.sendHrefStat(href);
                 },
+                loadMoreResults: function () {
+                    this.getSearchResults({
+                        'searchAfter': this.lastSort,
+                        'merge': true
+                    })
+                },
                 submit: function () {
                     let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
                     this.keywords = this.autoCompleteJS.input ? this.autoCompleteJS.input.value : this.keywords;
@@ -182,16 +223,16 @@
                             window.location.href = a.href;
                             return;
                         }
-                        this.getSearchResults()
+                        this.getSearchResults({})
                     } else {
-                        this.getSearchResults()
+                        this.getSearchResults({})
                     }
                 }
             },
             mounted: function () {
                 this.setAutoComplete();
                 <?php if ($this->keyword): ?>
-                this.getSearchResults();
+                this.getSearchResults({});
                 <?php endif; ?>
             }
         })

@@ -2,30 +2,31 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
+use Contao\System;
 use Contao\Database;
 use Contao\StringUtil;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class Stats
 {
 
-    public static function setKeyword($arrKeywords, $intHits): void
+    public static function setKeyword($arrKeywords, $intHits, $strSource = ''): void
     {
 
         $varStat = static::findStat($arrKeywords['keyword'], $arrKeywords['types']);
-
         if (!$varStat) {
-            static::newStat($arrKeywords['keyword'], $arrKeywords['types'], $intHits);
-            return;
+            $varStat = static::newStat($arrKeywords['keyword'], $arrKeywords['types'], $intHits);
+        } else {
+            static::updateStat($varStat, $intHits);
         }
 
-        static::updateStat($varStat, $intHits);
+        static::setSource($varStat, $strSource);
     }
 
     public static function setClick($arrKeywords, $strUrl): void
     {
 
         $arrStat = static::findStat($arrKeywords['keyword'], $arrKeywords['types']);
-
         if (!$arrStat) {
             return;
         }
@@ -43,6 +44,38 @@ class Stats
         ])->execute($arrStat['id']);
     }
 
+    protected static function setSource($arrStat, $strSource): void
+    {
+
+        $blnNew = true;
+        $strSource = strtok($strSource, '?');
+        $strKeyword = $arrStat['keywords'] ?? '';
+
+        if (!$strKeyword || !$strSource) {
+            return;
+        }
+
+        $arrSources = StringUtil::deserialize($arrStat['source'], true);
+        foreach ($arrSources as $intIndex => $arrSource) {
+            if ($strSource == $arrSource['source']) {
+                $arrSources[$intIndex]['click'] = (int)$arrSource['click'] + 1;
+                $blnNew = false;
+            }
+        }
+
+        if ($blnNew) {
+            $arrSources[] = [
+                'source' => $strSource,
+                'click' => 1
+            ];
+        }
+
+        Database::getInstance()->prepare('UPDATE tl_search_stats %s WHERE id=?')->set([
+            'tstamp' => time(),
+            'source' => $arrSources,
+        ])->execute($arrStat['id']);
+    }
+
     protected static function updateStat($arrState, $intHits): void
     {
         $intNewHits = (int)$arrState['hits'] + $intHits;
@@ -55,9 +88,10 @@ class Stats
         ])->execute($arrState['id']);
     }
 
-    protected static function newStat($strKeyWord, $arrTypes, $intHits): void
+    protected static function newStat($strKeyWord, $arrTypes, $intHits): array
     {
-        Database::getInstance()->prepare('INSERT INTO tl_search_stats %s')->set([
+
+        $arrSet = [
             'types' => serialize($arrTypes),
             'keywords' => $strKeyWord,
             'urls' => serialize([]),
@@ -65,7 +99,13 @@ class Stats
             'tstamp' => time(),
             'clicks' => 0,
             'count' => 1
-        ])->execute();
+        ];
+
+        $objInsert = Database::getInstance()->prepare('INSERT INTO tl_search_stats %s')->set($arrSet)->execute();
+
+        $arrSet['id'] = $objInsert->insertId;
+
+        return $arrSet;
     }
 
     protected static function findStat($strKeyWord, $arrTypes = []): bool|array
@@ -87,5 +127,75 @@ class Stats
         }
 
         return false;
+    }
+
+    public static function export(): void
+    {
+
+        System::loadLanguageFile('tl_search_stats');
+
+        $objSpreadsheet = new Spreadsheet();
+        $objSpreadsheet->getProperties()
+            ->setTitle('ProSearch Statistik')
+            ->setCreator('Contao CMS')
+            ->setLastModifiedBy(\BackendUser::getInstance()->email);
+        $objSheet = $objSpreadsheet->getActiveSheet();
+
+        $numRows = 1;
+        $objStats = Database::getInstance()->prepare('SELECT * FROM tl_search_stats ORDER BY count DESC')->execute();
+
+        $arrStats = [];
+        while ($objStats->next()) {
+
+            if (!$objStats->keywords) {
+                continue;
+            }
+
+            $arrUrls = StringUtil::deserialize($objStats->urls, true);
+            $arrTypes = StringUtil::deserialize($objStats->types, true);
+            $arrSources = [];
+            foreach (StringUtil::deserialize($objStats->source, true) as $arrSource) {
+                $arrSources[] = $arrSource['source'] . ':' . (int) $arrSource['click'];
+            }
+
+            $arrStat = [];
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['keywords'][0] ?? ''] = $objStats->keywords;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['types'][0] ?? ''] = implode(',', $arrTypes);
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['count'][0] ?? ''] = (int) $objStats->count;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['hits'][0] ?? ''] = (int) $objStats->hits;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['clicks'][0] ?? ''] = (int) $objStats->clicks;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['urls'][0] ?? ''] = implode(',', $arrUrls);
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['source'][0] ?? ''] = implode(',', $arrSources);
+
+            $arrStats[] = $arrStat;
+        }
+
+        $arrFields = array_keys(($arrStats[0] ?? []));
+
+        foreach ($arrFields as $numCols => $strField) {
+            $objSheet->setCellValue([$numCols + 1, $numRows], $strField);
+        }
+
+        $numRows++;
+
+        foreach ($arrStats as $arrMember) {
+            $numCols = 1;
+            foreach ($arrMember as $strValue) {
+                $objSheet->setCellValue([$numCols, $numRows], $strValue);
+                $numCols++;
+            }
+            $numRows++;
+        }
+
+        $objXls = new \PhpOffice\PhpSpreadsheet\Writer\Csv($objSpreadsheet);
+
+        $objXls->setDelimiter(';');
+        $objXls->setEnclosure('"');
+
+        header('Content-Disposition: attachment;filename="export-' . uniqid() . '.csv"');
+        header('Cache-Control: max-age=0');
+        header('Content-Type: application/vnd.ms-excel');
+        $objXls->save('php://output');
+        exit;
     }
 }

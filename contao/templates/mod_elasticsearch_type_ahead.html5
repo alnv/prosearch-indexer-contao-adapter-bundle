@@ -8,18 +8,21 @@
         </div>
         <div class="elasticsearch-input">
             <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" value="<?= $this->keyword ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
-            <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>">
-                <img v-if="!loading" src="<?= $GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?>" alt="<?= $this->search ?>">
-                <img v-else src="<?= $GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?>" alt="">
+            <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" @click="submitSearch">
+                <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>">
+                <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="">
             </button>
         </div>
     </form>
     <?php if ($this->isResultPage): ?>
         <div class="search-results" v-if="results.length && keywords">
             <div v-for="result in results" v-html="result.template" class="result-hit" @click="sendStat"></div>
+            <?php if ($this->perPage): ?>
+            <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
+            <?php endif; ?>
         </div>
         <div v-if="!results.length && keywords && !loading && submitted" class="no-search-results">
-            <p><?= $GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?></p>
+            <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
         </div>
     <?php endif; ?>
 </div>
