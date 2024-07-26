@@ -166,7 +166,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'eval' => [
                 'maxlength' => 255,
                 'mandatory' => true,
-                'tl_class' => 'w50 clr',
+                'tl_class' => 'long clr',
                 'decodeEntities' => true
             ],
             'sql' => "varchar(255) NOT NULL default ''"

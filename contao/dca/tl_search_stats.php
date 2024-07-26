@@ -28,8 +28,7 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
         ],
         'sql' => [
             'keys' => [
-                'id' => 'primary',
-                'keywords' => 'index'
+                'id' => 'primary'
             ]
         ]
     ],

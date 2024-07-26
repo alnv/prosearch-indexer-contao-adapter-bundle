@@ -159,7 +159,7 @@
                                 if (!this.urls.includes(results[i]['url'])) {
                                     this.results.push(results[i]);
                                 } else {
-                                    results.pop();
+                                    results.splice(i, 1);
                                 }
                             }
 
