@@ -82,6 +82,11 @@
                                 }
                             }
                         } else {
+                            for (let type in gResults) {
+                                for (let i=0;i<gResults[type]['hits'].length;i++) {
+                                    this.urls.push(gResults[type]['hits'][i]['url']);
+                                }
+                            }
                             this.views.results = gResults;
                             this.views.didYouMean = res.body.results['didYouMean'];
                         }
@@ -149,9 +154,6 @@
                             }
                             group[type] = hits[type];
                             this.lastSort = hits[type]['hits'].length ? hits[type]['hits'][hits[type]['hits'].length-1]['sort'].join() : '';
-                            for (let i=0;i<hits[type]['hits'].length;i++) {
-                                this.urls.push(hits[type]['hits'][i]['url']);
-                            }
                         }
                     }
 

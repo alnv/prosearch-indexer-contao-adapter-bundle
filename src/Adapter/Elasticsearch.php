@@ -702,7 +702,7 @@ class Elasticsearch extends Adapter
                         "_score" => "desc"
                     ],
                     [
-                        "id" => "asc"
+                        "url" => "asc"
                     ]
                 ],
                 "highlight" => [
