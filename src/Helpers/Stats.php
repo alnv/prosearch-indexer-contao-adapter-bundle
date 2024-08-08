@@ -5,6 +5,7 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 use Contao\System;
 use Contao\Database;
 use Contao\StringUtil;
+use Contao\BackendUser;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 
@@ -144,7 +145,7 @@ class Stats
         $objSpreadsheet->getProperties()
             ->setTitle('ProSearch Statistik')
             ->setCreator('Contao CMS')
-            ->setLastModifiedBy(\BackendUser::getInstance()->email);
+            ->setLastModifiedBy(BackendUser::getInstance()->email);
         $objSheet = $objSpreadsheet->getActiveSheet();
 
         $numRows = 1;
