@@ -26,7 +26,7 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
         ],
         'operations' => [
             'edit' => [
-                'icon' => 'header.svg',
+                'icon' => 'edit.svg',
                 'href' => 'act=edit'
             ],
             'delete' => [

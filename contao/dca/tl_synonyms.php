@@ -31,7 +31,7 @@ $GLOBALS['TL_DCA']['tl_synonyms'] = [
         ],
         'operations' => [
             'edit' => [
-                'icon' => 'header.svg',
+                'icon' => 'edit.svg',
                 'href' => 'act=edit'
             ],
             'copy' => [
