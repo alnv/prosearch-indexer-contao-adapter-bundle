@@ -30,7 +30,7 @@
     "guzzlehttp/guzzle": "^7.8",
     "elasticsearch/elasticsearch": "^8.12",
     "menatwork/contao-multicolumnwizard-bundle": "^3.6",
-    "phpoffice/phpspreadsheet": "^1.29"
+    "phpoffice/phpspreadsheet": "^1.29 || ^2.2"
   },
   "config": {
     "preferred-install": "dist"
