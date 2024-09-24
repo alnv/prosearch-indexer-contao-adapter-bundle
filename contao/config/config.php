@@ -66,7 +66,8 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 3, [
             'name' => 'indices',
             'reindexIndex' => [Backend::class, 'reIndexSite'],
             'tables' => [
-                'tl_indices'
+                'tl_indices',
+                'tl_search_vector_files'
             ]
         ]
     ]

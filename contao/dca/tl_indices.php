@@ -18,7 +18,6 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
         'onload_callback' => [function (DataContainer $objDataContainer) {
-
             $strAct = Input::get('act') ?: '';
             $blnIsSavin = Input::post('FORM_SUBMIT') === $objDataContainer->table;
 
@@ -45,10 +44,10 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
 
             foreach (Toolkit::parseDocumentIndex($objIndices->document) as $strField => $varData) {
 
-                $strFieldname = $strFieldPrefix . $strField;
+                $strFieldName = $strFieldPrefix . $strField;
 
                 $arrField = [
-                    'label' => &$GLOBALS['TL_LANG']['tl_indices'][$strFieldname],
+                    'label' => &$GLOBALS['TL_LANG']['tl_indices'][$strFieldName],
                     'inputType' => 'listWizard',
                     'eval' => [
                         'alwaysSave' => true,
@@ -81,10 +80,10 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
                     }
                 }
 
-                Input::setPost('__' . $strFieldname . '__', $varData);
+                Input::setPost('__' . $strFieldName . '__', $varData);
 
-                $arrPalettes[] = $strFieldname;
-                $GLOBALS['TL_DCA']['tl_indices']['fields'][$strFieldname] = $arrField;
+                $arrPalettes[] = $strFieldName;
+                $GLOBALS['TL_DCA']['tl_indices']['fields'][$strFieldName] = $arrField;
             }
 
             $strPrevField = $arrPalettes[0] ?? '';
@@ -105,7 +104,6 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             $objPaletteManipulator->applyToPalette('default', 'tl_indices');
         }],
         'onsubmit_callback' => [function (DataContainer $objDataContainer) {
-
             $objIndices = IndicesModel::findByPk($objDataContainer->id);
             if (!$objIndices) {
                 return;
@@ -144,6 +142,11 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'showColumns' => true
         ],
         'global_operations' => [
+            'vector_files' => [
+                'href' => 'table=tl_search_vector_files',
+                'class' => 'header_edit_all',
+                'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"'
+            ],
             'all' => [
                 'href' => 'act=select',
                 'class' => 'header_edit_all',

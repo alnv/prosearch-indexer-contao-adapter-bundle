@@ -33,7 +33,7 @@
             },
             methods: {
                 fetch: function (params) {
-                    if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength?:'0') ?>) {
+                    if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength ?: '0') ?>) {
                         return;
                     }
                     this.loading = true;
@@ -48,7 +48,7 @@
                     let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
                     this.$http.post('/elastic/search/results?query=' + this.keywords + searchAfter, {
                             categories: this.categories,
-                            module:"<?= $this->id ?>",
+                            module: "<?= $this->id ?>",
                             root: "<?= $this->rootPageId ?>",
                             group: true,
                             source: window.location.href
@@ -66,21 +66,13 @@
                     ).then(function (res) {
 
                         let results = res.body.results['hits'] ? res.body.results['hits'] : [];
-                        let gResults = this.groupResults(results);
+                        let arrResults = this.groupResults(results);
 
-                        if (params && params.hasOwnProperty('merge') && params.merge)
-                        {
+                        if (params && params.hasOwnProperty('merge') && params.merge) {
                             let hasMatches = false;
-                            for (let name in gResults) {
-                                if (this.views.results.hasOwnProperty(name)) {
-                                    for (let i=0;i<gResults[name]['hits'].length;i++) {
-                                        if (!this.urls.includes(gResults[name]['hits'][i]['url'])) {
-                                            this.views.results[name]['hits'].push(gResults[name]['hits'][i]);
-                                            hasMatches = true;
-                                        }
-                                    }
-                                } else {
-                                    this.views.results[name] = gResults[name];
+                            for (let i = 0; i < arrResults.length; i++) {
+                                if (this.add2ResultsByCategory(arrResults[i]['value'], arrResults[i])) {
+                                    hasMatches = true;
                                 }
                             }
 
@@ -89,16 +81,17 @@
                             }
 
                         } else {
-                            for (let type in gResults) {
-                                for (let i=0;i<gResults[type]['hits'].length;i++) {
-                                    this.urls.push(gResults[type]['hits'][i]['url']);
-                                }
-                            }
-                            this.views.results = gResults;
+                            this.views.results = arrResults;
                             this.views.didYouMean = res.body.results['didYouMean'];
                         }
 
-                        if (Object.keys(this.views.results).length) {
+                        for (let i = 0; i < arrResults.length; i++) {
+                            for (let j = 0; j < arrResults[i]['hits'].length; j++) {
+                                this.urls.push(arrResults[i]['hits'][j]['url']);
+                            }
+                        }
+
+                        if (this.views.results.length) {
                             this.hasResults = true;
                         } else {
                             this.categories = [];
@@ -111,7 +104,27 @@
                         this.loading = false;
                         this.resultsOnly = false;
                         this.clickOutside();
+
                     }.bind(this));
+                },
+                add2ResultsByCategory: function (category, results) {
+                    let added = false;
+                    let exist = false;
+                    for (let i = 0; i < this.views.results.length; i++) {
+                        if (this.views.results[i]['value'] === category) {
+                            for (let j = 0; j < results['hits'].length; j++) {
+                                if (!this.urls.includes(results['hits'][j]['url'])) {
+                                    this.views.results[i]['hits'].push(results['hits'][j]);
+                                    added = true;
+                                }
+                            }
+                            exist = true;
+                        }
+                    }
+                    if (!exist) {
+                        this.views.results.push(results)
+                    }
+                    return added;
                 },
                 loadMoreResults: function () {
                     this.fetch({
@@ -127,9 +140,9 @@
                 setFaqRichSnippets: function () {
                     this.richSnippets['faq'] = {};
                     if (Object.keys(this.views.globalRichSnippets).length && this.views.globalRichSnippets.hasOwnProperty('FAQPage')) {
-                        for (let i=0;i<this.views.globalRichSnippets['FAQPage'].length;i++) {
+                        for (let i = 0; i < this.views.globalRichSnippets['FAQPage'].length; i++) {
                             let faqPages = this.views.globalRichSnippets['FAQPage'][i];
-                            for (let j=0;j<faqPages['mainEntity'].length;j++) {
+                            for (let j = 0; j < faqPages['mainEntity'].length; j++) {
                                 let page = faqPages['mainEntity'][j];
                                 if (page['name'] && page['acceptedAnswer'] && page['acceptedAnswer']['text'] && page['_matched']) {
                                     this.richSnippets['faq'][page.name] = {
@@ -147,8 +160,9 @@
                     this.$forceUpdate();
                 },
                 groupResults: function (hits) {
+
                     let group = {};
-                    let onlyCategories = <?= \json_encode((empty($this->categories)?[]:$this->categories)) ?>;
+                    let onlyCategories = <?= \json_encode((empty($this->categories) ? [] : $this->categories)) ?>;
 
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
@@ -157,50 +171,57 @@
                                 continue;
                             }
                             group[type] = hits[type];
-                            this.lastSort = hits[type]['hits'].length ? hits[type]['hits'][hits[type]['hits'].length-1]['sort'].join() : '';
+                            this.lastSort = hits[type]['hits'].length ? hits[type]['hits'][hits[type]['hits'].length - 1]['sort'].join() : '';
                         }
                     }
 
-                    return group;
+                    let _sortedGroup = [];
+                    if (onlyCategories.length) {
+                        for (let i = 0; i < onlyCategories.length; i++) {
+                            for (let groupLabel in group) {
+                                if (group[groupLabel]['value'] === onlyCategories[i]) {
+                                    _sortedGroup.push(group[groupLabel]);
+                                }
+                            }
+                        }
+                        return _sortedGroup;
+                    } else {
+                        _sortedGroup = this.sortObject(group);
+                    }
+
+                    return _sortedGroup;
                 },
                 countResults: function () {
-                    let categories = {};
-                    let sorting = {}
-                    for (let type in this.views.results) {
+
+                    let categories = [];
+
+                    for (let i = 0; i < this.views.results.length; i++) {
+
                         let count = 0;
-                        if (!type) {
-                            continue;
-                        }
-                        let val = this.views.results[type]['value'];
-                        let label = this.views.results[type]['label'];
+                        let val = this.views.results[i]['value'];
                         let category = this.options.categories[val];
-                        count = Array.isArray(this.views.results[type]['hits']) ? this.views.results[type]['hits'].length : 0;
-                        category['count'] = Array.isArray(this.views.results[type]['hits']) ? this.views.results[type]['hits'].length : 0;
-                        sorting[type] = count
-                        categories[label] = categories[label] || this.options.categories[val];
+
+                        count = Array.isArray(this.views.results[i]['hits']) ? this.views.results[i]['hits'].length : 0;
+                        category['count'] = Array.isArray(this.views.results[i]['hits']) ? this.views.results[i]['hits'].length : 0;
+
+                        if (typeof categories[i] === 'undefined') {
+                            categories[i] = this.options.categories[val];
+                        }
                     }
 
-                    try {
-                        let g = {};
-                        let c = Object.keys(sorting).sort(function(a,b){return sorting[b]-sorting[a]});
-                        for (let i=0;i<c.length;i++) {
-                            g[c[i]] = this.views.results[c[i]];
-                        }
-                        this.views.results = g;
-                    } catch (e) {}
-
                     if (!this.resultsOnly) {
-                        this.views.categories = this.sortObject(categories);
+                        this.views.categories = categories;
                     }
                 },
                 sortObject: function (obj) {
-                    let s = {};
-                    Object.keys(obj)
-                        .sort()
-                        .forEach(function(v) {
-                            s[v] = obj[v];
-                        });
-                    return s;
+                    let arrReturn = [];
+                    Object.keys(obj).sort(function (a, b) {return a.toLowerCase().localeCompare(b.toLowerCase())}).forEach(function (v) {
+                        arrReturn.push(obj[v]);
+                    });
+                    return arrReturn;
+                },
+                startsWithUppercase: function (str) {
+                    return str.substr(0, 1).match(/[A-Z\u00C0-\u00DC]/);
                 },
                 setCategory: function (category) {
                     this.resultsOnly = true;
@@ -254,7 +275,7 @@
                     window.addEventListener('click', function () {
                         this.close();
                     }.bind(this));
-                    this.$refs['elasticsearchContainerInside'].addEventListener('click', function(e){
+                    this.$refs['elasticsearchContainerInside'].addEventListener('click', function (e) {
                         e.stopPropagation();
                     });
                 },
@@ -272,7 +293,7 @@
                         debounce: 600,
                         submit: true,
                         data: {
-                            src: async function(query) {
+                            src: async function (query) {
                                 let headers = new Headers();
                                 headers.append('Accept', 'application/json');
                                 headers.append('Content-Type', 'application/json');
@@ -291,7 +312,7 @@
                                 });
                                 let results = [];
                                 let data = await source.json();
-                                for (let i=0; i<data.results['hits'].length; i++) {
+                                for (let i = 0; i < data.results['hits'].length; i++) {
                                     results.push(data.results['hits'][i]['term']);
                                 }
                                 return results;

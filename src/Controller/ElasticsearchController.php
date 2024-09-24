@@ -2,6 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiElasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
@@ -81,6 +82,13 @@ class ElasticsearchController extends AbstractController
         }
 
         $arrHits = $arrResults['results']['hits'];
+
+        if (empty($arrHits) && $arrElasticOptions['useOpenAi']) {
+            $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
+            $arrResults['results']['didYouMean'] = [];
+            $arrResults['results']['max_score'] = 0;
+        }
+
         $arrResults['results']['hits'] = [];
 
         $objModule = ModuleModel::findByPk($strModuleId);
@@ -95,11 +103,9 @@ class ElasticsearchController extends AbstractController
             foreach ($arrHits as $arrHit) {
 
                 $arrTypes = empty($arrHit['_source']['types']) ? [''] : $arrHit['_source']['types'];
-
                 foreach ($arrTypes as $strType) {
 
                     $strLabel = $arrCategoriesLabels[$strType]['label'] ?? '';
-
                     if (!isset($arrGrouped[$strLabel])) {
                         $arrGrouped[$strLabel] = [
                             'hits' => [],
@@ -256,8 +262,13 @@ class ElasticsearchController extends AbstractController
         $strLanguage = $objModule?->psLanguage ? $objModule->psLanguage : '';
         $strDomains = $objModule?->psDomains ? $objModule->psDomains : '';
 
+        $strOpenAssistant = $objModule?->psOpenAssistant ? $objModule->psOpenAssistant : '';
+        $blnUseOpenAi = (bool)$objModule?->psUseOpenAi;
+
         $objElasticOptions = new Options();
         $objElasticOptions->setLanguage($strLanguage);
+        $objElasticOptions->setOpenAiAssistant($strOpenAssistant);
+        $objElasticOptions->setUseOpenAi($blnUseOpenAi);
         $objElasticOptions->setRootPageId($strRootPageId);
         $objElasticOptions->setPerPage($objModule?->perPage ?: 50);
         $objElasticOptions->setAnalyzer($strAnalyzer);

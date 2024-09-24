@@ -881,6 +881,8 @@ class Elasticsearch extends Adapter
         }
 
         $response = $this->getClient()->search($params);
+
+        $arrResults['tries'] = $intTryCounts;
         $arrResults['hits'] = $response['hits']['hits'] ?? [];
         $arrResults['max_score'] = $response['hits']['max_score'] ?? 0;
 

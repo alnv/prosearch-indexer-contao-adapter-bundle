@@ -21,6 +21,7 @@ $GLOBALS['TL_LANG']['tl_indices']['language'] = ['Sprache', ''];
 $GLOBALS['TL_LANG']['tl_indices']['doc_type'] = ['Dokumenten Typ', ''];
 $GLOBALS['TL_LANG']['tl_indices']['origin_url'] = ['Ursprünglich URL', ''];
 $GLOBALS['TL_LANG']['tl_indices']['pageId'] = ['Seite', ''];
+$GLOBALS['TL_LANG']['tl_indices']['vector_files'] = ['Vektordatei erstellen', ''];
 $GLOBALS['TL_LANG']['tl_indices']['reindex'] = ['Seite Re-indexieren', ''];
 $GLOBALS['TL_LANG']['tl_indices']['settings'] = ['Sucheinstellungen', 'Hier kannst du das Verhalten bei der Indexierung des Dokumentes ändern.'];
 

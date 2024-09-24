@@ -30,7 +30,7 @@
                     <div class="categories-headline">
                         <p><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?? '') ?></p>
                     </div>
-                    <nav v-if="Object.keys(views.categories).length">
+                    <nav v-if="views.categories.length">
                         <ul>
                             <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
                                 <button @click.stop.prevent="setCategory(category.key)" class="category-item-button"><span v-html="category.label"></span><i v-if="category.count">({{ category.count }})</i></button>
@@ -39,7 +39,7 @@
                     </nav>
                 </div>
 
-                <div v-if="Object.keys(views.results).length" class="search-results">
+                <div v-if="views.results.length" class="search-results">
                     <div v-if="Object.keys(views.globalRichSnippets).length && views.globalRichSnippets.hasOwnProperty('FAQPage')" class="search-rich-snippets">
                         <div class="faq-rich-snippet" v-if="Object.keys(richSnippets['faq']).length">
                             <div v-for="(faq,name) in richSnippets['faq']" class="faq-container" v-bind:class="{active:faq.active}">

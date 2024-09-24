@@ -23,6 +23,16 @@ class Options
     protected string $language = '';
 
     /**
+     * @var bool
+     */
+    protected bool $useOpenAi = false;
+
+    /**
+     * @var string
+     */
+    protected string $openAiAssistant = '';
+
+    /**
      * @var string
      */
     protected string $domain = '';
@@ -84,6 +94,24 @@ class Options
     public function setLanguage(string $strLanguage = ''): void
     {
         $this->language = $strLanguage;
+    }
+
+    /**
+     * @param string $strOpenAiAssistant
+     * @return void
+     */
+    public function setOpenAiAssistant(string $strOpenAiAssistant = ''): void
+    {
+        $this->openAiAssistant = $strOpenAiAssistant;
+    }
+
+    /**
+     * @param bool $useAi
+     * @return void
+     */
+    public function setUseOpenAi(bool $useAi = false): void
+    {
+        $this->useOpenAi = $useAi;
     }
 
     /**
@@ -167,6 +195,8 @@ class Options
             'rootPageId' => $this->rootPageId,
             'perPage' => $this->perPage,
             'fuzzy' => $this->fuzzy,
+            'useOpenAi' => $this->useOpenAi,
+            'openAiAssistant' => $this->openAiAssistant,
             'openDocumentsInBrowser' => $this->openDocumentsInBrowser,
             'useRichSnippets' => $this->useRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
