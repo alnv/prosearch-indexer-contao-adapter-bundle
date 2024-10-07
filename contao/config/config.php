@@ -1,5 +1,6 @@
 <?php
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiChatComponentParser;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchTypeAheadModule;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Purge\PurgeElasticsearch;
@@ -78,6 +79,14 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 3, [
  */
 $GLOBALS['TL_PURGE']['custom']['deleteElasticsearchIndex'] = [
     'callback' => [PurgeElasticsearch::class, 'deleteAllDatabases']
+];
+
+/**
+ * Open AI Parser
+ */
+$GLOBALS['OPEN_AI_MESSAGE_PARSER']['elasticsearch'] = [
+    'label' => 'Elasticsearch',
+    'class' => AiChatComponentParser::class
 ];
 
 /**

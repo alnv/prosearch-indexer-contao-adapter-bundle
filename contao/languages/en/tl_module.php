@@ -14,8 +14,9 @@ $GLOBALS['TL_LANG']['tl_module']['psUseRichSnippets'] = ['RichSnippets verwenden
 $GLOBALS['TL_LANG']['tl_module']['psLanguage'] = ['Sprache (ISO-639 Standard)', 'Welche Sprache soll abgefragt werden? Die Sprache muss mit der in der Seitenstruktur hinterlegten Sprache übereinstimmen.'];
 $GLOBALS['TL_LANG']['tl_module']['psPreventCssLoading'] = ['Keine CSS-Dateien laden', ''];
 
-$GLOBALS['TL_LANG']['tl_module']['psOpenAssistant'] = ['Assistant', ''];
+$GLOBALS['TL_LANG']['tl_module']['psOpenAssistant'] = ['Assistant', 'Stelle sicher, dass der Assistent einen Vector-Store mit Elasticsearch-Dokumenten verwendet.'];
 $GLOBALS['TL_LANG']['tl_module']['psUseOpenAi'] = ['Open-AI verwenden', 'Sollte Elasticsearch keine Ergebnisse liefern, springt OpenAI an.'];
+$GLOBALS['TL_LANG']['tl_module']['psOpenAiRelevance'] = ['Score-Relevanz', 'Die Score-Relevanz bestimmt, bei welchem Relevanzwert die OpenAI-Suche aktiviert wird. Wenn du beispielsweise den Wert 40 eingibst, wird die OpenAI-Suche ausgelöst, wenn die Ergebnisse von Elasticsearch einen Relevanzwert von 40 oder niedriger haben. Das hilft dabei, die OpenAI-Suche nur bei weniger relevanten Ergebnissen von Elasticsearch zu aktivieren.'];
 
 $GLOBALS['TL_LANG']['tl_module']['psReference'] = [];
 $GLOBALS['TL_LANG']['tl_module']['psReference']['simple'] = ['Wortvervollständigung', ''];

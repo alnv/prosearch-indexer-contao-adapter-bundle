@@ -15,7 +15,7 @@ $GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},n
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';
-$GLOBALS['TL_DCA']['tl_module']['subpalettes']['psUseOpenAi'] = 'psOpenAssistant';
+$GLOBALS['TL_DCA']['tl_module']['subpalettes']['psUseOpenAi'] = 'psOpenAssistant,psOpenAiRelevance';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['psSearchCategories'] = [
     'inputType' => 'checkboxWizard',
@@ -150,6 +150,15 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psOpenAssistant'] = [
         return $arReturn;
     },
     'sql' => "varchar(128) NOT NULL default ''"
+];
+$GLOBALS['TL_DCA']['tl_module']['fields']['psOpenAiRelevance'] = [
+    'inputType' => 'text',
+    'eval' => [
+        'minval' => 0,
+        'maxval' => 100,
+        'tl_class' => 'w50'
+    ],
+    'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
 ];
 $GLOBALS['TL_DCA']['tl_module']['fields']['psUseOpenAi'] = [
     'inputType' => 'checkbox',

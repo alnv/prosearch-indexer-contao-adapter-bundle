@@ -8,9 +8,9 @@ class Options
 {
 
     /**
-     * @var array
+     * @var array|bool
      */
-    protected array $arrCredentials = [];
+    protected array|bool $arrCredentials = [];
 
     /**
      * @var string
@@ -26,6 +26,11 @@ class Options
      * @var bool
      */
     protected bool $useOpenAi = false;
+
+    /**
+     * @var integer
+     */
+    protected int $openAiRelevanceScore = 0;
 
     /**
      * @var string
@@ -184,6 +189,15 @@ class Options
     }
 
     /**
+     * @param int $openAiRelevanceScore
+     * @return void
+     */
+    public function setOpenAiRelevanceScore(int $openAiRelevanceScore = 0): void
+    {
+        $this->openAiRelevanceScore = $openAiRelevanceScore;
+    }
+
+    /**
      * @return array
      */
     public function getOptions(): array
@@ -200,7 +214,8 @@ class Options
             'openDocumentsInBrowser' => $this->openDocumentsInBrowser,
             'useRichSnippets' => $this->useRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
-            'domain' => $this->domain
+            'domain' => $this->domain,
+            'openAiRelevanceScore' => $this->openAiRelevanceScore
         ];
     }
 }

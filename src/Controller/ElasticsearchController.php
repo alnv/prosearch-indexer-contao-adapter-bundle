@@ -2,10 +2,10 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiElasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
+use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiElasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
@@ -83,10 +83,14 @@ class ElasticsearchController extends AbstractController
 
         $arrHits = $arrResults['results']['hits'];
 
-        if (empty($arrHits) && $arrElasticOptions['useOpenAi']) {
-            $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
-            $arrResults['results']['didYouMean'] = [];
-            $arrResults['results']['max_score'] = 0;
+        if ($arrElasticOptions['useOpenAi']) {
+
+            $intFirstScore = (floatval(($arrHits[0]['_score'] ?? 0)) * 10);
+            if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 || $arrElasticOptions['openAiRelevanceScore'] >= $intFirstScore)) {
+                $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
+                $arrResults['results']['didYouMean'] = [];
+                $arrResults['results']['max_score'] = 0;
+            }
         }
 
         $arrResults['results']['hits'] = [];
@@ -276,6 +280,7 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setUseRichSnippets((bool)$objModule?->psUseRichSnippets);
         $objElasticOptions->setOpenDocumentsInBrowser(((bool)$objModule?->psOpenDocumentInBrowser));
         $objElasticOptions->setMinKeywordLength(($objModule?->minKeywordLength ?: 3));
+        $objElasticOptions->setOpenAiRelevanceScore((int)($objModule?->psOpenAiRelevance ?: 0));
         $objElasticOptions->setDomain($strDomains);
 
         return $objElasticOptions->getOptions();

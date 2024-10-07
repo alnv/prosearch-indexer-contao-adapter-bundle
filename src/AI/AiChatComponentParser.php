@@ -3,11 +3,12 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\AI;
 
 use Contao\FrontendTemplate;
+use Alnv\ContaoOpenAiAssistantBundle\Library\Parser;
 use Alnv\ContaoOpenAiAssistantBundle\Helpers\Toolkit;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 
-class AiSearchComponent
+class AiChatComponentParser extends Parser
 {
 
     public function getAdditionalInstructions(): string
@@ -33,14 +34,19 @@ class AiSearchComponent
             }
             ```
             ' .
-            'Falls möglich, präsentiere deine Antwort in Form einer Tabelle oder Liste, um die Informationen klar und übersichtlich darzustellen.';
+            'Falls möglich, präsentiere deine Antwort in Form einer HTML-Tabelle oder Liste, um die Informationen klar und übersichtlich darzustellen. Beachte folgende Reihenfolge: Antworte erst mit einem kurzen einleitenden Satz, dann gebe das JSON aus und dann kommt die präzise und informative Antwort auf gestellte Fragen.';
     }
 
-    public function parseMessages($strMessage): string
+    public function parseMessages($strMessage, $arrMessages, $arrOptions = []): string
     {
 
         $strHits = "";
-        $arrPages = Toolkit::getJsonFromMessage($strMessage, '<code class="language-json">', '</code>');
+        $arrPages = Toolkit::getJsonFromMessage($strMessage, '<code class="json">', '</code>');
+
+        if (empty($arrPages)) {
+            $arrPages = Toolkit::getJsonFromMessage($strMessage, '<code>', '</code>');
+        }
+
         foreach (($arrPages['pages'] ?? []) as $arrPage) {
             $strPageURL = $arrPage['URL'] ?? '';
             if (!$strPageURL) {
@@ -64,8 +70,8 @@ class AiSearchComponent
         }
 
         if ($strHits) {
-            $strMessage = Toolkit::replace($strMessage, '<code class="language-json">', '</code>', $strHits);
-            $strMessage = str_replace('<code class="language-json">', '<div class="elasticsearch-results">', $strMessage);
+            $strMessage = Toolkit::replace($strMessage, '<code class="json">', '</code>', $strHits);
+            $strMessage = str_replace('<code class="json">', '<div class="elasticsearch-results">', $strMessage);
             $strMessage = str_replace('</code>', '</div>', $strMessage);
             $strMessage = str_replace('<pre>', '', $strMessage);
             $strMessage = str_replace('</pre>', '', $strMessage);
