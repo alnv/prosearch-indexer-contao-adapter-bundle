@@ -5,6 +5,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Contao\Database;
 use Contao\DataContainer;
 use Contao\DC_Table;
+use Contao\Input;
+use Contao\Controller;
 
 $GLOBALS['TL_DCA']['tl_search_vector_files'] = [
     'config' => [
