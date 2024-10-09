@@ -53,7 +53,7 @@ class SearchVectorFile
 
     public function update(): void
     {
-        Automator::updateVectorStoresByFilePath($this->arrSearchVectorFile['file'], $this->arrSearchVectorFile['name']);
+        Automator::updateVectorStoresByFilePath($this->arrSearchVectorFile['file'], ($this->arrSearchVectorFile['name'] ?? ''));
     }
 
     public function save($strFolder = ''): string
