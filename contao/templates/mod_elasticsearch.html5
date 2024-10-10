@@ -4,6 +4,7 @@
 
         <div class="elasticsearch-container-inside" ref="elasticsearchContainerInside">
             <form method="GET">
+
                 <div class="elasticsearch-search-panel">
                     <div class="elasticsearch-input">
                         <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
@@ -17,6 +18,11 @@
                             <span><?= $strButtonText ?></span>
                             <?php endif; ?>
                         </button>
+                    </div>
+                    <div v-if="showOpenAiText" class="elasticsearch-openai-waiting-text">
+                        <?php if ($strOpenAiWaitingText = ($GLOBALS['TL_LANG']['MSC']['searchOpenAiWaitingText'] ?? '')): ?>
+                            <p><?= $strOpenAiWaitingText ?></p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </form>

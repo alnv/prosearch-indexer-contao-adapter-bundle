@@ -85,8 +85,8 @@ class ElasticsearchController extends AbstractController
 
         if ($arrElasticOptions['useOpenAi']) {
 
-            $intFirstScore = (floatval(($arrHits[0]['_score'] ?? 0)) * 10);
-            if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 || $arrElasticOptions['openAiRelevanceScore'] >= $intFirstScore)) {
+            $intFirstScore = ((int)($arrHits[0]['_score'] ?? 0));
+            if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 && $arrElasticOptions['openAiRelevanceScore'] >= $intFirstScore)) {
                 $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
                 $arrResults['results']['didYouMean'] = [];
                 $arrResults['results']['max_score'] = 0;
@@ -150,10 +150,10 @@ class ElasticsearchController extends AbstractController
             if (($intIndex = array_search($arrKeywords['keyword'], $arrResults['results']['didYouMean'])) !== false) {
                 unset($arrResults['results']['didYouMean'][$intIndex]);
             }
-            $arrResults['results']['didYouMean'] = array_filter($arrResults['results']['didYouMean']);
+            $arrResults['results']['didYouMean'] = \array_filter($arrResults['results']['didYouMean']);
         }
 
-        Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])), $strSource);
+        Stats::setKeyword($arrKeywords, \count(($arrResults['results']['hits'] ?? [])), $strSource);
 
         return new JsonResponse($arrResults);
     }

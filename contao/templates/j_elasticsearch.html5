@@ -12,6 +12,10 @@
             autoCompleteJS: null,
             loadMoreButton: true,
             lastSort: '',
+            timer: null,
+            time: 0,
+            showOpenAiText: false,
+            openAi: <?= $this->openAi ? 'true' : 'false' ?>,
             views: {
                 results: [],
                 didYouMean: [],
@@ -33,11 +37,14 @@
             },
             methods: {
                 fetch: function (params) {
+
                     if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength ?: '0') ?>) {
                         return;
                     }
+
                     this.loading = true;
                     this.initial = false;
+
                     if (!this.keywords) {
                         this.hasResults = false;
                         this.views.results = [];
@@ -45,6 +52,9 @@
                         this.loading = false;
                         return;
                     }
+
+                    this.startAiTimer();
+
                     let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
                     this.$http.post('/elastic/search/results?query=' + this.keywords + searchAfter, {
                             categories: this.categories,
@@ -103,9 +113,27 @@
                         this.setFaqRichSnippets();
                         this.loading = false;
                         this.resultsOnly = false;
+                        this.stopAiTimer();
                         this.clickOutside();
 
                     }.bind(this));
+                },
+                startAiTimer: function () {
+                    if (!this.openAi) {
+                        return;
+                    }
+                    this.timer = setInterval(function () {
+                        this.time += 1;
+                        if (this.time > 6 && !this.showOpenAiText) {
+                            this.showOpenAiText = true;
+                        }
+                    }.bind(this), 1000);
+                },
+                stopAiTimer: function () {
+                    clearInterval(this.timer);
+                    this.showOpenAiText = false;
+                    this.timer = null;
+                    this.time = 0;
                 },
                 add2ResultsByCategory: function (category, results) {
                     let added = false;

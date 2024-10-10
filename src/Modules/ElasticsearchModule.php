@@ -3,13 +3,13 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Modules;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
+use Contao\BackendTemplate;
 use Contao\Combiner;
+use Contao\FrontendTemplate;
+use Contao\Input;
 use Contao\Module;
 use Contao\StringUtil;
 use Contao\System;
-use Contao\Input;
-use Contao\FrontendTemplate;
-use Contao\BackendTemplate;
 
 class ElasticsearchModule extends Module
 {
@@ -49,7 +49,7 @@ class ElasticsearchModule extends Module
         $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         $this->Template->keywords = $this->getKeywords();
-        // $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
+        $this->Template->openAi = $this->psUseOpenAi && $this->psOpenAssistant;
 
         $objTemplate = new FrontendTemplate('j_elasticsearch');
         $objTemplate->setData($this->Template->getData());

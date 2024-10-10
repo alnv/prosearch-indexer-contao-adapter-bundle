@@ -8,6 +8,7 @@ $GLOBALS['TL_LANG']['MSC']['searchResultsCloseButtonLabel'] = 'Close';
 $GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] = 'Load more';
 $GLOBALS['TL_LANG']['MSC']['searchButtonLabel'] = '';
 $GLOBALS['TL_LANG']['MSC']['searchInputLabel'] = '';
+$GLOBALS['TL_LANG']['MSC']['searchOpenAiWaitingText'] = 'We ask for your patience. Your enquiry will be processed.';
 
 $GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] = '/bundles/alnvprosearchindexercontaoadapter/search-icon.svg';
 $GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] = '/system/themes/flexible/icons/loading.svg';
