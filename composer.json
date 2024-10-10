@@ -2,8 +2,8 @@
   "name": "alnv/prosearch-indexer-contao-adapter-bundle",
   "type": "contao-bundle",
   "license": "proprietary",
-  "description": "Contao Search Pro // Elasticsearch",
-  "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete", "fulltext search"],
+  "description": "Contao Search Pro || Elasticsearch",
+  "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete", "fulltext search", "ai", "ki"],
   "authors": [
     {
       "name": "SINEOS GmbH",
