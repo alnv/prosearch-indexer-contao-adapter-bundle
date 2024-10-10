@@ -6,6 +6,8 @@ $GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] = 'Categories';
 $GLOBALS['TL_LANG']['MSC']['noSearchResults'] = 'No search results found.';
 $GLOBALS['TL_LANG']['MSC']['searchResultsCloseButtonLabel'] = 'Close';
 $GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] = 'Load more';
+$GLOBALS['TL_LANG']['MSC']['searchButtonLabel'] = '';
+$GLOBALS['TL_LANG']['MSC']['searchInputLabel'] = '';
 
 $GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] = '/bundles/alnvprosearchindexercontaoadapter/search-icon.svg';
 $GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] = '/system/themes/flexible/icons/loading.svg';

@@ -146,6 +146,13 @@ class ElasticsearchController extends AbstractController
             }
         }
 
+        if (!empty($arrResults['results']['didYouMean'])) {
+            if (($intIndex = array_search($arrKeywords['keyword'], $arrResults['results']['didYouMean'])) !== false) {
+                unset($arrResults['results']['didYouMean'][$intIndex]);
+            }
+            $arrResults['results']['didYouMean'] = array_filter($arrResults['results']['didYouMean']);
+        }
+
         Stats::setKeyword($arrKeywords, count(($arrResults['results']['hits'] ?? [])), $strSource);
 
         return new JsonResponse($arrResults);
