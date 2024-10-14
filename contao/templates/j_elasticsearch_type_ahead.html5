@@ -169,8 +169,9 @@
                                 this.results.push(results[i]);
                                 this.urls.push(results[i]['url']);
                             }
-                            this.didYouMean = res.body['results']['didYouMean'];
                         }
+
+                        this.didYouMean = res.body['results']['didYouMean'];
 
                         if (!results.length) {
                             this.loadMoreButton = false;

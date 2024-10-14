@@ -92,8 +92,9 @@
 
                         } else {
                             this.views.results = arrResults;
-                            this.views.didYouMean = res.body.results['didYouMean'];
                         }
+
+                        this.views.didYouMean = res.body.results['didYouMean'];
 
                         for (let i = 0; i < arrResults.length; i++) {
                             for (let j = 0; j < arrResults[i]['hits'].length; j++) {
