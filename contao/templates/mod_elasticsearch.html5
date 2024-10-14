@@ -3,8 +3,8 @@
     <div id="<?= $this->elementId ?>" class="elasticsearch-container" v-bind:class="{results_open: hasResults, loading_results: loading}">
 
         <div class="elasticsearch-container-inside" ref="elasticsearchContainerInside">
-            <form method="GET">
 
+            <form method="GET">
                 <div class="elasticsearch-search-panel">
                     <div class="elasticsearch-input">
                         <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
@@ -34,15 +34,15 @@
                 </div>
 
                 <div class="suggest-results">
-                    <p v-if="keywords" class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
+                    <p v-if="keywords && views.results.length" class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
                     <p v-if="views.didYouMean.length" class="suggest-results-mean"><?= ($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?? '') ?> <a @click.stop.prevent="setDidYouMeanToKeyword" v-for="didYouMean in views.didYouMean"><span>{{ didYouMean }}</span></a></p>
                 </div>
 
-                <div class="categories-results">
+                <div class="categories-results" v-if="views.categories.length">
                     <div class="categories-headline">
                         <p><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsCategoriesHeadline'] ?? '') ?></p>
                     </div>
-                    <nav v-if="views.categories.length">
+                    <nav>
                         <ul>
                             <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}">
                                 <button @click.stop.prevent="setCategory(category.key)" class="category-item-button"><span v-html="category.label"></span><i v-if="category.count">({{ category.count }})</i></button>
@@ -71,10 +71,12 @@
                         </div>
                         <div class="result-hit" v-for="hit in result.hits" v-html="hit.template" @click="sendStat"></div>
                     </div>
+
                     <?php if ($this->perPage): ?>
                     <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
                     <?php endif; ?>
                 </div>
+
             </div>
             <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
                 <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>

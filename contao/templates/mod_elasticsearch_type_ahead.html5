@@ -2,18 +2,14 @@
 <?php $this->block('content'); ?>
 
 <div id="<?= $this->elementId ?>" class="elasticsearch-container">
-    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
 
-        <?php if (!$this->isResultPage): ?>
-        <div class="suggest-results">
-            <p v-if="didYouMean.length"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
-        </div>
-        <?php endif; ?>
+    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
 
         <div class="elasticsearch-input">
             <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
                 <label for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
             <?php endif; ?>
+            <p v-if="didYouMean.length" class="suggest-results-mean"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
             <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" value="<?= $this->keyword ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
             <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" @click="submitSearch" class="elasticsearch-input-button">
                 <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>">
@@ -23,13 +19,12 @@
                 <?php endif; ?>
             </button>
         </div>
+
     </form>
 
     <?php if ($this->isResultPage): ?>
-
-        <div class="suggest-results">
-            <p v-if="keywords" class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
-            <p v-if="didYouMean.length"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
+        <div class="suggest-results" v-if="results.length && keywords">
+            <p class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
         </div>
 
         <div class="search-results" v-if="results.length && keywords">
