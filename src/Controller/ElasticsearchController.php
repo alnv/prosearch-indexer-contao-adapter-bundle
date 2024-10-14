@@ -11,6 +11,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Keyword;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Stats;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Toolkit;
 use Contao\CoreBundle\Controller\AbstractController;
 use Contao\FrontendTemplate;
 use Contao\Input;
@@ -146,12 +147,7 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        if (!empty($arrResults['results']['didYouMean'])) {
-            if (($intIndex = \array_search(\strtolower($arrKeywords['keyword']), \array_map('strtolower', $arrResults['results']['didYouMean']))) !== false) {
-                unset($arrResults['results']['didYouMean'][$intIndex]);
-            }
-            $arrResults['results']['didYouMean'] = \array_filter($arrResults['results']['didYouMean']);
-        }
+        $arrResults['results']['didYouMean'] = Toolkit::parseDidYouMeanArray(($arrKeywords['keyword'] ?? ''), $arrResults['results']['didYouMean']);
 
         Stats::setKeyword($arrKeywords, \count(($arrResults['results']['hits'] ?? [])), $strSource);
 
@@ -259,6 +255,10 @@ class ElasticsearchController extends AbstractController
                 $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
                 $arrResults['results'] = $objProxy->autocompletion($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrOptions);
                 break;
+        }
+
+        if (isset($arrResults['results']['didYouMean'])) {
+            $arrResults['results']['didYouMean'] = Toolkit::parseDidYouMeanArray(($arrKeywords['keyword'] ?? ''), $arrResults['results']['didYouMean']);
         }
 
         return new JsonResponse($arrResults);
