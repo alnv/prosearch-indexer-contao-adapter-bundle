@@ -36,6 +36,16 @@
                 return objState
             },
             methods: {
+                hasHits: function (hits) {
+                    for (let type in hits) {
+                        if (hits.hasOwnProperty(type)) {
+                            if (hits[type]['hits'].length) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                },
                 fetch: function (params) {
 
                     if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength ?: '0') ?>) {
@@ -102,7 +112,7 @@
                             }
                         }
 
-                        if (this.views.results.length) {
+                        if (this.hasHits(results)) {
                             this.hasResults = true;
                         } else {
                             this.categories = [];
@@ -226,11 +236,12 @@
 
                     for (let i = 0; i < this.views.results.length; i++) {
 
-                        let count = 0;
                         let val = this.views.results[i]['value'];
                         let category = this.options.categories[val];
+                        if (typeof category === 'undefined' || !category) {
+                            category = {};
+                        }
 
-                        count = Array.isArray(this.views.results[i]['hits']) ? this.views.results[i]['hits'].length : 0;
                         category['count'] = Array.isArray(this.views.results[i]['hits']) ? this.views.results[i]['hits'].length : 0;
 
                         if (typeof categories[i] === 'undefined') {

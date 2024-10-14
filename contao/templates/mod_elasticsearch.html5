@@ -73,11 +73,12 @@
                     </div>
 
                     <?php if ($this->perPage): ?>
-                    <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
+                    <button v-if="loadMoreButton && hasResults" class="elasticsearch-more-button" @click="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
                     <?php endif; ?>
                 </div>
 
             </div>
+
             <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
                 <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
             </div>
