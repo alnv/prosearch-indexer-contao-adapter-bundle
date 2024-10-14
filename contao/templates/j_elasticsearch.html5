@@ -37,6 +37,12 @@
             },
             methods: {
                 hasHits: function (hits) {
+                    if (!hits) {
+                        return false;
+                    }
+                    if (Array.isArray(hits)) {
+                        return false;
+                    }
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
                             if (hits[type]['hits'].length) {
