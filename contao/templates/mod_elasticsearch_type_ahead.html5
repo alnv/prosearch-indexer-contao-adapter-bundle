@@ -1,7 +1,7 @@
 <?php $this->extend('block_unsearchable'); ?>
 <?php $this->block('content'); ?>
 
-<div id="<?= $this->elementId ?>" class="elasticsearch-container">
+<div id="<?= $this->elementId ?>" class="elasticsearch-container" v-bind:class="{loading_results: loading}">
 
     <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
 
