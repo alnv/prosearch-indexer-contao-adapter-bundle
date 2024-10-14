@@ -147,7 +147,9 @@ class ElasticsearchController extends AbstractController
             }
         }
 
-        $arrResults['results']['didYouMean'] = Toolkit::parseDidYouMeanArray(($arrKeywords['keyword'] ?? ''), $arrResults['results']['didYouMean']);
+        if (isset($arrResults['results']['didYouMean'])) {
+            $arrResults['results']['didYouMean'] = Toolkit::parseDidYouMeanArray(($arrKeywords['keyword'] ?? ''), $arrResults['results']['didYouMean']);
+        }
 
         Stats::setKeyword($arrKeywords, \count(($arrResults['results']['hits'] ?? [])), $strSource);
 
