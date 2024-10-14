@@ -37,7 +37,7 @@ class Toolkit
         }
 
         if (($intIndex = \array_search(\strtolower($strSearchQuery), \array_map('strtolower', $arrDidYouMean))) !== false) {
-            \unset($arrDidYouMean[$intIndex]);
+            unset($arrDidYouMean[$intIndex]);
 
             $arrDidYouMean = \array_filter($arrDidYouMean);
         }
