@@ -147,7 +147,7 @@ class ElasticsearchController extends AbstractController
         }
 
         if (!empty($arrResults['results']['didYouMean'])) {
-            if (($intIndex = array_search($arrKeywords['keyword'], $arrResults['results']['didYouMean'])) !== false) {
+            if (($intIndex = \array_search(\strtolower($arrKeywords['keyword']), \array_map('strtolower', $arrResults['results']['didYouMean']))) !== false) {
                 unset($arrResults['results']['didYouMean'][$intIndex]);
             }
             $arrResults['results']['didYouMean'] = \array_filter($arrResults['results']['didYouMean']);
