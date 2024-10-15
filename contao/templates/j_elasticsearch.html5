@@ -122,6 +122,7 @@
                             this.hasResults = true;
                         } else {
                             this.categories = [];
+                            this.hasResults = false;
                         }
 
                         this.countResults();
@@ -206,9 +207,12 @@
                 },
                 groupResults: function (hits) {
 
+                    if (Array.isArray(hits)) {
+                        return [];
+                    }
+
                     let group = {};
                     let onlyCategories = <?= \json_encode((empty($this->categories) ? [] : $this->categories)) ?>;
-
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
                             let val = hits[type]['value'];
