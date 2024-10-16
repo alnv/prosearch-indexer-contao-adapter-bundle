@@ -2,8 +2,10 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
+use Contao\System;
 use Contao\Database;
 use Contao\StringUtil;
+use Symfony\Component\HttpFoundation\Request;
 
 class Categories
 {
@@ -102,7 +104,9 @@ class Categories
             }
         }
 
-        Database::getInstance()->prepare('UPDATE tl_ps_categories %s')->set(['tstamp' => time(), 'exist' => ''])->execute();
+        if (System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest(System::getContainer()->get('request_stack')->getCurrentRequest() ?? Request::create(''))) {
+            Database::getInstance()->prepare('UPDATE tl_ps_categories %s')->set(['tstamp' => time(), 'exist' => ''])->execute();
+        }
 
         foreach ($arrCategories as $strCategory) {
 
