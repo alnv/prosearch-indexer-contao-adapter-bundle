@@ -730,6 +730,17 @@ class Elasticsearch extends Adapter
                     "number_of_fragments" => 3,
                     "fragmenter" => "span"
                 ],
+                "aggs" => [
+                    "autocomplete" => [
+                        "terms" => [
+                            "field" => "autocomplete",
+                            "order" => [
+                                "_count" => "desc"
+                            ],
+                            "include" => $arrKeywords['query'] . ".*"
+                        ]
+                    ]
+                ],
                 "suggest" => [
                     "didYouMean" => [
                         "text" => $arrKeywords['query'],
@@ -892,6 +903,14 @@ class Elasticsearch extends Adapter
                     $arrResults['didYouMean'][] = $arrOption['text'];
                 }
             }
+        }
+
+        $arrBuckets = $response['aggregations']['autocomplete']['buckets'] ?? [];
+        foreach ($arrBuckets as $arrBucket) {
+            $arrResults['autocomplete'][] = [
+                'term' => $arrBucket['key'],
+                'template' => $arrBucket['key']
+            ];
         }
 
         $intMaxTryCounts = 1;

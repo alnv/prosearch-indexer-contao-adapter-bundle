@@ -19,6 +19,7 @@
             views: {
                 results: [],
                 didYouMean: [],
+                autocompletion: [],
                 categories: [],
                 globalRichSnippets: {}
             },
@@ -64,7 +65,8 @@
                     if (!this.keywords) {
                         this.hasResults = false;
                         this.views.results = [];
-                        this.views.didYouMean = []
+                        this.views.didYouMean = [];
+                        this.views.autocompletion = [];
                         this.loading = false;
                         return;
                     }
@@ -111,6 +113,7 @@
                         }
 
                         this.views.didYouMean = res.body.results['didYouMean'];
+                        this.views.autocompletion = res.body.results['autocomplete'];
 
                         for (let i = 0; i < arrResults.length; i++) {
                             for (let j = 0; j < arrResults[i]['hits'].length; j++) {
@@ -325,9 +328,11 @@
                     window.addEventListener('click', function () {
                         this.close();
                     }.bind(this));
-                    this.$refs['elasticsearchContainerInside'].addEventListener('click', function (e) {
-                        e.stopPropagation();
-                    });
+                    if (this.$refs['elasticsearchContainerInside']) {
+                        this.$refs['elasticsearchContainerInside'].addEventListener('click', function (e) {
+                            e.stopPropagation();
+                        });
+                    }
                 },
                 close: function () {
                     this.hasResults = false;

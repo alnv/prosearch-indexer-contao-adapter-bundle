@@ -1,7 +1,7 @@
 <script>
     (function () {
         let objState = {
-            categories: <?= json_encode((empty($this->categories)?[]:$this->categories)) ?>,
+            categories: <?= json_encode((empty($this->categories) ? [] : $this->categories)) ?>,
             keywords: '<?= $this->keyword ?>',
             didYouMean: [],
             results: [],
@@ -24,7 +24,7 @@
                     }
                     let self = this;
                     let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
-                    let fetchUrl = '/elastic/search/'+ type +'?query=';
+                    let fetchUrl = '/elastic/search/' + type + '?query=';
                     this.autoCompleteJS = new autoComplete({
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
@@ -32,14 +32,14 @@
                         debounce: 800,
                         submit: true,
                         data: {
-                            src: async function(query) {
+                            src: async function (query) {
                                 self.didYouMean = [];
                                 try {
                                     self.loading = true;
                                     let headers = new Headers();
                                     headers.append('Accept', 'application/json');
                                     headers.append('Content-Type', 'application/json');
-                                    const source = await fetch(fetchUrl+query, {
+                                    const source = await fetch(fetchUrl + query, {
                                         method: "POST",
                                         mode: "cors",
                                         headers: headers,
@@ -55,7 +55,7 @@
                                     });
                                     const data = await source.json();
                                     let suggests = [];
-                                    for (let i=0;i<data['results']['hits'].length;i++) {
+                                    for (let i = 0; i < data['results']['hits'].length; i++) {
                                         let suggest = data['results']['hits'][i];
                                         suggests.push(suggest.template);
                                     }
@@ -135,7 +135,7 @@
                     let fetchUrl = '/elastic/search/results?query=' + this.keywords + searchAfter;
                     this.$http.post(fetchUrl, {
                             categories: this.categories,
-                            module:"<?= $this->id ?>",
+                            module: "<?= $this->id ?>",
                             root: "<?= $this->rootPageId ?>",
                             source: window.location.href
                         },
@@ -155,7 +155,7 @@
                         let results = res.body.results['hits'] ? res.body.results['hits'] : [];
 
                         if (params && params.hasOwnProperty('merge') && params.merge) {
-                            for (let i=0;i<results.length;i++) {
+                            for (let i = 0; i < results.length; i++) {
                                 if (!this.urls.includes(results[i]['url'])) {
                                     this.results.push(results[i]);
                                 } else {
@@ -165,7 +165,7 @@
 
                         } else {
                             this.results = [];
-                            for (let i=0;i<results.length;i++) {
+                            for (let i = 0; i < results.length; i++) {
                                 this.results.push(results[i]);
                                 this.urls.push(results[i]['url']);
                             }
@@ -176,7 +176,7 @@
                         if (!results.length) {
                             this.loadMoreButton = false;
                         } else {
-                            this.lastSort = results[results.length-1]['sort'].join()
+                            this.lastSort = results[results.length - 1]['sort'].join()
                         }
 
                     }.bind(this));
