@@ -90,6 +90,7 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
             'eval' => [
                 'multiple' => false
             ],
+            'filter' => true,
             'sql' => "char(1) NOT NULL default ''"
         ]
     ]
