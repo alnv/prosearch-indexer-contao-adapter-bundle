@@ -5,7 +5,7 @@
             keywords: '<?= $this->keywords ?>',
             initial: true,
             timeout: null,
-            categories: [],
+            categories: <?= \json_encode($this->inputCategories, null, 512) ?>,
             loading: false,
             hasResults: false,
             resultsOnly: false,
@@ -55,14 +55,14 @@
                 },
                 fetch: function (params) {
 
-                    if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength ?: '0') ?>) {
+                    if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength ?: '0') ?> && !this.categories.length) {
                         return;
                     }
 
                     this.loading = true;
                     this.initial = false;
 
-                    if (!this.keywords) {
+                    if (!this.keywords && !this.categories.length) {
                         this.hasResults = false;
                         this.views.results = [];
                         this.views.didYouMean = [];
@@ -428,9 +428,7 @@
                 }
             },
             mounted: function () {
-                if (this.keywords) {
-                    this.fetch({});
-                }
+                this.fetch({});
             }
         });
         window.elasticInstaces.push(elasticComponent);

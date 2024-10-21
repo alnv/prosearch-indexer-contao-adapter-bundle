@@ -50,10 +50,27 @@ class ElasticsearchModule extends Module
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         $this->Template->keywords = $this->getKeywords();
         $this->Template->openAi = $this->psUseOpenAi && $this->psOpenAssistant;
+        $this->Template->inputCategories = $this->getInputCategories();
 
         $objTemplate = new FrontendTemplate('j_elasticsearch');
         $objTemplate->setData($this->Template->getData());
         $this->Template->script = $objTemplate->parse();
+    }
+
+    protected function getInputCategories(): array
+    {
+
+        $varInputCategories = Input::get('categories') ?: null;
+
+        if ($varInputCategories && is_string($varInputCategories)) {
+            $varInputCategories = [$varInputCategories];
+        }
+
+        if (!empty($varInputCategories) && is_array($varInputCategories)) {
+            return $varInputCategories;
+        }
+
+        return [];
     }
 
     protected function getElementId(): string
@@ -63,7 +80,7 @@ class ElasticsearchModule extends Module
 
     protected function getKeywords(): string
     {
-        return Input::get('q') ?: '';
+        return trim(Input::get('q') ?: (Input::get('keywords') ?: ''));
     }
 
     protected function loadAssets(): void
