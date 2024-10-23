@@ -28,6 +28,11 @@ class Options
     protected bool $useOpenAi = false;
 
     /**
+     * @var array
+     */
+    protected array $categories = [];
+
+    /**
      * @var integer
      */
     protected int $openAiRelevanceScore = 0;
@@ -117,6 +122,15 @@ class Options
     public function setUseOpenAi(bool $useAi = false): void
     {
         $this->useOpenAi = $useAi;
+    }
+
+    /**
+     * @param array $arrCategories
+     * @return void
+     */
+    public function setCategories(array $arrCategories = []): void
+    {
+        $this->categories = $arrCategories;
     }
 
     /**
@@ -215,6 +229,7 @@ class Options
             'useRichSnippets' => $this->useRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
             'domain' => $this->domain,
+            'categories' => $this->categories,
             'openAiRelevanceScore' => $this->openAiRelevanceScore
         ];
     }

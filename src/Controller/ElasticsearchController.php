@@ -16,6 +16,7 @@ use Contao\CoreBundle\Controller\AbstractController;
 use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\ModuleModel;
+use Contao\StringUtil;
 use Contao\System;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -47,20 +48,24 @@ class ElasticsearchController extends AbstractController
         $strQuery = Input::get('query') ?? '';
         $strSearchAfter = Input::get('search_after') ?? '';
 
-        $objKeyword = new Keyword();
-        $arrKeywords = $objKeyword->setKeywords($strQuery, ['categories' => $arrCategories]);
-
         $objCredentials = new Credentials();
         $arrCredentials = $objCredentials->getCredentials();
+
+        $arrElasticOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
+        $arrElasticOptions['search_after'] = $strSearchAfter;
+
+        if (empty($arrCategories)) {
+            $arrCategories = $arrElasticOptions['categories'] ?? [];
+        }
+
+        $objKeyword = new Keyword();
+        $arrKeywords = $objKeyword->setKeywords($strQuery, ['categories' => $arrCategories]);
 
         $arrResults = [
             'keywords' => $arrKeywords,
             'globalRichSnippets' => [],
             'results' => []
         ];
-
-        $arrElasticOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
-        $arrElasticOptions['search_after'] = $strSearchAfter;
 
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
@@ -149,6 +154,12 @@ class ElasticsearchController extends AbstractController
 
         if (isset($arrResults['results']['didYouMean'])) {
             $arrResults['results']['didYouMean'] = Toolkit::parseDidYouMeanArray(($arrKeywords['keyword'] ?? ''), $arrResults['results']['didYouMean']);
+        }
+
+        if (isset($GLOBALS['TL_HOOKS']['psParseSearchResults']) && is_array($GLOBALS['TL_HOOKS']['psParseSearchResults'])) {
+            foreach ($GLOBALS['TL_HOOKS']['psParseSearchResults'] as $arrCallback) {
+                $arrResults = System::importStatic($arrCallback[0])->{$arrCallback[1]}($arrResults, $arrElasticOptions, $this);
+            }
         }
 
         Stats::setKeyword($arrKeywords, \count(($arrResults['results']['hits'] ?? [])), $strSource);
@@ -285,6 +296,7 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setRootPageId($strRootPageId);
         $objElasticOptions->setPerPage($objModule?->perPage ?: 50);
         $objElasticOptions->setAnalyzer($strAnalyzer);
+        $objElasticOptions->setCategories(StringUtil::deserialize($objModule?->psSearchCategories, true));
         $objElasticOptions->setFuzzy((bool)$objModule?->fuzzy);
         $objElasticOptions->setUseRichSnippets((bool)$objModule?->psUseRichSnippets);
         $objElasticOptions->setOpenDocumentsInBrowser(((bool)$objModule?->psOpenDocumentInBrowser));
