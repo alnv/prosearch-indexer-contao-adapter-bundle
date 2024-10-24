@@ -145,7 +145,7 @@ class Options
             return;
         }
 
-        $this->rootPageId = $strRootId;
+        $this->rootPageId = (int)$strRootId;
     }
 
     /**
