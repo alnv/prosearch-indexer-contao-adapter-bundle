@@ -79,11 +79,11 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
         ],
         'keywords' => [
             'search' => true,
-            'sql' => "varchar(128) NOT NULL default ''"
+            'sql' => "varchar(255) NOT NULL default ''"
         ],
         'types' => [
             'search' => true,
-            'sql' => "varchar(255) NOT NULL default ''"
+            'sql' => "text NULL"
         ],
         'hits' => [
             'flag' => 12,

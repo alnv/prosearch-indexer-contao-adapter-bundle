@@ -17,6 +17,7 @@
             showOpenAiText: false,
             openAi: <?= $this->openAi ? 'true' : 'false' ?>,
             views: {
+                total: 0,
                 results: [],
                 didYouMean: [],
                 autocompletion: [],
@@ -215,6 +216,7 @@
                     }
 
                     let group = {};
+                    this.views.total = 0;
                     let onlyCategories = <?= \json_encode((empty($this->categories) ? [] : $this->categories)) ?>;
                     for (let type in hits) {
                         if (hits.hasOwnProperty(type)) {
@@ -224,6 +226,7 @@
                             }
                             group[type] = hits[type];
                             this.lastSort = hits[type]['hits'].length ? hits[type]['hits'][hits[type]['hits'].length - 1]['sort'].join() : '';
+                            this.views.total = this.views.total + hits[type]['hits'].length;
                         }
                     }
 
@@ -325,10 +328,10 @@
                     });
                 },
                 clickOutside: function () {
-                    window.addEventListener('click', function () {
-                        this.close();
-                    }.bind(this));
                     if (this.$refs['elasticsearchContainerInside']) {
+                        window.addEventListener('click', function () {
+                            this.close();
+                        }.bind(this));
                         this.$refs['elasticsearchContainerInside'].addEventListener('click', function (e) {
                             e.stopPropagation();
                         });
