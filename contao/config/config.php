@@ -16,6 +16,8 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Event;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Backend;
 use Contao\ArrayUtil;
 
+/* https://docs.contao.org/manual/en/system/maintenance/#indexing-protected-pages */
+
 /**
  * Microdata
  */

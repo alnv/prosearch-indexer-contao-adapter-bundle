@@ -95,6 +95,7 @@ class ElasticsearchController extends AbstractController
             if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 && $arrElasticOptions['openAiRelevanceScore'] >= $intFirstScore)) {
                 $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
                 $arrResults['results']['didYouMean'] = [];
+                $arrResults['results']['autocomplete'] = [];
                 $arrResults['results']['max_score'] = 0;
             }
         }
@@ -154,6 +155,10 @@ class ElasticsearchController extends AbstractController
 
         if (isset($arrResults['results']['didYouMean'])) {
             $arrResults['results']['didYouMean'] = Toolkit::parseDidYouMeanArray(($arrKeywords['keyword'] ?? ''), $arrResults['results']['didYouMean']);
+        }
+
+        if (!isset($arrResults['results']['autocomplete'])) {
+            $arrResults['results']['autocomplete'] = [];
         }
 
         if (isset($GLOBALS['TL_HOOKS']['psParseSearchResults']) && is_array($GLOBALS['TL_HOOKS']['psParseSearchResults'])) {

@@ -298,7 +298,7 @@
                     clearTimeout(this.timeout);
                     this.timeout = setTimeout(function () {
                         this.fetch({});
-                    }.bind(this), 600);
+                    }.bind(this), 800);
                 },
                 submit: function () {
                     let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
