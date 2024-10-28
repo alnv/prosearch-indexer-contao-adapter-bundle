@@ -59,7 +59,7 @@ class Indices extends Searcher
         $strUrl = strtok($strUrl, '?');
 
         $arrCanonicalUrls = $this->objCrawler->filterXpath("//link[@rel='canonical']")->extract(['href']);
-        if (is_array($arrCanonicalUrls) && !empty($arrCanonicalUrls) && isset($arrCanonicalUrls[0])) {
+        if (!empty($arrCanonicalUrls) && isset($arrCanonicalUrls[0])) {
             $strCanonicalUrl = $arrCanonicalUrls[0];
             $strCanonicalUrl = StringUtil::decodeEntities($strCanonicalUrl);
             $strCanonicalUrl = strtok($strCanonicalUrl, '?');
@@ -82,7 +82,6 @@ class Indices extends Searcher
         }
 
         $arrSettings = StringUtil::deserialize($objIndicesModel->settings, true);
-
         if (in_array('preventIndex', $arrSettings)) {
             return;
         }
@@ -114,7 +113,7 @@ class Indices extends Searcher
         $objPage->loadDetails();
 
         if (!in_array('preventIndexMetadata', $arrSettings)) {
-            $objIndicesModel->images = serialize($arrImages);
+            $objIndicesModel->images = \serialize($arrImages);
             $objIndicesModel->title = Text::tokenize($this->getTitle($objPageObject));
             $objIndicesModel->description = Text::tokenize($this->getDescription($objPageObject));
         }
@@ -125,10 +124,12 @@ class Indices extends Searcher
         $objIndicesModel->language = $strLanguage;
         $objIndicesModel->types = $arrSearchTypes;
         $objIndicesModel->pageId = $objPage->id;
-        $objIndicesModel->document = serialize($arrDocument);
+        $objIndicesModel->document = \serialize($arrDocument);
         $objIndicesModel->domain = $document->getUri()->getHost();
         $objIndicesModel->doc_type = 'page';
         $objIndicesModel->origin_url = '';
+        $objIndicesModel->groups = $meta['groups'] ?? '';
+        $objIndicesModel->protected = $meta['protected'] ?? '';
         $objIndicesModel->save();
 
         new MicroDataDispatcher($document, $objIndicesModel->id);

@@ -7,6 +7,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Toolkit;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Contao\CoreBundle\DataContainer\PaletteManipulator;
+use Contao\MemberGroupModel;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Contao\Input;
@@ -171,7 +172,11 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ]
     ],
     'palettes' => [
-        'default' => '{settings_legend},settings,state;{types_legend},types;{page_legend},domain,url,language,pageId;{meta_legend},title,description,images'
+        '__selector__' => ['protected'],
+        'default' => '{settings_legend},settings,state;{types_legend},types;{page_legend},domain,url,language,pageId;{meta_legend},title,description,images;{protected_legend},protected'
+    ],
+    'subpalettes' => [
+        'protected' => 'groups'
     ],
     'fields' => [
         'id' => [
@@ -304,6 +309,35 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             ],
             'reference' => &$GLOBALS['TL_LANG']['tl_indices']['settings_options'],
             'options' => ['preventIndexMetadata', 'preventIndex', 'doNotShow'],
+            'sql' => "blob NULL"
+        ],
+        'protected' => [
+            'inputType' => 'checkbox',
+            'eval' => [
+                'tl_class' => 'clr',
+                'submitOnChange' => true
+            ],
+            'filter' => true,
+            'sql' => "char(1) NOT NULL default ''"
+        ],
+        'groups' => [
+            'inputType' => 'checkbox',
+            'eval' => [
+                'multiple' => true,
+                'tl_class' => 'clr'
+            ],
+            'options_callback' => function () {
+                $arrMemberGroups = [];
+                $objMemberGroups = MemberGroupModel::findAll();
+                if (!$objMemberGroups) {
+                    return [];
+                }
+                while ($objMemberGroups->next()) {
+                    $arrMemberGroups[$objMemberGroups->id] = $objMemberGroups->name;
+                }
+                return $arrMemberGroups;
+            },
+            'filter' => true,
             'sql' => "blob NULL"
         ]
     ]

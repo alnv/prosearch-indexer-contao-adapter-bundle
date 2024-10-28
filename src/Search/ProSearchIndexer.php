@@ -14,6 +14,11 @@ use Contao\StringUtil;
  */
 class ProSearchIndexer implements IndexerInterface
 {
+
+    public function __construct(private readonly bool $indexProtected = false)
+    {
+    }
+
     public function index(Document $document): void
     {
 
@@ -58,6 +63,11 @@ class ProSearchIndexer implements IndexerInterface
         // If the front end preview is activated, we do not index
         if (isset($meta['fePreview']) && true === $meta['fePreview']) {
             $this->throwBecause('Indexing when the front end preview is enabled is not possible.');
+        }
+
+        // If the page is protected and indexing protecting pages is disabled, we do not index
+        if (isset($meta['protected']) && true === $meta['protected'] && !$this->indexProtected) {
+            $this->throwBecause('Indexing protected pages is disabled.');
         }
 
         new Indices($document, $meta);
