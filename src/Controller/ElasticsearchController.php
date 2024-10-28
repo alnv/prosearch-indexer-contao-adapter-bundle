@@ -161,13 +161,13 @@ class ElasticsearchController extends AbstractController
             $arrResults['results']['autocomplete'] = [];
         }
 
+        Stats::setKeyword($arrKeywords, \count(($arrResults['results']['hits'] ?? [])), $strSource);
+
         if (isset($GLOBALS['TL_HOOKS']['psParseSearchResults']) && is_array($GLOBALS['TL_HOOKS']['psParseSearchResults'])) {
             foreach ($GLOBALS['TL_HOOKS']['psParseSearchResults'] as $arrCallback) {
                 $arrResults = System::importStatic($arrCallback[0])->{$arrCallback[1]}($arrResults, $arrElasticOptions, $this);
             }
         }
-
-        Stats::setKeyword($arrKeywords, \count(($arrResults['results']['hits'] ?? [])), $strSource);
 
         return new JsonResponse($arrResults);
     }
@@ -201,17 +201,14 @@ class ElasticsearchController extends AbstractController
         foreach ($arrHit['microdata'] as $strType => $arrEntities) {
 
             $arrMicroData[$strType] = [];
-
             foreach ($arrEntities as $objEntity) {
 
                 $arrJsonLdScriptsData = $objEntity->getJsonLdScriptsData();
-
                 if ($objEntity->globalRichSnippet) {
 
                     if (!isset($arrGlobalRichSnippets[$strType])) {
                         $arrGlobalRichSnippets[$strType] = [];
                     }
-
                     $arrGlobalRichSnippets[$strType][] = $arrJsonLdScriptsData;
                 }
 

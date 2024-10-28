@@ -7,6 +7,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\FilesModel;
 use Contao\StringUtil;
+use Contao\System;
 use Contao\Validator;
 
 class Result
@@ -110,7 +111,6 @@ class Result
         if (($objMicroData = MicrodataModel::findAll(['column' => ['pid=?'], 'value' => [$this->arrHit['id']]])) && $blnUseRichSnippets) {
 
             $arrMicrodata = [];
-
             while ($objMicroData->next()) {
 
                 if (!$objMicroData->type || !is_array($GLOBALS['PS_MICRODATA_CLASSES']) || !isset($GLOBALS['PS_MICRODATA_CLASSES'][$objMicroData->type])) {
@@ -131,6 +131,13 @@ class Result
             $arrReturn['microdata'] = $arrMicrodata;
             $arrReturn['rich_snippet'] = $this->getRichSnippets($arrMicrodata, $arrReturn);
         }
+
+        if (isset($GLOBALS['TL_HOOKS']['psParseSearchHit']) && is_array($GLOBALS['TL_HOOKS']['psParseSearchHit'])) {
+            foreach ($GLOBALS['TL_HOOKS']['psParseSearchHit'] as $arrCallback) {
+                $arrReturn = System::importStatic($arrCallback[0])->{$arrCallback[1]}($arrReturn, $this->arrHit, $this);
+            }
+        }
+
 
         return $arrReturn;
     }
