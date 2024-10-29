@@ -5,6 +5,7 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Entity;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
+use Contao\CoreBundle\Security\ContaoCorePermissions;
 use Contao\FilesModel;
 use Contao\StringUtil;
 use Contao\System;
@@ -44,6 +45,18 @@ class Result
         $arrSettings = StringUtil::deserialize($objDocument->settings, true);
         if (in_array('doNotShow', $arrSettings)) {
             return;
+        }
+
+        if ($objDocument->protected) {
+            
+            $arrGroups = StringUtil::deserialize($objDocument->groups, true);
+            if (empty($arrGroups)) {
+                return;
+            }
+
+            if (!System::getContainer()->get('security.helper')->isGranted(ContaoCorePermissions::MEMBER_IN_GROUPS, $arrGroups)) {
+                return;
+            }
         }
 
         foreach (StringUtil::deserialize($objDocument->images, true) as $strFileId) {
