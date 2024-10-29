@@ -76,6 +76,7 @@ class ProSearchIndexer implements IndexerInterface
 
     public function delete(Document $document): void
     {
+        
         $strUrl = $document->getUri()->__toString();
         $strUrl = StringUtil::decodeEntities($strUrl);
         $strUrl = strtok($strUrl, '?');
@@ -98,6 +99,7 @@ class ProSearchIndexer implements IndexerInterface
 
     public function clear(): void
     {
+
         $objIndices = IndicesModel::findAll();
 
         if (!$objIndices) {
@@ -118,6 +120,7 @@ class ProSearchIndexer implements IndexerInterface
 
     private function throwBecause(string $message, bool $onlyWarning = true): void
     {
+
         if ($onlyWarning) {
             throw IndexerException::createAsWarning($message);
         }
@@ -127,6 +130,7 @@ class ProSearchIndexer implements IndexerInterface
 
     private function extendMetaFromJsonLdScripts(Document $document, array &$meta): void
     {
+
         $jsonLds = $document->extractJsonLdScripts('https://schema.contao.org/', 'Page');
 
         if (0 === \count($jsonLds)) {

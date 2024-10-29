@@ -48,7 +48,7 @@ class Result
         }
 
         if ($objDocument->protected) {
-            
+
             $arrGroups = StringUtil::deserialize($objDocument->groups, true);
             if (empty($arrGroups)) {
                 return;
