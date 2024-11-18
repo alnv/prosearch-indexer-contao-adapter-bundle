@@ -92,7 +92,10 @@ class ElasticsearchController extends AbstractController
         if ($arrElasticOptions['useOpenAi']) {
 
             $intFirstScore = ((int)($arrHits[0]['_score'] ?? 0));
-            if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 && $arrElasticOptions['openAiRelevanceScore'] >= $intFirstScore)) {
+            $intSearchWords = count($arrKeywords['words'] ?? []);
+
+            if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 && ($arrElasticOptions['openAiRelevanceScore'] > $intFirstScore && $intSearchWords > 1))) {
+
                 $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
                 $arrResults['results']['didYouMean'] = [];
                 $arrResults['results']['autocomplete'] = [];
