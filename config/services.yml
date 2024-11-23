@@ -15,5 +15,7 @@ services:
     tags:
       - { name: contao.hook, hook: getPageLayout, method: getPageLayout, priority: 100 }
   Alnv\ProSearchIndexerContaoAdapterBundle\Search\ProSearchIndexer:
+    arguments:
+      - '@contao.framework'
     tags:
       - { name: 'contao.search_indexer' }

@@ -4,6 +4,7 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
+use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Search\Document;
 use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Contao\CoreBundle\Search\Indexer\IndexerInterface;
@@ -15,8 +16,14 @@ use Contao\StringUtil;
 class ProSearchIndexer implements IndexerInterface
 {
 
-    public function __construct(private readonly bool $indexProtected = false)
+    private ContaoFramework $framework;
+
+    private bool $indexProtected;
+
+    public function __construct(ContaoFramework $framework, bool $indexProtected = false)
     {
+        $this->framework = $framework;
+        $this->indexProtected = $indexProtected;
     }
 
     public function index(Document $document): void
@@ -70,13 +77,17 @@ class ProSearchIndexer implements IndexerInterface
             $this->throwBecause('Indexing protected pages is disabled.');
         }
 
+        $this->framework->initialize();
+
         new Indices($document, $meta);
         new PDFIndices($document, $meta);
     }
 
     public function delete(Document $document): void
     {
-        
+
+        $this->framework->initialize();
+
         $strUrl = $document->getUri()->__toString();
         $strUrl = StringUtil::decodeEntities($strUrl);
         $strUrl = strtok($strUrl, '?');
@@ -89,7 +100,7 @@ class ProSearchIndexer implements IndexerInterface
 
         $arrSettings = StringUtil::deserialize($objIndices->settings, true);
 
-        if (in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
+        if (\in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
             return;
         }
 
@@ -100,6 +111,8 @@ class ProSearchIndexer implements IndexerInterface
     public function clear(): void
     {
 
+        $this->framework->initialize();
+
         $objIndices = IndicesModel::findAll();
 
         if (!$objIndices) {
@@ -109,7 +122,7 @@ class ProSearchIndexer implements IndexerInterface
         while ($objIndices->next()) {
 
             $arrSettings = StringUtil::deserialize($objIndices->settings, true);
-            if (in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
+            if (\in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
                 continue;
             }
 
