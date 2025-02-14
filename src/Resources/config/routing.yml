@@ -1,0 +1,3 @@
+prosearchindexcontroller:
+  resource: "@AlnvProSearchIndexerContaoAdapterBundle/Controller"
+  type: annotation
