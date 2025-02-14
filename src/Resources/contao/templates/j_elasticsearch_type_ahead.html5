@@ -60,7 +60,7 @@
                                         suggests.push(suggest.template);
                                     }
                                     self.loading = false;
-                                    self.didYouMean = data['results']['didYouMean'];
+                                    self.didYouMean = data['results']['didYouMean'] ? data['results']['didYouMean'] : [];
                                     return suggests;
                                 } catch (error) {
                                     self.loading = false;
@@ -86,7 +86,7 @@
                                     objState.autoCompleteJS.input.value = event.detail.selection.value;
                                     let results = document.querySelector('#<?= $this->elementId ?>');
                                     let form = results.querySelector('form');
-                                    form.submit();
+                                        form.submit();
                                 },
                                 <?php endif; ?>
                                 keydown(event) {

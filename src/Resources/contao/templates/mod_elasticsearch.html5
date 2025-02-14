@@ -4,13 +4,13 @@
 
         <div class="elasticsearch-container-inside" ref="elasticsearchContainerInside">
 
-            <form method="GET">
+            <form method="GET"<?php if ($this->redirect): ?> action="<?= $this->redirect ?>"<?php endif; ?>>
                 <div class="elasticsearch-search-panel">
                     <div class="elasticsearch-input">
                         <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
                         <label for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
                         <?php endif; ?>
-                        <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" @search="search" v-model="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocomplete="off" autocapitalize="off">
+                        <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" @search="search" v-model="keywords" name="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocomplete="off" autocapitalize="off">
                         <button @click.stop.prevent="search" class="elasticsearch-input-button">
                             <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>" class="button-search-icon">
                             <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="" class="button-loading-icon">
@@ -82,6 +82,7 @@
             <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
                 <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
             </div>
+
         </div>
     </div>
 <?= $this->script ?>

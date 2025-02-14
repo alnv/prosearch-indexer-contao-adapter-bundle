@@ -11,7 +11,7 @@ $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletio
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psUseOpenAi';
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psSearchCategories;psAutoCompletionType;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{open_ai_legend},psUseOpenAi;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{open_ai_legend},psUseOpenAi;{style_legend},psPreventCssLoading;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{open_ai_legend},psUseOpenAi;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';

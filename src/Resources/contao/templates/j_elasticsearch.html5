@@ -56,6 +56,10 @@
                 },
                 fetch: function (params) {
 
+                    <?php if ($this->isResultPage): ?>
+                        return;
+                    <?php endif; ?>
+
                     if (this.keywords.length && this.keywords.length < <?= ($this->minKeywordLength ?: '0') ?> && !this.categories.length) {
                         return;
                     }

@@ -8,6 +8,7 @@ use Contao\Combiner;
 use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\Module;
+use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
 
@@ -44,6 +45,8 @@ class ElasticsearchModule extends Module
         $this->Template->uniqueId = $this->id;
         $this->Template->rootPageId = $objPage->rootId;
         $this->Template->elementId = $this->getElementId();
+        $this->Template->redirect = $this->getRedirectUrl();
+        $this->Template->isResultPage = $this->isResultsPage();
         $this->Template->categoryOptions = (new Categories())->getTranslatedCategories();
         $this->Template->categories = StringUtil::deserialize($this->psSearchCategories, true);
         $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
@@ -55,6 +58,26 @@ class ElasticsearchModule extends Module
         $objTemplate = new FrontendTemplate('j_elasticsearch');
         $objTemplate->setData($this->Template->getData());
         $this->Template->script = $objTemplate->parse();
+    }
+
+    protected function isResultsPage(): bool
+    {
+
+        global $objPage;
+
+        return $objPage->id === $this->jumpTo;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+
+        $strRedirect = '';
+
+        if ($objPage = PageModel::findByPk($this->jumpTo)) {
+            $strRedirect = $objPage->getFrontendUrl();
+        }
+
+        return $strRedirect;
     }
 
     protected function getInputCategories(): array
