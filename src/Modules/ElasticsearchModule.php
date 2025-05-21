@@ -110,12 +110,12 @@ class ElasticsearchModule extends Module
     {
 
         $objCombiner = new Combiner();
-        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/vue.min.js');
-        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/vue-resource.min.js');
+        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/vue.min.js');
+        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/vue-resource.min.js');
         $GLOBALS['TL_HEAD']['vue'] = '<script src="' . $objCombiner->getCombinedFile() . '"></script>';
 
         $objCombiner = new Combiner();
-        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/autoComplete.min.js');
+        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/autoComplete.min.js');
         $GLOBALS['TL_HEAD']['autoComplete'] = '<script src="' . $objCombiner->getCombinedFile() . '"></script>';
 
         if ($this->psPreventCssLoading) {
@@ -123,12 +123,12 @@ class ElasticsearchModule extends Module
         }
 
         $objCombiner = new Combiner();
-        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/default.scss');
-        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/autoComplete.scss');
+        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/default.scss');
+        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/autoComplete.scss');
         $GLOBALS['TL_HEAD']['elasticsearch-default'] = '<link href="' . $objCombiner->getCombinedFile() . '" rel="stylesheet">';
 
         $objCombiner = new Combiner();
-        $objCombiner->add('/bundles/alnvprosearchindexercontaoadapter/elasticsearch.scss');
+        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/elasticsearch.scss');
         $GLOBALS['TL_HEAD']['elasticsearch-custom'] = '<link href="' . $objCombiner->getCombinedFile() . '" rel="stylesheet">';
     }
 }

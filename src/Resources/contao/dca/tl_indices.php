@@ -136,7 +136,7 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'mode' => 2,
             'flag' => 12,
             'fields' => ['last_indexed'],
-            'panelLayout' => 'filter;sort,search'
+            'panelLayout' => 'filter,limit;sort,search'
         ],
         'label' => [
             'fields' => ['last_indexed', 'title', 'url', 'state'],
