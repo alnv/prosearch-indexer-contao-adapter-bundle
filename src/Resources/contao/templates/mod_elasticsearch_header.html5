@@ -2,20 +2,19 @@
 <?php $this->block('content'); ?>
     <div id="<?= $this->elementId ?>" class="elasticsearch-container" v-bind:class="{results_open: hasResults, loading_results: loading}">
 
-        <div class="elasticsearch-container-inside" ref="elasticsearchContainerInside">
-
+        <div class="elasticsearch-container-inside">
             <form method="GET"<?php if ($this->redirect): ?> action="<?= $this->redirect ?>"<?php endif; ?>>
                 <div class="elasticsearch-search-panel">
                     <div class="elasticsearch-input">
                         <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
-                        <label for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
+                            <label for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
                         <?php endif; ?>
                         <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" @search="search" v-model="keywords" name="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocomplete="off" autocapitalize="off">
                         <button @click.stop.prevent="search" @keyup.enter.stop.prevent="search" class="elasticsearch-input-button" tabindex="0">
                             <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>" class="button-search-icon">
                             <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="" class="button-loading-icon">
                             <?php if ($strButtonText = ($GLOBALS['TL_LANG']['MSC']['searchButtonLabel'] ?? '')): ?>
-                            <span><?= $strButtonText ?></span>
+                                <span><?= $strButtonText ?></span>
                             <?php endif; ?>
                         </button>
                     </div>
@@ -26,16 +25,38 @@
                     </div>
                 </div>
             </form>
+        </div>
 
-            <div class="elasticsearch-results-panel" v-if="hasResults">
+        <div class="elasticsearch-results-panel" v-if="!initial && !loading && keywords">
 
+            <div class="results-panel-container" ref="elasticsearchResultsContainer">
                 <div class="close-results">
                     <button @click.stop.prevent="close" @keyup.enter.stop.prevent="close" class="close button"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsCloseButtonLabel'] ?? '') ?></span></button>
                 </div>
 
+                <div class="elasticsearch-input">
+                    <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
+                        <label for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
+                    <?php endif; ?>
+                    <input id="ctrl_keywords_<?= $this->uniqueId ?>" type="search" @keyup="search" @search="search" v-model="keywords" placeholder="<?= $this->keywordLabel ?>" spellcheck=false autocomplete="off" autocapitalize="off">
+                    <button @click.stop.prevent="search" @keyup.enter.stop.prevent="search" class="elasticsearch-input-button">
+                        <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>" class="button-search-icon">
+                        <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="" class="button-loading-icon">
+                        <?php if ($strButtonText = ($GLOBALS['TL_LANG']['MSC']['searchButtonLabel'] ?? '')): ?>
+                            <span><?= $strButtonText ?></span>
+                        <?php endif; ?>
+                    </button>
+                </div>
+
+                <div v-if="showOpenAiText" class="elasticsearch-openai-waiting-text">
+                    <?php if ($strOpenAiWaitingText = ($GLOBALS['TL_LANG']['MSC']['searchOpenAiWaitingText'] ?? '')): ?>
+                        <p><?= $strOpenAiWaitingText ?></p>
+                    <?php endif; ?>
+                </div>
+
                 <div class="suggest-results">
                     <p v-if="keywords && views.results.length" class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
-                    <p v-if="views.didYouMean.length" class="suggest-results-mean"><?= ($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?? '') ?> <a tabindex="0" role="button" aria-pressed="false" @keyup.enter.stop.prevent="setDidYouMeanToKeyword" @click.stop.prevent="setDidYouMeanToKeyword" v-for="didYouMean in views.didYouMean"><span v-html="didYouMean"></span></a></p>
+                    <p v-if="views.didYouMean.length" class="suggest-results-mean"><?= ($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?? '') ?> <a tabindex="0" role="button" aria-pressed="false" @click.stop.prevent="setDidYouMeanToKeyword" @keyup.enter.stop.prevent="setDidYouMeanToKeyword" v-for="didYouMean in views.didYouMean"><span>{{ didYouMean }}</span></a></p>
                 </div>
 
                 <div class="categories-results" v-if="views.categories.length">
@@ -45,7 +66,7 @@
                     <nav>
                         <ul>
                             <li v-for="category in views.categories" class="category-item" v-bind:class="{active: activeCategory(category.key)}" v-if="category">
-                                <button @keyup.enter.stop.prevent="setCategory(category.key)" @click.stop.prevent="setCategory(category.key)" class="category-item-button"><span v-html="category.label"></span><i v-if="category.count">({{ category.count }})</i></button>
+                                <button @click.stop.prevent="setCategory(category.key)" @keyup.enter.stop.prevent="setCategory(category.key)" class="category-item-button"><span v-html="category.label"></span><i v-if="category.count">({{ category.count }})</i></button>
                             </li>
                         </ul>
                     </nav>
@@ -55,7 +76,7 @@
                     <div v-if="Object.keys(views.globalRichSnippets).length && views.globalRichSnippets.hasOwnProperty('FAQPage')" class="search-rich-snippets">
                         <div class="faq-rich-snippet" v-if="Object.keys(richSnippets['faq']).length">
                             <div v-for="(faq,name) in richSnippets['faq']" class="faq-container" v-bind:class="{active:faq.active}">
-                                <div class="faq-question" @click.stop.prevent="toggleFaqSnippet(name)" @keyup.enter.stop.prevent="toggleFaqSnippet(name)" tabindex="0" role="button" aria-pressed="false">
+                                <div class="faq-question" @click="toggleFaqSnippet(name)" @keyup.enter="toggleFaqSnippet(name)" tabindex="0" role="button" aria-pressed="false">
                                     <p><strong>{{ faq.question }}</strong></p>
                                 </div>
                                 <div class="faq-answer" v-show="faq.active">
@@ -73,17 +94,17 @@
                     </div>
 
                     <?php if ($this->perPage): ?>
-                    <button v-if="loadMoreButton && hasResults" class="elasticsearch-more-button" @click.stop.prevent="loadMoreResults" @keyup.enter.stop.prevent="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
+                        <button v-if="loadMoreButton && hasResults" class="elasticsearch-more-button" @click.prevent.stop="loadMoreResults" @keyup.enter.prevent.stop="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
                     <?php endif; ?>
                 </div>
 
-            </div>
-
-            <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
-                <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
+                <div v-if="!hasResults && !initial && !loading && keywords" class="no-search-results">
+                    <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
+                </div>
             </div>
 
         </div>
+
     </div>
-    <?= $this->script ?>
+<?= $this->script ?>
 <?php $this->endblock(); ?>

@@ -8,9 +8,9 @@
             <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
                 <label v-if="!didYouMean.length" for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
             <?php endif; ?>
-            <label v-if="didYouMean && didYouMean.length"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</label>
+            <label v-if="didYouMean && didYouMean.length"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @keyup.enter.stop.prevent="setDidYouMeanToKeyword" @click.stop.prevent="setDidYouMeanToKeyword" href="#" role="button"><span>{{ didYouMean[0] }}</span></a>?</label>
             <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" value="<?= $this->keyword ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
-            <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" @click="submitSearch" class="elasticsearch-input-button">
+            <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" @click="submitSearch" @keyup.enter="submitSearch" tabindex="0" class="elasticsearch-input-button">
                 <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>">
                 <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="">
                 <?php if ($strButtonText = ($GLOBALS['TL_LANG']['MSC']['searchButtonLabel'] ?? '')): ?>
@@ -23,12 +23,12 @@
     <?php if ($this->isResultPage): ?>
         <div class="suggest-results" v-if="results.length && keywords">
             <p class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
-            <p v-if="didYouMean.length" class="suggest-results-mean"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
+            <p v-if="didYouMean.length" class="suggest-results-mean"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @keyup.enter.stop.prevent="setDidYouMeanToKeyword" @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
         </div>
         <div class="search-results" v-if="results.length && keywords">
             <div v-for="result in results" v-html="result.template" class="result-hit" @click="sendStat"></div>
             <?php if ($this->perPage): ?>
-            <button v-if="loadMoreButton" class="elasticsearch-more-button" @click="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
+            <button v-if="loadMoreButton" class="elasticsearch-more-button" @click.stop.prevent="loadMoreResults" @keyup.enter.stop.prevent="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
             <?php endif; ?>
         </div>
         <div v-if="!results.length && keywords && !loading && submitted" class="no-search-results">

@@ -27,7 +27,7 @@ class ElasticsearchModule extends Module
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
             $objTemplate->href = 'contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
-            $objTemplate->wildcard = '### ' . strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch'][0]) . ' ###';
+            $objTemplate->wildcard = '### ' . \strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch'][0]) . ' ###';
 
             return $objTemplate->parse();
         }
@@ -85,11 +85,11 @@ class ElasticsearchModule extends Module
 
         $varInputCategories = Input::get('categories') ?: null;
 
-        if ($varInputCategories && is_string($varInputCategories)) {
+        if ($varInputCategories && \is_string($varInputCategories)) {
             $varInputCategories = [$varInputCategories];
         }
 
-        if (!empty($varInputCategories) && is_array($varInputCategories)) {
+        if (!empty($varInputCategories) && \is_array($varInputCategories)) {
             return $varInputCategories;
         }
 
@@ -98,12 +98,12 @@ class ElasticsearchModule extends Module
 
     protected function getElementId(): string
     {
-        return 'id_search_' . uniqid() . $this->id;
+        return 'id_search_' . \uniqid() . $this->id;
     }
 
     protected function getKeywords(): string
     {
-        return trim(Input::get('q') ?: (Input::get('keywords') ?: ''));
+        return \trim(Input::get('q') ?: (Input::get('keywords') ?: ''));
     }
 
     protected function loadAssets(): void

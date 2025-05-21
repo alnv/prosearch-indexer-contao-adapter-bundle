@@ -141,8 +141,16 @@
                         this.resultsOnly = false;
                         this.stopAiTimer();
                         this.clickOutside();
+                        this.autoFocusFirstInputField();
 
                     }.bind(this));
+                },
+                autoFocusFirstInputField: function () {
+                    setTimeout(function () {
+                        if (this.$refs['elasticsearchResultsContainer']) {
+                            this.$refs['elasticsearchResultsContainer'].querySelector('input[type="search"]').focus();
+                        }
+                    }.bind(this), 50);
                 },
                 startAiTimer: function () {
                     if (!this.openAi) {
@@ -298,6 +306,12 @@
                     return index !== -1;
                 },
                 search: function () {
+
+                    <?php if ($this->isResultPage): ?>
+                    window.location.href = "<?= $this->redirect ?>?keywords=" + this.keywords;
+                    return;
+                    <?php endif; ?>
+
                     this.loadMoreButton = true;
                     clearTimeout(this.timeout);
                     this.timeout = setTimeout(function () {
@@ -305,6 +319,7 @@
                     }.bind(this), 800);
                 },
                 submit: function () {
+
                     let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
                     if (match) {
                         this.keywords = match.value;

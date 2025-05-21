@@ -1,7 +1,7 @@
 <script>
     (function () {
         let objState = {
-            categories: <?= json_encode((empty($this->categories) ? [] : $this->categories)) ?>,
+            categories: <?= \json_encode((empty($this->categories) ? [] : $this->categories)) ?>,
             keywords: '<?= $this->keyword ?>',
             didYouMean: [],
             results: [],
