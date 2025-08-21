@@ -57,7 +57,7 @@ class Stats
             return;
         }
 
-        $arrSources = StringUtil::deserialize($arrStat['source'], true);
+        $arrSources = StringUtil::deserialize(($arrStat['source'] ?? ''), true);
         foreach ($arrSources as $intIndex => $arrSource) {
             if ($strSource == $arrSource['source']) {
                 $arrSources[$intIndex]['click'] = (int)$arrSource['click'] + 1;
