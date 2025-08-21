@@ -27,7 +27,9 @@ class Proxy
         $objClient->request('POST', $this->strProxyDomain . '/search/index?licence=' . $this->strLicence, [
             'json' => [
                 'body' => $arrParams
-            ]
+            ],
+            'timeout' => 10,
+            'connect_timeout' => 10
         ]);
 
         return true;
@@ -51,7 +53,9 @@ class Proxy
                     'index' => $strIndex,
                     'id' => $strDocumentId
                 ]
-            ]
+            ],
+            'timeout' => 10,
+            'connect_timeout' => 10
         ]);
 
         return true;
@@ -68,7 +72,9 @@ class Proxy
         $client->request('POST', $this->strProxyDomain . '/search/mapping?licence=' . $this->strLicence, [
             'json' => [
                 'body' => $arrParams
-            ]
+            ],
+            'timeout' => 10,
+            'connect_timeout' => 10
         ]);
 
         return true;
@@ -87,7 +93,9 @@ class Proxy
                 'keywords' => $arrKeywords,
                 'options' => $arrOptions,
                 'index' => $strIndex,
-            ]
+            ],
+            'timeout' => 30,
+            'connect_timeout' => 30
         ]);
 
         return json_decode($res->getBody()->getContents(), true);
@@ -106,7 +114,9 @@ class Proxy
                 'keywords' => $arrKeywords,
                 'options' => $arrOptions,
                 'index' => $strIndex,
-            ]
+            ],
+            'timeout' => 10,
+            'connect_timeout' => 10
         ]);
 
         return json_decode($res->getBody()->getContents(), true);
