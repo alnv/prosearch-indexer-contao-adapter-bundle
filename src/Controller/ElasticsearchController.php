@@ -112,7 +112,7 @@ class ElasticsearchController extends AbstractController
 
             $arrGrouped = [];
             $arrGlobalRichSnippets = [];
-            $arrCategoriesLabels = (new Categories())->getTranslatedCategories();
+            $arrCategoriesLabels = (new Categories())->getTranslatedCategories($strRootPageId);
 
             foreach ($arrHits as $arrHit) {
 
@@ -139,7 +139,7 @@ class ElasticsearchController extends AbstractController
                 }
             }
 
-            ksort($arrGrouped);
+            \ksort($arrGrouped);
             $arrResults['globalRichSnippets'] = $arrGlobalRichSnippets;
             $arrResults['results']['hits'] = $arrGrouped;
 

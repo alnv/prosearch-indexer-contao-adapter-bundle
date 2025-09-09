@@ -22,9 +22,7 @@ class Keyword
         $strKeywords = str_replace('/', '\/', $strKeywords);
         $strToken = Text::tokenize($strKeywords);
         $strToken = strtolower($strToken);
-
         $arrTypes = $arrOptions['categories'] ?? [];
-
         $strSynonym = $this->objSynonyms->predict($strToken);
         $strQuery = $strSynonym;
 
