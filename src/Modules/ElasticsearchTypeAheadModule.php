@@ -86,7 +86,14 @@ class ElasticsearchTypeAheadModule extends Module
         }
 
         global $objPage;
-        return $objPage->getFrontendUrl();
+
+        $pageRegistry = System::getContainer()->get('contao.routing.page_registry');
+        
+        if ($pageRegistry->isRoutable($objPage)) {
+            return $objPage->getFrontendUrl();
+        }
+
+        return '/';
     }
 
     protected function getJsScript(): void
