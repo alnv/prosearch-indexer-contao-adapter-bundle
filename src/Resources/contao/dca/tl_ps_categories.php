@@ -58,28 +58,33 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
             'sql' => "varchar(128) NOT NULL default ''"
         ],
         'translating' => [
-            'inputType' => 'multiColumnWizard',
+            'inputType' => 'rowWizard',
             'eval' => [
                 'tl_class' => 'w50 clr',
-                'columnFields' => [
-                    'language' => [
-                        'label' => &$GLOBALS['TL_LANG']['tl_ps_categories']['language'],
-                        'inputType' => 'select',
-                        'eval' => [
-                            'chosen' => true,
-                            'style' => 'width:250px',
-                            'includeBlankOption' => true
-                        ],
-                        'options_callback' => function() {
-                            return System::getContainer()->get('contao.intl.locales')->getLocales(null, false);
-                        }
+                'actions' => [
+                    'copy',
+                    'delete'
+                ],
+                'min' => 1
+            ],
+            'fields' => [
+                'language' => [
+                    'label' => &$GLOBALS['TL_LANG']['tl_ps_categories']['language'],
+                    'inputType' => 'select',
+                    'eval' => [
+                        'chosen' => true,
+                        'style' => 'width:250px',
+                        'includeBlankOption' => true
                     ],
-                    'label' => [
-                        'label' => &$GLOBALS['TL_LANG']['tl_ps_categories']['label'],
-                        'inputType' => 'text',
-                        'eval' => [
-                            'style' => 'width:250px'
-                        ]
+                    'options_callback' => function() {
+                        return System::getContainer()->get('contao.intl.locales')->getLocales(null, false);
+                    }
+                ],
+                'label' => [
+                    'label' => &$GLOBALS['TL_LANG']['tl_ps_categories']['label'],
+                    'inputType' => 'text',
+                    'eval' => [
+                        'style' => 'width:250px'
                     ]
                 ]
             ],

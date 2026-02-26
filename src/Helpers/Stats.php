@@ -156,7 +156,7 @@ class Stats
         $objSheet = $objSpreadsheet->getActiveSheet();
 
         $numRows = 1;
-        $objStats = Database::getInstance()->prepare('SELECT * FROM tl_search_stats ORDER BY count DESC')->execute();
+        $objStats = Database::getInstance()->prepare('SELECT * FROM tl_search_stats ORDER BY count DESC')->limit(1000)->execute();
 
         $arrStats = [];
         while ($objStats->next()) {
@@ -184,14 +184,13 @@ class Stats
             $arrStats[] = $arrStat;
         }
 
-        $arrFields = array_keys(($arrStats[0] ?? []));
-
+        $arrFields = \array_keys(($arrStats[0] ?? []));
         foreach ($arrFields as $numCols => $strField) {
             $objSheet->setCellValue([$numCols + 1, $numRows], $strField);
         }
 
-        $numRows++;
 
+        $numRows++;
         foreach ($arrStats as $arrMember) {
             $numCols = 1;
             foreach ($arrMember as $strValue) {
@@ -206,9 +205,10 @@ class Stats
         $objXls->setDelimiter(';');
         $objXls->setEnclosure('"');
 
-        header('Content-Disposition: attachment;filename="export-' . uniqid() . '.csv"');
-        header('Cache-Control: max-age=0');
-        header('Content-Type: application/vnd.ms-excel');
+        \header('Content-Disposition: attachment;filename="export-' . \uniqid() . '.csv"');
+        \header('Cache-Control: max-age=0');
+        \header('Content-Type: application/vnd.ms-excel');
+
         $objXls->save('php://output');
         exit;
     }

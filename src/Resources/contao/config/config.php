@@ -1,19 +1,19 @@
 <?php
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiChatComponentParser;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchTypeAheadModule;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Purge\PurgeElasticsearch;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\JobPosting;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Backend;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Article;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Dataset;
-use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\FAQPage;
-use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Product;
-use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Person;
 use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Event;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Backend;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\FAQPage;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\JobPosting;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Person;
+use Alnv\ProSearchIndexerContaoAdapterBundle\MicroData\Product;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchTypeAheadModule;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Purge\PurgeElasticsearch;
 use Contao\ArrayUtil;
 
 /**

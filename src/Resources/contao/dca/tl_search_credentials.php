@@ -182,23 +182,28 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             'sql' => "varchar(255) NOT NULL default ''"
         ],
         'keys' => [
-            'inputType' => 'multiColumnWizard',
+            'inputType' => 'rowWizard',
             'eval' => [
                 'mandatory' => true,
                 'tl_class' => 'long clr',
                 'decodeEntities' => true,
-                'columnFields' => [
-                    'key' => [
-                        'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['key'],
-                        'inputType' => 'text',
-                        'eval' => ['style' => 'width:100%']
-                    ],
-                    'domain' => [
-                        'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['domain'],
-                        'inputType' => 'text',
-                        'eval' => ['style' => 'width:100%'],
-                        'save_callback' => [[Authorization::class, 'parseDomain']]
-                    ]
+                'actions' => [
+                    'copy',
+                    'delete'
+                ],
+                'min' => 1
+            ],
+            'fields' => [
+                'key' => [
+                    'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['key'],
+                    'inputType' => 'text',
+                    'eval' => ['style' => 'min-width: 100px;width: 100%']
+                ],
+                'domain' => [
+                    'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['domain'],
+                    'inputType' => 'text',
+                    'eval' => ['style' => 'width: calc(100% - 100px)'],
+                    'save_callback' => [[Authorization::class, 'parseDomain']]
                 ]
             ],
             'save_callback' => [function ($varValue, DataContainer $dc) {

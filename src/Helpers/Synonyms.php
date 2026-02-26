@@ -14,11 +14,9 @@ class Synonyms
     {
 
         $objSynonyms = Database::getInstance()->prepare('SELECT * FROM tl_synonyms WHERE disable!=?')->execute('1');
-
         while ($objSynonyms->next()) {
 
             $strKeyword = Text::tokenize($objSynonyms->keyword);
-
             if (!$strKeyword) {
                 continue;
             }

@@ -2,11 +2,11 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\AI;
 
-use Contao\FrontendTemplate;
-use Alnv\ContaoOpenAiAssistantBundle\Library\Parser;
 use Alnv\ContaoOpenAiAssistantBundle\Helpers\Toolkit;
+use Alnv\ContaoOpenAiAssistantBundle\Library\Parser;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
+use Contao\FrontendTemplate;
 
 class AiChatComponentParser extends Parser
 {
