@@ -1,5 +1,7 @@
 <?php
 
+$GLOBALS['TL_LANG']['tl_search_stats']['tableLabel'] = 'Prosearch Statistiken';
+
 $GLOBALS['TL_LANG']['tl_search_stats']['keywords'] = ['Suchwort', ''];
 $GLOBALS['TL_LANG']['tl_search_stats']['types'] = ['Kontext', ''];
 $GLOBALS['TL_LANG']['tl_search_stats']['hits'] = ['Anzahl der Suchergebnisse', ''];

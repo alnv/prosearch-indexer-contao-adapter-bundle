@@ -1,5 +1,7 @@
 <?php
 
+$GLOBALS['TL_LANG']['tl_search_credentials']['tableLabel'] = 'Prosearch Zugangsdaten';
+
 $GLOBALS['TL_LANG']['tl_search_credentials']['type'] = ['Paket', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['host'] = ['Host', ''];
 $GLOBALS['TL_LANG']['tl_search_credentials']['port'] = ['Port', ''];

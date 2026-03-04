@@ -2,6 +2,8 @@
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 
+$GLOBALS['TL_LANG']['tl_indices']['tableLabel'] = 'Prosearch Index';
+
 $GLOBALS['TL_LANG']['tl_indices']['types_legend'] = 'Types';
 $GLOBALS['TL_LANG']['tl_indices']['meta_legend'] = 'Meta';
 $GLOBALS['TL_LANG']['tl_indices']['page_legend'] = 'Seite';

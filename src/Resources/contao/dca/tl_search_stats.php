@@ -10,6 +10,7 @@ $GLOBALS['TL_DCA']['tl_search_stats'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'closed' => true,
+        'backendSearchIgnore' => true,
         'onload_callback' => [
             function () {
                 if (!Input::get('export')) {

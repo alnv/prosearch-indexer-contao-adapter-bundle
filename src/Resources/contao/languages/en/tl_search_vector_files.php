@@ -1,5 +1,7 @@
 <?php
 
+$GLOBALS['TL_LANG']['tl_search_stats']['tableLabel'] = 'Prosearch AI';
+
 $GLOBALS['TL_LANG']['tl_search_vector_files']['file'] = ['Datei', ''];
 $GLOBALS['TL_LANG']['tl_search_vector_files']['name'] = ['Bezeichnung', ''];
 $GLOBALS['TL_LANG']['tl_search_vector_files']['types'] = ['Seitentypen', 'Welche Seitentypen sollen in der Vektordatei enthalten sein?'];

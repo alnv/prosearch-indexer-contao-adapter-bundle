@@ -2,16 +2,17 @@
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\SearchVectorFile;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
+use Contao\Controller;
 use Contao\Database;
 use Contao\DataContainer;
 use Contao\DC_Table;
-use Contao\Input;
 use Contao\Environment;
-use Contao\Controller;
+use Contao\Input;
 
 $GLOBALS['TL_DCA']['tl_search_vector_files'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
+        'backendSearchIgnore' => true,
         'onsubmit_callback' => [function (DataContainer $objDataContainer) {
             $objSearchVectorFile = new SearchVectorFile($objDataContainer->id);
             $strUuid = $objSearchVectorFile->save('files/_vectors');

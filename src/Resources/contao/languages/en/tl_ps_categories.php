@@ -1,5 +1,7 @@
 <?php
 
+$GLOBALS['TL_LANG']['tl_ps_categories']['tableLabel'] = 'Prosearch Kategorien';
+
 $GLOBALS['TL_LANG']['tl_ps_categories']['category'] = ['Kategorie', ''];
 $GLOBALS['TL_LANG']['tl_ps_categories']['translating'] = ['Übersetzung', ''];
 $GLOBALS['TL_LANG']['tl_ps_categories']['label'] = ['Label', ''];
