@@ -25,8 +25,6 @@ class PDFIndices extends Searcher
     public function __construct(Document $document, array $meta = [])
     {
 
-        set_time_limit(600);
-
         try {
             $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
         } catch (\Exception $e) {
@@ -42,26 +40,43 @@ class PDFIndices extends Searcher
 
         $strHtml = $document->getBody();
         $this->objCrawler = new Crawler($strHtml);
-        $objLinks = $this->objCrawler->filter("body a");
+        $objLinks = $this->objCrawler->filterXPath("//a");
 
         foreach ($objLinks as $objLink) {
 
             $strHref = $objLink->getAttribute('href');
+            if (!$strHref || !$this->isPdf($strHref)) continue;
 
-            if (!$strHref || strpos($strHref, '.pdf') === false) {
+            $arrUrl = \parse_url($strHref);
+            $strFile = '';
+
+            if (\strpos($arrUrl['path'], '.pdf') !== false) {
+                $strFile = \ltrim($arrUrl['path'], '/');
+            } elseif (isset($arrUrl['query'])) {
+                \parse_str($arrUrl['query'], $params);
+                if (isset($params['p']) && \strpos($params['p'], '.pdf') !== false) {
+                    $strFile = 'files/' . $params['p'];
+                }
+            }
+
+            if (!$strFile) {
                 continue;
             }
 
-            $arrUrl = parse_url($strHref);
-            $strFile = $arrUrl['path'];
             $objFile = FilesModel::findByPath($strFile);
-
             if (!$objFile) {
-                continue;
+                $objFile = FilesModel::findByPath(rawurldecode($strFile));
             }
+
+            if (!$objFile) continue;
 
             $_File = new File($objFile->path);
             if (($_File->filesize / 1000001) > 5) {
+
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): MAX 5mb allowed!', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+
                 continue;
             }
 
@@ -134,7 +149,7 @@ class PDFIndices extends Searcher
                 $objIndicesModel->save();
 
                 if ($objIndicesModel->last_indexed && strtotime('+3 hours', $objIndicesModel->last_indexed) > time()) {
-                    return;
+                    continue;
                 }
 
                 $objOptions = new Options();
@@ -149,5 +164,16 @@ class PDFIndices extends Searcher
                     ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
             }
         }
+    }
+
+    protected function isPdf($url): bool
+    {
+
+        $arrUrl = \parse_url($url);
+        \parse_str($arrUrl['query'] ?? '', $arrParams);
+
+        return (isset($arrParams['f']) && \str_ends_with(strtolower($arrParams['f']), '.pdf')) ||
+            (isset($arrParams['p']) && \str_ends_with(\strtolower($arrParams['p']), '.pdf')) ||
+            (\str_ends_with(\strtolower($arrUrl['path']), '.pdf'));
     }
 }
