@@ -2,21 +2,22 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Contao\CoreBundle\Search\Document;
-use Contao\File;
-use Contao\FilesModel;
+use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\Frontend;
-use Contao\PageModel;
+use Contao\File;
 use Contao\StringUtil;
+use Contao\FilesModel;
 use Contao\System;
+use Contao\PageModel;
 use Psr\Log\LogLevel;
 use Smalot\PdfParser\Parser;
+use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 
 class PDFIndices extends Searcher
@@ -50,8 +51,8 @@ class PDFIndices extends Searcher
             $arrUrl = \parse_url($strHref);
             $strFile = '';
 
-            if (\strpos(($arrUrl['path'] ?? ''), '.pdf') !== false) {
-                $strFile = \ltrim(($arrUrl['path'] ?? ''), '/');
+            if (\strpos($arrUrl['path'], '.pdf') !== false) {
+                $strFile = \ltrim($arrUrl['path'], '/');
             } elseif (isset($arrUrl['query'])) {
                 \parse_str($arrUrl['query'], $params);
                 if (isset($params['p']) && \strpos($params['p'], '.pdf') !== false) {
@@ -72,7 +73,11 @@ class PDFIndices extends Searcher
 
             $_File = new File($objFile->path);
             if (($_File->filesize / 1000001) > 5) {
-                Logger::set('PDF Parser (' . $objFile->path . '): MAX 5mb allowed!', LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
+
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): MAX 5mb allowed!', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+
                 continue;
             }
 
@@ -128,7 +133,7 @@ class PDFIndices extends Searcher
 
                 if (!in_array('preventIndexMetadata', $arrSettings)) {
                     $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
-                    $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr ?: $strNodeContent)) ?: $strFilename);
+                    $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr?:$strNodeContent)) ?: $strFilename);
                     $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
                 }
 
@@ -144,14 +149,18 @@ class PDFIndices extends Searcher
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
 
+                if ($objIndicesModel->last_indexed && strtotime('+3 hours', $objIndicesModel->last_indexed) > time()) {
+                    continue;
+                }
+
                 $objOptions = new Options();
                 $objOptions->setLanguage($strLanguage);
                 $objOptions->setRootPageId($objPage->rootId);
 
-                (new Adapter())->getInstance((new Options())->getOptions())->indexDocuments($objIndicesModel->id);
+                (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
 
             } catch (\Exception $exception) {
-                Logger::set('PDF Parser (' . $objFile->path . '): ' . $exception->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
+                Logger::set($exception->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
             }
         }
     }
@@ -164,6 +173,6 @@ class PDFIndices extends Searcher
 
         return (isset($arrParams['f']) && \str_ends_with(strtolower($arrParams['f']), '.pdf')) ||
             (isset($arrParams['p']) && \str_ends_with(\strtolower($arrParams['p']), '.pdf')) ||
-            (\str_ends_with(\strtolower($arrUrl['path'] ?? ''), '.pdf'));
+            (\str_ends_with(\strtolower($arrUrl['path']), '.pdf'));
     }
 }

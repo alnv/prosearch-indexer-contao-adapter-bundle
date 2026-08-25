@@ -156,8 +156,7 @@ class Proxy
                     'index' => $strIndex,
                 ],
                 'timeout' => 10,
-                'connect_timeout' => 10,
-                'http_errors' => false
+                'connect_timeout' => 10
             ]);
 
             return json_decode($res->getBody()->getContents(), true);
