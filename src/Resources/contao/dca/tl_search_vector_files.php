@@ -11,6 +11,7 @@ use Contao\Controller;
 
 $GLOBALS['TL_DCA']['tl_search_vector_files'] = [
     'config' => [
+        'backendSearchIgnore' => true,
         'dataContainer' => DC_Table::class,
         'onsubmit_callback' => [function (DataContainer $objDataContainer) {
             $objSearchVectorFile = new SearchVectorFile($objDataContainer->id);

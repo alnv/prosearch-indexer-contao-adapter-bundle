@@ -9,6 +9,7 @@ use Contao\Input;
 $GLOBALS['TL_DCA']['tl_search_stats'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
+        'backendSearchIgnore' => true,
         'closed' => true,
         'onload_callback' => [
             function () {

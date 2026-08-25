@@ -6,6 +6,7 @@ $GLOBALS['TL_DCA']['tl_microdata'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'ptable' => 'tl_indices',
+        'backendSearchIgnore' => true,
         'sql' => [
             'keys' => [
                 'id' => 'primary',

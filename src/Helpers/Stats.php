@@ -160,7 +160,6 @@ class Stats
 
         $arrStats = [];
         while ($objStats->next()) {
-
             if (!$objStats->keywords) {
                 continue;
             }

@@ -16,6 +16,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
+        'backendSearchIgnore' => true,
         'onload_callback' => [
             function () {
                 $strRequestToken = System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue();

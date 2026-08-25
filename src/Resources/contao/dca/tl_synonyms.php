@@ -6,6 +6,7 @@ $GLOBALS['TL_DCA']['tl_synonyms'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
+        'backendSearchIgnore' => true,
         'sql' => [
             'keys' => [
                 'id' => 'primary'

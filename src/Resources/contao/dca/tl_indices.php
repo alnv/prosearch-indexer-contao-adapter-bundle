@@ -18,6 +18,7 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
+        'backendSearchIgnore' => true,
         'onload_callback' => [function (DataContainer $objDataContainer) {
             $strAct = Input::get('act') ?: '';
             $blnIsSavin = Input::post('FORM_SUBMIT') === $objDataContainer->table;
@@ -156,15 +157,18 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
         ],
         'operations' => [
             'edit' => [
+                'primary' => true,
                 'icon' => 'edit.svg',
                 'href' => 'act=edit'
             ],
             'reindex' => [
+                'primary' => true,
                 'label' => &$GLOBALS['TL_LANG']['tl_indices']['reindex'],
                 'href' => 'key=reindexIndex',
                 'icon' => 'sync.svg'
             ],
             'delete' => [
+                'primary' => true,
                 'href' => 'act=delete',
                 'icon' => 'delete.svg',
                 'attributes' => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? '') . '\'))return false;Backend.getScrollOffset()"'
