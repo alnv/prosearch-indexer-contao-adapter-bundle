@@ -2,7 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Contao\Controller;
@@ -20,7 +20,7 @@ class Backend
 
         $objIndicesModel = IndicesModel::findByPk($objDataContainer->id);
         if (!$objIndicesModel) {
-            Message::addInfo('Etwas ist schiefgelaufen');
+            Message::addError('Etwas ist schiefgelaufen');
             Controller::redirect('contao?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
         }
 
@@ -32,8 +32,13 @@ class Backend
         }
 
         $objOptions->setLanguage($objIndicesModel->language);
-        (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
+        $adapter = (new Adapter())->getInstance($objOptions->getOptions());
+
+
+        $adapter->indexDocuments($objIndicesModel->id);
+
         Message::addInfo('Seite wurde indexiert');
+
         Controller::redirect('contao?do=indices&rt=' . $objContainer->get('contao.csrf.token_manager')->getDefaultTokenValue());
     }
 }

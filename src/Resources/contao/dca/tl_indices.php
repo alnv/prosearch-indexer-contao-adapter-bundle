@@ -1,6 +1,6 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
@@ -122,7 +122,7 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             Message::addInfo('Änderungen werden erst bei einer Re-Indexierung übernommen!');
         }],
         'ondelete_callback' => [function (DataContainer $objDataContainer) {
-            $objElasticsearch = new Elasticsearch((new Options())->getOptions());
+            $objElasticsearch = (new Adapter())->getInstance((new Options())->getOptions());
             $objElasticsearch->deleteIndex($objDataContainer->id);
         }],
         'sql' => [

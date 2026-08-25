@@ -2,15 +2,15 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
-use Contao\CoreBundle\Exception\AccessDeniedException;
-use Contao\Input;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
-use Contao\CoreBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
-use Symfony\Component\Routing\Annotation\Route;
+use Contao\CoreBundle\Controller\AbstractController;
+use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\Environment;
+use Contao\Input;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
 
 #[Route(path: 'proxy', name: 'elastic-proxy-controller', defaults: ['_scope' => 'frontend', '_token_check' => false])]
 class ElasticsearchProxyController extends AbstractController
@@ -22,9 +22,12 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-
-        $objElasticsearch = new Elasticsearch($arrBody['options']);
+        $objElasticsearch = (new Adapter())->getInstance($arrBody['options']);
         $objElasticsearch->connect();
+
+        if (!$objElasticsearch->getClient()) {
+            return new JsonResponse([]);
+        }
 
         return new JsonResponse($objElasticsearch->search($arrBody['keywords'], $arrBody['index']));
     }
@@ -37,8 +40,12 @@ class ElasticsearchProxyController extends AbstractController
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
 
-        $objElasticsearch = new Elasticsearch($arrBody['options']);
+        $objElasticsearch = (new Adapter())->getInstance($arrBody['options']);
         $objElasticsearch->connect();
+
+        if (!$objElasticsearch->getClient()) {
+            return new JsonResponse([]);
+        }
 
         return new JsonResponse($objElasticsearch->autoCompilation($arrBody['keywords'], $arrBody['index']));
     }
@@ -46,7 +53,6 @@ class ElasticsearchProxyController extends AbstractController
     #[Route(path: '/search/index', methods: ["POST"])]
     public function index(): JsonResponse
     {
-
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
@@ -56,11 +62,21 @@ class ElasticsearchProxyController extends AbstractController
             throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
         }
 
-        $objElasticsearch = new Elasticsearch((new Options())->getOptions());
+        $objElasticsearch = (new Adapter())->getInstance((new Options())->getOptions());
         $objElasticsearch->connect();
+
+        if (!$objElasticsearch->getClient()) {
+            return new JsonResponse([
+                'error' => true,
+                'message' => 'no connection to client'
+            ]);
+        }
+
         $objElasticsearch->clientIndex($arrBody['body'] ?? []);
 
-        return new JsonResponse([]);
+        return new JsonResponse([
+            'success' => true
+        ]);
     }
 
     #[Route(path: '/search/delete', methods: ["POST"])]
@@ -70,12 +86,22 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $arrBody = \json_decode(file_get_contents('php://input'), true);
-
-        $objElasticsearch = new Elasticsearch((new Options())->getOptions());
+        $objElasticsearch = (new Adapter())->getInstance((new Options())->getOptions());
         $objElasticsearch->connect();
+
+        if (!$objElasticsearch->getClient()) {
+            return new JsonResponse([
+                'error' => true,
+                'message' => 'no connection to client'
+            ]);
+        }
+
+
         $objElasticsearch->clientDelete($arrBody['body']['index'], $arrBody['body']['id']);
 
-        return new JsonResponse([]);
+        return new JsonResponse([
+            'success' => true
+        ]);
     }
 
     #[Route(path: '/search/mapping', methods: ["POST"])]
@@ -90,22 +116,20 @@ class ElasticsearchProxyController extends AbstractController
             throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
         }
 
-        $objElasticsearch = new Elasticsearch((new Options())->getOptions());
+        $objElasticsearch = (new Adapter())->getInstance((new Options())->getOptions());
         $objElasticsearch->connect();
+
+        if (!$objElasticsearch->getClient()) {
+            return new JsonResponse([
+                'error' => true,
+                'message' => 'no connection to client'
+            ]);
+        }
+
         $objElasticsearch->clientMapping($arrBody['body'] ?? []);
 
-        return new JsonResponse([]);
-    }
-
-    #[Route(path: '/delete/database/{index}', methods: ["POST"])]
-    public function deleteDatabase($index): JsonResponse
-    {
-        $this->container->get('contao.framework')->initialize();
-
-        $objElasticsearch = new Elasticsearch((new Options())->getOptions());
-        $objElasticsearch->connect();
-        $objElasticsearch->deleteDatabase($index);
-
-        return new JsonResponse([]);
+        return new JsonResponse([
+            'success' => true
+        ]);
     }
 }

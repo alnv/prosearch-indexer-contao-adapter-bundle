@@ -1,6 +1,6 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
@@ -39,8 +39,9 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'onsubmit_callback' => [function (DataContainer $dataContainer) {
             switch ($dataContainer->activeRecord->type) {
                 case 'elasticsearch':
+                case 'opensearch':
                 case 'elasticsearch_cloud':
-                    $objElasticsearchAdapter = new Elasticsearch((new Options())->getOptions());
+                    $objElasticsearchAdapter = (new Adapter())->getInstance((new Options())->getOptions());
                     $objElasticsearchAdapter->connect();
                     if (!$objElasticsearchAdapter->getClient()) {
                         Message::addError('No connection to the server could be established');
@@ -232,8 +233,8 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                 'includeBlankOption' => true
             ],
             'options_callback' => function() {
-                $objAdapter = new Elasticsearch((new Options())->getOptions());
-                $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
+                $objAdapter = (new Adapter())->getInstance((new Options())->getOptions());
+                $arrAnalyzer = \array_keys($objAdapter->getAnalyzer());
                 $arrAnalyzer[] = 'whitespace';
                 $arrAnalyzer[] = 'standard';
                 $arrAnalyzer[] = 'keyword';

@@ -1,6 +1,6 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Contao\CoreBundle\DataContainer\PaletteManipulator;
 
@@ -26,11 +26,12 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['psSearchCategory'] = [
         if (!$strValue) {
             return '';
         }
-        $strValue = strtolower($strValue);
-        $strValue = str_replace('-', '', $strValue);
-        $strValue = str_replace('_', '', $strValue);
-        $strValue = str_replace('.', '', $strValue);
-        return str_replace(' ', '', $strValue);
+        $strValue = \strtolower($strValue);
+        $strValue = \str_replace('-', '', $strValue);
+        $strValue = \str_replace('_', '', $strValue);
+        $strValue = \str_replace('.', '', $strValue);
+
+        return \str_replace(' ', '', $strValue);
     }],
     'sql' => "varchar(128) NOT NULL default 'page'"
 ];
@@ -43,7 +44,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['psAnalyzer'] = [
         'tl_class' => 'w50'
     ],
     'options_callback' => function() {
-        $objAdapter = new Elasticsearch((new Options())->getOptions());
+        $objAdapter = (new Adapter())->getInstance((new Options())->getOptions());
         $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
         $arrAnalyzer[] = 'whitespace';
         $arrAnalyzer[] = 'standard';

@@ -22,7 +22,6 @@ class SearchVectorFile
     {
 
         $this->strSearchVectorFileId = $strSearchVectorFileId;
-
         $this->setVectorFile();
     }
 

@@ -129,6 +129,7 @@
                     window.location.href = "<?= $this->redirect ?>?keywords=" + this.keywords;
                     return;
                     <?php endif; ?>
+
                     this.didYouMean = [];
                     this.loading = true;
                     let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
@@ -215,6 +216,7 @@
                 submit: function () {
                     let match = this.autoCompleteJS.feedback && this.autoCompleteJS.feedback.hasOwnProperty('cursor') ? this.autoCompleteJS.feedback.matches[this.autoCompleteJS.feedback.cursor] : '';
                     this.keywords = this.autoCompleteJS.input ? this.autoCompleteJS.input.value : this.keywords;
+
                     if (match) {
                         const link = document.createElement("div");
                         link.innerHTML = match.value;
@@ -223,11 +225,17 @@
                             this.sendHrefStat(a.href);
                             window.location.href = a.href;
                             return;
+                        } else {
+                            this.keywords = match.value
                         }
                         this.getSearchResults({})
                     } else {
                         this.getSearchResults({})
                     }
+
+                    <?php if ($this->isResultPage && $this->redirect): ?>
+                    window.location.href = "<?= $this->redirect ?>?keywords=" + this.keywords;
+                    <?php endif; ?>
                 }
             },
             mounted: function () {

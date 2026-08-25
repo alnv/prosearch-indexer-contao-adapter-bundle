@@ -2,7 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
 use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiElasticsearch;
@@ -69,8 +69,9 @@ class ElasticsearchController extends AbstractController
 
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
+            case 'opensearch':
             case 'elasticsearch_cloud':
-                $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
+                $objElasticsearchAdapter = (new Adapter())->getInstance($arrElasticOptions);
                 $objElasticsearchAdapter->connect();
 
                 if ($objElasticsearchAdapter->getClient()) {
@@ -79,7 +80,7 @@ class ElasticsearchController extends AbstractController
                 break;
 
             case 'licence':
-                $objElasticsearchAdapter = new Elasticsearch($arrElasticOptions);
+                $objElasticsearchAdapter = (new Adapter())->getInstance($arrElasticOptions);
                 $objElasticsearchAdapter->connect();
 
                 $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
@@ -88,14 +89,12 @@ class ElasticsearchController extends AbstractController
         }
 
         $arrHits = $arrResults['results']['hits'];
-
         if ($arrElasticOptions['useOpenAi']) {
 
             $intFirstScore = ((int)($arrHits[0]['_score'] ?? 0));
             $intSearchWords = count($arrKeywords['words'] ?? []);
 
             if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 && ($arrElasticOptions['openAiRelevanceScore'] > $intFirstScore && $intSearchWords > 1))) {
-
                 $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
                 $arrResults['results']['didYouMean'] = [];
                 $arrResults['results']['autocomplete'] = [];
@@ -109,10 +108,9 @@ class ElasticsearchController extends AbstractController
         $strSearchResultsTemplate = $objModule ? ($objModule->psResultsTemplate ?? 'elasticsearch_result') : 'elasticsearch_result';
 
         if ($blnGroup === true) {
-
             $arrGrouped = [];
             $arrGlobalRichSnippets = [];
-            $arrCategoriesLabels = (new Categories())->getTranslatedCategories();
+            $arrCategoriesLabels = (new Categories())->getTranslatedCategories($strRootPageId);
 
             foreach ($arrHits as $arrHit) {
 
@@ -139,7 +137,7 @@ class ElasticsearchController extends AbstractController
                 }
             }
 
-            ksort($arrGrouped);
+            \ksort($arrGrouped);
             $arrResults['globalRichSnippets'] = $arrGlobalRichSnippets;
             $arrResults['results']['hits'] = $arrGrouped;
 
@@ -196,7 +194,6 @@ class ElasticsearchController extends AbstractController
 
     protected function addTemplate($strTemplate, $arrHit, &$arrGlobalRichSnippets = []): array
     {
-
         $objTemplate = new FrontendTemplate($strTemplate);
         $objTemplate->setData($arrHit);
         $arrMicroData = [];
@@ -259,8 +256,9 @@ class ElasticsearchController extends AbstractController
 
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
+            case 'opensearch':
             case 'elasticsearch_cloud':
-                $objElasticsearchAdapter = new Elasticsearch($this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId));
+                $objElasticsearchAdapter = (new Adapter())->getInstance($this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId));
                 $objElasticsearchAdapter->connect();
                 if ($objElasticsearchAdapter->getClient()) {
                     $arrResults['results'] = $objElasticsearchAdapter->autoCompilation($arrKeywords);
@@ -268,7 +266,7 @@ class ElasticsearchController extends AbstractController
                 break;
             case 'licence':
                 $arrOptions = $this->getOptionsByModuleAndRootId($strModuleId, $strRootPageId);
-                $objElasticsearchAdapter = new Elasticsearch($arrOptions);
+                $objElasticsearchAdapter = (new Adapter())->getInstance($arrOptions);
                 $objElasticsearchAdapter->connect();
                 $objProxy = new Proxy($objElasticsearchAdapter->getLicense());
                 $arrResults['results'] = $objProxy->autocompletion($arrKeywords, $objElasticsearchAdapter->getIndexName($strRootPageId), $arrOptions);

@@ -18,7 +18,6 @@ class MicroDataDispatcher
     {
 
         if (!empty($GLOBALS['PS_MICRODATA_CLASSES']) && is_array($GLOBALS['PS_MICRODATA_CLASSES'])) {
-
             foreach ($GLOBALS['PS_MICRODATA_CLASSES'] as $strKey => $strClass) {
                 (new $strClass())->dispatch($document->extractJsonLdScripts('https://schema.org', $strKey), $indicesId);
             }

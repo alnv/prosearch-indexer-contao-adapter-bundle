@@ -2,10 +2,10 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
-use Contao\System;
+use Contao\BackendUser;
 use Contao\Database;
 use Contao\StringUtil;
-use Contao\BackendUser;
+use Contao\System;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 
@@ -57,7 +57,7 @@ class Stats
             return;
         }
 
-        $arrSources = StringUtil::deserialize($arrStat['source'], true);
+        $arrSources = StringUtil::deserialize(($arrStat['source'] ?? ''), true);
         foreach ($arrSources as $intIndex => $arrSource) {
             if ($strSource == $arrSource['source']) {
                 $arrSources[$intIndex]['click'] = (int)$arrSource['click'] + 1;
@@ -75,7 +75,7 @@ class Stats
         Database::getInstance()->prepare('UPDATE tl_search_stats %s WHERE id=?')->set([
             'tstamp' => time(),
             'source' => $arrSources,
-        ])->execute($arrStat['id']);
+        ])->execute($arrStat['id'] ?? 0);
     }
 
     protected static function updateStat($arrState, $intHits): void
@@ -86,8 +86,8 @@ class Stats
         Database::getInstance()->prepare('UPDATE tl_search_stats %s WHERE id=?')->set([
             'hits' => $intNewHits,
             'count' => $intCount,
-            'tstamp' => time(),
-        ])->execute($arrState['id']);
+            'tstamp' => \time(),
+        ])->execute($arrState['id'] ?? 0);
     }
 
     protected static function newStat($strKeyWord, $arrTypes, $intHits): array
@@ -103,6 +103,10 @@ class Stats
             'count' => 1
         ];
 
+        if (!$strKeyWord) {
+            return $arrSet;
+        }
+
         $objInsert = Database::getInstance()->prepare('INSERT INTO tl_search_stats %s')->set($arrSet)->execute();
 
         $arrSet['id'] = $objInsert->insertId;
@@ -113,8 +117,11 @@ class Stats
     protected static function findStat($strKeyWord, $arrTypes = []): bool|array
     {
 
-        $objStat = Database::getInstance()->prepare('SELECT * FROM tl_search_stats WHERE `keywords`=?')->execute($strKeyWord);
+        if (!$strKeyWord) {
+            return false;
+        }
 
+        $objStat = Database::getInstance()->prepare('SELECT * FROM tl_search_stats WHERE `keywords`=?')->execute($strKeyWord);
         if (!$objStat->numRows) {
             return false;
         }
@@ -162,15 +169,15 @@ class Stats
             $arrTypes = StringUtil::deserialize($objStats->types, true);
             $arrSources = [];
             foreach (StringUtil::deserialize($objStats->source, true) as $arrSource) {
-                $arrSources[] = $arrSource['source'] . ' : ' . (int) $arrSource['click'];
+                $arrSources[] = $arrSource['source'] . ' : ' . (int)$arrSource['click'];
             }
 
             $arrStat = [];
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['keywords'][0] ?? ''] = $objStats->keywords;
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['types'][0] ?? ''] = implode(',', $arrTypes);
-            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['count'][0] ?? ''] = (int) $objStats->count;
-            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['hits'][0] ?? ''] = (int) $objStats->hits;
-            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['clicks'][0] ?? ''] = (int) $objStats->clicks;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['count'][0] ?? ''] = (int)$objStats->count;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['hits'][0] ?? ''] = (int)$objStats->hits;
+            $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['clicks'][0] ?? ''] = (int)$objStats->clicks;
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['urls'][0] ?? ''] = implode(PHP_EOL, $arrUrls);
             $arrStat[$GLOBALS['TL_LANG']['tl_search_stats']['source'][0] ?? ''] = implode(PHP_EOL, $arrSources);
 

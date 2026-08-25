@@ -2,25 +2,20 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
-use Contao\Environment;
 use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
-use Elastic\Elasticsearch\Client;
-use Elastic\Elasticsearch\ClientBuilder;
+use OpenSearch\ClientBuilder;
 use Psr\Log\LogLevel;
 
-// https://github.com/elastic/elasticsearch-php
-class Elasticsearch extends AbstractAdapter
+class Opensearch extends AbstractAdapter
 {
-
     public const string INDEX = 'contao_search';
 
     protected string $strSignature = "";
@@ -58,42 +53,17 @@ class Elasticsearch extends AbstractAdapter
         }
 
         $this->strSignature = $this->arrCredentials['signature'] ?? '';
-
         switch ($this->arrCredentials['type']) {
-            case 'elasticsearch':
+            case 'opensearch':
                 try {
                     $this->objClient = ClientBuilder::create()
                         ->setHosts([$this->arrCredentials['host'] . ($this->arrCredentials['port'] ? ':' . $this->arrCredentials['port'] : '')])
                         ->setBasicAuthentication($this->arrCredentials['username'], $this->arrCredentials['password'])
-                        ->setCABundle($this->arrCredentials['cert'])
                         ->build();
                 } catch (\Exception $objError) {
                     Logger::set($objError->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
                 }
                 break;
-            case 'elasticsearch_cloud':
-                try {
-                    $this->objClient = ClientBuilder::create()
-                        ->setHosts([$this->arrCredentials['host']])
-                        ->setApiKey($this->arrCredentials['key'])
-                        ->build();
-                } catch (\Exception $objError) {
-                    Logger::set($objError->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
-                }
-                break;
-            case 'licence':
-                $objAuthorization = new Authorization();
-                $strDomain = Environment::get('httpHost');
-                $arrLicenseKeys = StringUtil::deserialize($this->arrCredentials['keys'], true);
-
-                if (empty($arrLicenseKeys)) {
-                    $strLicense = $this->arrCredentials['key'] ?? '';
-                } else {
-                    $strLicense = $objAuthorization->pluckKeyFromKeysGlobalByDomain($arrLicenseKeys, $strDomain);
-                }
-
-                $this->strLicense = $objAuthorization->encodeLicense($strLicense, $strDomain, ($this->arrCredentials['authToken'] ?? ''));
-                return;
         }
 
         if (!$this->strSignature) {
@@ -101,14 +71,13 @@ class Elasticsearch extends AbstractAdapter
         }
     }
 
-    public function getClient(): Client|null
+    public function getClient(): mixed
     {
         return $this->objClient;
     }
 
     public function deleteDatabases(): void
     {
-
         $this->connect();
 
         $objRoots = PageModel::findPublishedRootPages();
@@ -117,7 +86,6 @@ class Elasticsearch extends AbstractAdapter
         }
 
         while ($objRoots->next()) {
-
             try {
                 $strIndex = $this->getIndexName($objRoots->id);
                 if (!$this->getClient()) {
@@ -127,7 +95,6 @@ class Elasticsearch extends AbstractAdapter
                 } else {
                     $this->deleteDatabase($strIndex);
                 }
-
             } catch (\Exception $objError) {
                 Logger::set($objError->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
             }
@@ -136,17 +103,15 @@ class Elasticsearch extends AbstractAdapter
 
     public function deleteDatabase($strIndex): void
     {
-        $objCurl = \curl_init();
+        try {
+            $params = [
+                'index' => $strIndex
+            ];
 
-        \curl_setopt($objCurl, CURLOPT_URL, "http://" . ($this->arrCredentials['host'] ?? '') . ":" . ($this->arrCredentials['port'] ?? '') . "/" . $strIndex);
-        \curl_setopt($objCurl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-
-        if ($this->arrCredentials['username'] && $this->arrCredentials['password']) {
-            \curl_setopt($objCurl, CURLOPT_HTTPHEADER, array('Authorization:Basic ' . base64_encode($this->arrCredentials['username'] . ':' . $this->arrCredentials['password'])));
+            $this->objClient->indices()->delete($params);
+        } catch (\Exception $e) {
+            throw new \Exception("Fehler beim Löschen des Index '{$strIndex}': " . $e->getMessage(), $e->getCode(), $e);
         }
-
-        \curl_exec($objCurl);
-        \curl_close($objCurl);
     }
 
     public function deleteIndex($strIndicesId): void
@@ -165,7 +130,6 @@ class Elasticsearch extends AbstractAdapter
             if ((new Proxy($this->strLicense))->deleteDocument($strIndex, $strIndicesId) === false) {
                 return;
             }
-
         } else {
             $this->clientDelete($strIndex, $strIndicesId);
         }
@@ -185,8 +149,9 @@ class Elasticsearch extends AbstractAdapter
 
     public function clientDelete($strIndex, $strIndicesId): void
     {
+        $arrExists = $this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId]);
 
-        if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
+        if ($arrExists === true || (is_array($arrExists) && ($arrExists['status'] ?? 404) === 200)) {
             $this->getClient()->deleteByQuery([
                 'index' => $strIndex,
                 'body' => [
@@ -202,7 +167,6 @@ class Elasticsearch extends AbstractAdapter
 
     public function getIndex($strIndicesId = null, int $intLimit = 5): array
     {
-
         $arrColumn = ['state=?'];
         $arrValue = [States::ACTIVE];
 
@@ -223,7 +187,6 @@ class Elasticsearch extends AbstractAdapter
         }
 
         $arrDocuments = [];
-
         while ($objIndices->next()) {
             $arrDocuments[$objIndices->url] = $this->createDocument($objIndices->id);
         }
@@ -235,176 +198,103 @@ class Elasticsearch extends AbstractAdapter
     {
         $this->connect();
 
-        $strAnalyzer = $this->arrOptions['analyzer'];
-        $strIndex = $this->getIndexName($this->arrOptions['rootPageId']);
-        $arrAnalyzer = $this->arrAnalyzer;
+        $strAnalyzer = $this->arrOptions['analyzer'] ?? 'standard';
+        $strIndex = $this->getIndexName($this->arrOptions['rootPageId'] ?? 0);
 
-        $arrAnalyzer["autocomplete"] = [
-            "filter" => ["lowercase", "autocomplete"],
-            "type" => "custom",
-            "tokenizer" => "standard"
+        $arrAnalyzer = $this->arrAnalyzer ?? [];
+
+        $arrAnalyzer['autocomplete'] = [
+            'tokenizer' => 'standard',
+            'filter' => ['lowercase', 'autocomplete'],
+            'type' => 'custom',
+        ];
+
+        $textMappingWithAutocomplete = [
+            'type' => 'text',
+            'analyzer' => $strAnalyzer,
+            'copy_to' => ['autocomplete'],
+        ];
+
+        $textMappingStandard = [
+            'type' => 'text',
+            'analyzer' => $strAnalyzer,
+        ];
+
+        $keywordMapping = [
+            'type' => 'keyword',
         ];
 
         $arrParams = [
-            "index" => $strIndex,
-            "body" => [
-                "settings" => [
-                    "number_of_shards" => 1,
-                    "number_of_replicas" => 0,
-                    "analysis" => [
-                        "analyzer" => $arrAnalyzer,
-                        "char_filter" => [
-                            "german_mapping" => [
-                                "type" => "mapping",
-                                "mappings" => [
-                                    "ä => ae",
-                                    "ö => oe",
-                                    "ü => ue",
-                                    "Ä => Ae",
-                                    "Ö => Oe",
-                                    "Ü => Ue",
-                                    "ß => ss",
-                                    "- => "
-                                ]
+            'index' => $strIndex,
+            'body' => [
+                'settings' => [
+                    'number_of_shards' => 1,
+                    'number_of_replicas' => 0,
+                    'analysis' => [
+                        'analyzer' => $arrAnalyzer,
+                        'filter' => [
+                            'autocomplete' => [
+                                'type' => 'shingle',
+                                'min_shingle_size' => 2,
+                                'max_shingle_size' => 2,
                             ],
-                            "hyphen_to_space" => [
-                                "type" => "mapping",
-                                "mappings" => [
-                                    "- => "
-                                ]
-                            ]
-                        ],
-                        "filter" => [
-                            "autocomplete" => [
-                                "max_shingle_size" => 4,
-                                "min_shingle_size" => 2,
-                                "type" => "shingle"
-                            ],
-                            "decompound_filter" => [
-                                "type" => "word_delimiter",
-                                "preserve_original" => true,
-                                "split_on_numerics" => false,
-                                "split_on_case_change" => true,
-                                "generate_word_parts" => true,
-                                "generate_number_parts" => false,
-                                "catenate_words" => true,
-                                "catenate_numbers" => false,
-                                "catenate_all" => false
-                            ],
-                            "english_stemmer" => [
+                            'english_stemmer' => [
                                 "type" => "stemmer",
                                 "language" => "english"
                             ],
-                            "german_stemmer" => [
+                            'german_stemmer' => [
                                 "type" => "stemmer",
                                 "language" => "german"
                             ],
-                            "french_stemmer" => [
+                            'french_stemmer' => [
                                 "type" => "stemmer",
                                 "language" => "french"
                             ],
-                            "english_stopwords" => [
+                            'english_stopwords' => [
                                 "type" => "stop",
                                 "stopwords" => ["_english_"]
                             ],
-                            "french_stopwords" => [
+                            'french_stopwords' => [
                                 "type" => "stop",
                                 "stopwords" => ["_french_"]
                             ],
-                            "german_stopwords" => [
+                            'german_stopwords' => [
                                 "type" => "stop",
                                 "stopwords" => ["_german_"]
-                            ],
-                            "custom_asciifolding" => [
-                                "type" => "asciifolding",
-                                "preserve_original" => true
                             ]
                         ]
                     ]
                 ],
-                "mappings" => [
-                    "properties" => [
-                        "autocomplete" => [
-                            "type" => "text",
-                            "fielddata" => true,
-                            "analyzer" => "autocomplete"
+                'mappings' => [
+                    'properties' => [
+                        'autocomplete' => [
+                            'type' => 'text',
+                            'analyzer' => 'autocomplete'
                         ],
-                        "title" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                            "copy_to" => [
-                                "autocomplete"
-                            ]
-                        ],
-                        "description" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                            "copy_to" => [
-                                "autocomplete"
-                            ]
-                        ],
-                        "text" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer
-                        ],
-                        "document" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                        ],
-                        "h1" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                            "copy_to" => [
-                                "autocomplete"
-                            ]
-                        ],
-                        "h2" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                            "copy_to" => [
-                                "autocomplete"
-                            ]
-                        ],
-                        "h3" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                            "copy_to" => [
-                                "autocomplete"
-                            ]
-                        ],
-                        "h4" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                        ],
-                        "h5" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                        ],
-                        "h6" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                        ],
-                        "strong" => [
-                            "type" => "text",
-                            "analyzer" => $strAnalyzer,
-                        ],
-                        "language" => [
-                            "type" => "keyword"
-                        ],
-                        "domain" => [
-                            "type" => "keyword"
-                        ],
-                        "url" => [
-                            "type" => "keyword"
-                        ]
-                    ]
-                ]
-            ]
+                        'title' => $textMappingWithAutocomplete,
+                        'description' => $textMappingWithAutocomplete,
+                        'h1' => $textMappingWithAutocomplete,
+                        'h2' => $textMappingStandard,
+                        'h3' => $textMappingStandard,
+                        'text' => $textMappingStandard,
+                        'document' => $textMappingStandard,
+                        'h4' => $textMappingStandard,
+                        'h5' => $textMappingStandard,
+                        'h6' => $textMappingStandard,
+                        'strong' => $textMappingStandard,
+                        'language' => $keywordMapping,
+                        'domain' => $keywordMapping,
+                        'url' => $keywordMapping,
+                    ],
+                ],
+            ],
         ];
 
-        if (isset($GLOBALS['TL_HOOKS']['psCreateMapping']) && is_array($GLOBALS['TL_HOOKS']['psCreateMapping'])) {
-            foreach ($GLOBALS['TL_HOOKS']['psCreateMapping'] as $arrCallback) {
-                System::importStatic($arrCallback[0])->{$arrCallback[1]}($arrParams, $this->arrOptions, $this);
+        if (!empty($GLOBALS['TL_HOOKS']['psCreateMapping']) && is_array($GLOBALS['TL_HOOKS']['psCreateMapping'])) {
+            foreach ($GLOBALS['TL_HOOKS']['psCreateMapping'] as $callback) {
+                if (is_array($callback) && isset($callback[0], $callback[1])) {
+                    System::importStatic($callback[0])->{$callback[1]}($arrParams, $this->arrOptions, $this);
+                }
             }
         }
 
@@ -417,12 +307,17 @@ class Elasticsearch extends AbstractAdapter
 
     public function clientMapping($arrParams): void
     {
-        $blnExists = $this->getClient()->indices()->exists([
+        if (!$this->getClient()) {
+            return;
+        }
+
+        $arrExists = $this->getClient()->indices()->exists([
             "index" => $arrParams['index']
-        ])->asBool();
+        ]);
+
+        $blnExists = ($arrExists === true || (is_array($arrExists) && ($arrExists['status'] ?? 404) === 200));
 
         if (!$blnExists) {
-
             $this->getClient()->indices()->create($arrParams);
 
             System::getContainer()
@@ -447,7 +342,7 @@ class Elasticsearch extends AbstractAdapter
         ];
 
         if (!$this->getClient()) {
-            if (!(new Proxy($this->strLicense))->indexDocument($arrParams)) {
+            if ((new Proxy($this->strLicense))->indexDocument($arrParams) === false) {
                 return;
             }
         } else {
@@ -463,35 +358,38 @@ class Elasticsearch extends AbstractAdapter
         $objIndicesModel->save();
     }
 
-    public function clientIndex($arrParams): bool
+    public function clientIndex($arrParams): void
     {
         if (!$this->getClient()) {
-            throw new \RuntimeException('Client konnte nicht geladen werden.');
+            return;
         }
 
-        if ($this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']])->asBool()) {
-            unset($arrParams['body']['id']);
+        try {
+            $arrExists = $this->getClient()->exists(['index' => $arrParams['index'], 'id' => $arrParams['id']]);
+            $blnExists = ($arrExists === true || (is_array($arrExists) && ($arrExists['status'] ?? 404) === 200));
 
-            $this->getClient()->update([
-                'index' => $arrParams['index'],
-                'id' => $arrParams['id'],
-                'body' => [
-                    'doc' => $arrParams['body']
-                ]
-            ]);
-
-            System::getContainer()
-                ->get('monolog.logger.contao')
-                ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was updated.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
-        } else {
-            $this->getClient()->index($arrParams);
-
-            System::getContainer()
-                ->get('monolog.logger.contao')
-                ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+            if ($blnExists) {
+                unset($arrParams['body']['id']);
+                $this->getClient()->update([
+                    'index' => $arrParams['index'],
+                    'id' => $arrParams['id'],
+                    'body' => [
+                        'doc' => $arrParams['body']
+                    ]
+                ]);
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was updated.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+            } else {
+                $this->getClient()->index($arrParams);
+                System::getContainer()
+                    ->get('monolog.logger.contao')
+                    ->log(LogLevel::DEBUG, 'Index (' . $arrParams['index'] . ') document with ID ' . $arrParams['id'] . ' was created.', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+            }
+        } catch (\Exception $objError) {
+            Logger::set($objError->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
+            return;
         }
-
-        return true;
     }
 
     public function indexDocuments($strIndicesId): void
@@ -550,6 +448,7 @@ class Elasticsearch extends AbstractAdapter
             $arrDocument[$strField] = $varValues;
         }
 
+        $objIndices->last_indexed = time();
         $objIndices->save();
 
         return $arrDocument;
@@ -694,7 +593,7 @@ class Elasticsearch extends AbstractAdapter
                 'aggs' => [
                     'autocomplete' => [
                         'terms' => [
-                            'field' => 'autocomplete',
+                            'field' => 'autocomplete.keyword',
                             'order' => [
                                 '_count' => 'desc'
                             ],

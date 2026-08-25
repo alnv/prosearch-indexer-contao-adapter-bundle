@@ -14,7 +14,10 @@ class Credentials
             return false;
         }
 
-        $objCredentials = Database::getInstance()->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')->limit(1)->execute();
+        $objCredentials = Database::getInstance()
+            ->prepare('SELECT * FROM tl_search_credentials ORDER BY id DESC')
+            ->limit(1)
+            ->execute();
 
         if (!$objCredentials->numRows) {
             return false;

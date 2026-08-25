@@ -2,7 +2,6 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
-use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\System;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -10,14 +9,12 @@ use Psr\Log\LogLevel;
 
 class Authorization
 {
-
-    private string $strUrl = "https://app.sineos.de"; // 'https://usb-watcher.dev.contao4you.de';
+    private string $strUrl = "https://app.sineos.de";
 
     private string $strMethod = 'api/license/check/';
 
     public function parseDomain(string $strDomain): string
     {
-
         $arrFragments = parse_url($strDomain) ?? [];
         $strHost = $arrFragments['host'] ?? '';
         $strPort = $arrFragments['port'] ?? '';
@@ -33,18 +30,14 @@ class Authorization
 
     public function pluckKeyFromKeysGlobalByDomain(array $arrKeys, string $strDomain): string
     {
-
         $strDomain = $this->parseDomain($strDomain);
-
         foreach ($arrKeys as $arrKey) {
-
             if ($arrKey['domain'] == $strDomain) {
-
                 return $arrKey['key'];
             }
         }
 
-        return '';
+        return $arrKeys[0]['key'] ?? '';
     }
 
     /**
@@ -67,7 +60,6 @@ class Authorization
         }
 
         $arrLicenseFragments = $this->decodeLicense($strLicenseIdentifier);
-
         if (!$arrLicenseFragments['license']) {
             return false;
         }
@@ -78,7 +70,7 @@ class Authorization
 
         $strFileContent = '';
         $strRootDir = System::getContainer()->getParameter('kernel.project_dir');
-        $strCacheFolder = $strRootDir . '/var/cache/authorization';
+        $strCacheFolder = $strRootDir . '/var/authorization';
 
         if (!file_exists($strCacheFolder)) {
             mkdir($strCacheFolder, 0777, true);
@@ -94,13 +86,17 @@ class Authorization
 
         try {
             $objClient = new Client();
+
             $request = new Request('GET', $this->strUrl . '/' . $this->strMethod . $arrLicenseFragments['license'], [
                 'Authorization' => 'Bearer ' . ($arrLicenseFragments['authToken'] ?? '')
             ], '');
+
             $objResponse = $objClient->send($request);
             $arrJsonReturn = \json_decode($objResponse->getBody()->getContents(), true);
+
             $blnValid = $arrJsonReturn['valid'] ?? false;
             $strDomain = $arrJsonReturn['domain'] ?? '';
+
             if ($blnValid === true && $strDomain == $arrLicenseFragments['domain']) {
                 $strFilename = $strCacheFolder . '/auth.txt';
                 file_put_contents($strFilename, $strLicenseIdentifier, FILE_APPEND | LOCK_EX);
@@ -108,9 +104,7 @@ class Authorization
             }
 
         } catch (\Exception $objError) {
-            System::getContainer()
-                ->get('monolog.logger.contao')
-                ->log(LogLevel::ERROR, 'Prosearch Lizenz: ' . $objError->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+            Logger::set($objError->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
         }
 
         return false;
@@ -123,7 +117,6 @@ class Authorization
 
     public function decodeLicense($strLicenseIdentifier): array
     {
-
         $strFragments = rtrim(strtr(base64_decode($strLicenseIdentifier), '+/', '-_'), '=');
         $arrFragments = explode('::', $strFragments);
 

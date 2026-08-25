@@ -19,26 +19,24 @@ class Keyword
     public function setKeywords($strKeywords, $arrOptions = []): array
     {
 
-        $strKeywords = str_replace('/', '\/', $strKeywords);
+        $strKeywords = \str_replace('/', '\/', $strKeywords);
         $strToken = Text::tokenize($strKeywords);
-        $strToken = strtolower($strToken);
-
+        $strToken = \strtolower($strToken);
         $arrTypes = $arrOptions['categories'] ?? [];
-
         $strSynonym = $this->objSynonyms->predict($strToken);
         $strQuery = $strSynonym;
 
-        $arrTypes = array_unique($arrTypes);
-        $arrTypes = array_filter($arrTypes);
-        $arrTypes = array_filter($arrTypes, function ($strType) {
-            return strtolower($strType);
+        $arrTypes = \array_unique($arrTypes);
+        $arrTypes = \array_filter($arrTypes);
+        $arrTypes = \array_filter($arrTypes, function ($strType) {
+            return \strtolower($strType);
         });
 
         return [
             'keyword' => $strKeywords,
             'token' => $strToken,
             'query' => $strQuery,
-            'words' => array_filter(StringUtil::trimsplit(' |,', $strQuery)),
+            'words' => \array_filter(StringUtil::trimsplit(' |,', $strQuery)),
             'types' => $arrTypes,
             'synonym' => $strSynonym
         ];

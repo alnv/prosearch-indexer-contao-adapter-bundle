@@ -1,7 +1,7 @@
 <?php
 
 use Contao\CoreBundle\Util\LocaleUtil;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Contao\Environment;
@@ -119,8 +119,8 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psAnalyzer'] = [
         'includeBlankOption' => true
     ],
     'options_callback' => function () {
-        $objAdapter = new Elasticsearch((new Options())->getOptions());
-        $arrAnalyzer = array_keys($objAdapter->getAnalyzer());
+        $objAdapter = (new Adapter())->getInstance((new Options())->getOptions());
+        $arrAnalyzer = \array_keys($objAdapter->getAnalyzer());
         $arrAnalyzer[] = 'whitespace';
         $arrAnalyzer[] = 'standard';
         $arrAnalyzer[] = 'keyword';

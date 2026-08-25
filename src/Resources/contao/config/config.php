@@ -1,5 +1,8 @@
 <?php
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiChatComponentParser;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchTypeAheadModule;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Modules\ElasticsearchModule;
@@ -88,6 +91,14 @@ $GLOBALS['OPEN_AI_MESSAGE_PARSER']['elasticsearch'] = [
     'label' => 'Elasticsearch',
     'class' => AiChatComponentParser::class
 ];
+
+/**
+ * Adapter
+ */
+$GLOBALS['PS_ADAPTER'] = [[
+    'type' => 'elasticsearch',
+    'class' => Elasticsearch::class
+]];
 
 /**
  * Frontend modules

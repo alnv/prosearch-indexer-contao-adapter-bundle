@@ -2,6 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Contao\FilesModel;
 use Contao\StringUtil;
@@ -14,7 +15,6 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 
 class Indices extends Searcher
 {
@@ -88,7 +88,6 @@ class Indices extends Searcher
 
         $arrImages = [];
         foreach ($objPageObject->images as $objImage) {
-
             if (!$objImage->url) {
                 continue;
             }
@@ -134,15 +133,11 @@ class Indices extends Searcher
 
         new MicroDataDispatcher($document, $objIndicesModel->id);
 
-        if ($objIndicesModel->last_indexed && strtotime('+3 hours', $objIndicesModel->last_indexed) > time()) {
-            return;
-        }
-
         $objOptions = new Options();
         $objOptions->setLanguage($strLanguage);
         $objOptions->setRootPageId($objPage->rootId);
 
-        (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
+        (new Adapter())->getInstance((new Options())->getOptions())->indexDocuments($objIndicesModel->id);
     }
 
     protected function getDescription($objPageObject): string

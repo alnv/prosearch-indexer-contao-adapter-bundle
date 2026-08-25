@@ -114,13 +114,11 @@ class ProSearchIndexer implements IndexerInterface
         $this->framework->initialize();
 
         $objIndices = IndicesModel::findAll();
-
         if (!$objIndices) {
             return;
         }
 
         while ($objIndices->next()) {
-
             $arrSettings = StringUtil::deserialize($objIndices->settings, true);
             if (\in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
                 continue;

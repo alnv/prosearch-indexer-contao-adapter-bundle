@@ -2,6 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
+use Contao\PageModel;
 use Contao\System;
 use Contao\Database;
 use Contao\StringUtil;
@@ -25,7 +26,7 @@ class Categories
         return $arrCategories;
     }
 
-    public function getTranslatedCategories(): array
+    public function getTranslatedCategories($strRootId = ''): array
     {
 
         $this->setCategories();
@@ -33,11 +34,13 @@ class Categories
         $arrCategories = [];
         $strCurrentLanguage = $GLOBALS['TL_LANGUAGE'] ?? '';
 
+        if ($objRootPage = PageModel::findByPk($strRootId)) {
+            $strCurrentLanguage = $objRootPage->language;
+        }
+
         if (!$strCurrentLanguage) {
             $objRootPage = Database::getInstance()->prepare('SELECT * FROM tl_page WHERE (type=? OR type=?) AND `language`!=?')->limit(1)->execute('rootfallback', 'root', '');
-            if ($objRootPage->numRows) {
-                $strCurrentLanguage = $objRootPage->language;
-            }
+            $strCurrentLanguage = $objRootPage?->language;
         }
 
         $objCategories = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE exist=? ORDER BY category')->execute('1');
@@ -52,8 +55,9 @@ class Categories
             $arrTranslations = StringUtil::deserialize($objCategories->translating, true);
 
             foreach ($arrTranslations as $arrTranslation) {
-                if ($arrTranslation['language'] == $strCurrentLanguage && $arrTranslation['label']) {
-                    $strLabel = $arrTranslation['label'];
+
+                if ($arrTranslation['language'] == $strCurrentLanguage) {
+                    $strLabel = $arrTranslation['label'] ?? '';
                 }
             }
 

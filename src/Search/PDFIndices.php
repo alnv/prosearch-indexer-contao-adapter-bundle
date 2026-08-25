@@ -2,21 +2,21 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Contao\CoreBundle\Monolog\ContaoContext;
-use Contao\Frontend;
+use Contao\CoreBundle\Search\Document;
 use Contao\File;
-use Contao\StringUtil;
 use Contao\FilesModel;
-use Contao\System;
+use Contao\Frontend;
 use Contao\PageModel;
+use Contao\StringUtil;
+use Contao\System;
 use Psr\Log\LogLevel;
 use Smalot\PdfParser\Parser;
-use Contao\CoreBundle\Search\Document;
 use Symfony\Component\DomCrawler\Crawler;
 
 class PDFIndices extends Searcher
@@ -24,8 +24,6 @@ class PDFIndices extends Searcher
 
     public function __construct(Document $document, array $meta = [])
     {
-
-        set_time_limit(600);
 
         try {
             $strLanguage = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
@@ -42,26 +40,39 @@ class PDFIndices extends Searcher
 
         $strHtml = $document->getBody();
         $this->objCrawler = new Crawler($strHtml);
-        $objLinks = $this->objCrawler->filter("body a");
+        $objLinks = $this->objCrawler->filterXPath("//a");
 
         foreach ($objLinks as $objLink) {
 
             $strHref = $objLink->getAttribute('href');
+            if (!$strHref || !$this->isPdf($strHref)) continue;
 
-            if (!$strHref || strpos($strHref, '.pdf') === false) {
+            $arrUrl = \parse_url($strHref);
+            $strFile = '';
+
+            if (\strpos(($arrUrl['path'] ?? ''), '.pdf') !== false) {
+                $strFile = \ltrim(($arrUrl['path'] ?? ''), '/');
+            } elseif (isset($arrUrl['query'])) {
+                \parse_str($arrUrl['query'], $params);
+                if (isset($params['p']) && \strpos($params['p'], '.pdf') !== false) {
+                    $strFile = 'files/' . $params['p'];
+                }
+            }
+
+            if (!$strFile) {
                 continue;
             }
 
-            $arrUrl = parse_url($strHref);
-            $strFile = $arrUrl['path'];
             $objFile = FilesModel::findByPath($strFile);
-
             if (!$objFile) {
-                continue;
+                $objFile = FilesModel::findByPath(rawurldecode($strFile));
             }
+
+            if (!$objFile) continue;
 
             $_File = new File($objFile->path);
             if (($_File->filesize / 1000001) > 5) {
+                Logger::set('PDF Parser (' . $objFile->path . '): MAX 5mb allowed!', LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
                 continue;
             }
 
@@ -117,7 +128,7 @@ class PDFIndices extends Searcher
 
                 if (!in_array('preventIndexMetadata', $arrSettings)) {
                     $objIndicesModel->images = ['assets/contao/images/pdf.svg'];
-                    $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr?:$strNodeContent)) ?: $strFilename);
+                    $objIndicesModel->title = (($strMetaTitle ?: ($strTitleAttr ?: $strNodeContent)) ?: $strFilename);
                     $objIndicesModel->description = ($strMetaDescription ?: $strMetaAlt);
                 }
 
@@ -133,21 +144,26 @@ class PDFIndices extends Searcher
                 $objIndicesModel->doc_type = 'file';
                 $objIndicesModel->save();
 
-                if ($objIndicesModel->last_indexed && strtotime('+3 hours', $objIndicesModel->last_indexed) > time()) {
-                    return;
-                }
-
                 $objOptions = new Options();
                 $objOptions->setLanguage($strLanguage);
                 $objOptions->setRootPageId($objPage->rootId);
 
-                (new Elasticsearch($objOptions->getOptions()))->indexDocuments($objIndicesModel->id);
+                (new Adapter())->getInstance((new Options())->getOptions())->indexDocuments($objIndicesModel->id);
 
             } catch (\Exception $exception) {
-                System::getContainer()
-                    ->get('monolog.logger.contao')
-                    ->log(LogLevel::ERROR, 'PDF Parser ('.$objFile->path.'): ' . $exception->getMessage(), ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
+                Logger::set('PDF Parser (' . $objFile->path . '): ' . $exception->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
             }
         }
+    }
+
+    protected function isPdf($url): bool
+    {
+
+        $arrUrl = \parse_url($url);
+        \parse_str($arrUrl['query'] ?? '', $arrParams);
+
+        return (isset($arrParams['f']) && \str_ends_with(strtolower($arrParams['f']), '.pdf')) ||
+            (isset($arrParams['p']) && \str_ends_with(\strtolower($arrParams['p']), '.pdf')) ||
+            (\str_ends_with(\strtolower($arrUrl['path'] ?? ''), '.pdf'));
     }
 }
