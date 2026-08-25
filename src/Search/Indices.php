@@ -136,7 +136,7 @@ class Indices extends Searcher
         $objOptions = new Options();
         $objOptions->setLanguage($strLanguage);
         $objOptions->setRootPageId($objPage->rootId);
-
+        
         (new Adapter())->getInstance((new Options())->getOptions())->indexDocuments($objIndicesModel->id);
     }
 

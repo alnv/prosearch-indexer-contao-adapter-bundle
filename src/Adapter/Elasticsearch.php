@@ -185,7 +185,6 @@ class Elasticsearch extends AbstractAdapter
 
     public function clientDelete($strIndex, $strIndicesId): void
     {
-
         if ($this->getClient()->exists(['index' => $strIndex, 'id' => $strIndicesId])->asBool()) {
             $this->getClient()->deleteByQuery([
                 'index' => $strIndex,
@@ -202,7 +201,6 @@ class Elasticsearch extends AbstractAdapter
 
     public function getIndex($strIndicesId = null, int $intLimit = 5): array
     {
-
         $arrColumn = ['state=?'];
         $arrValue = [States::ACTIVE];
 
@@ -231,12 +229,12 @@ class Elasticsearch extends AbstractAdapter
         return $arrDocuments;
     }
 
-    protected function createMapping(): void
+    protected function createMapping($rootId = null): void
     {
         $this->connect();
 
         $strAnalyzer = $this->arrOptions['analyzer'];
-        $strIndex = $this->getIndexName($this->arrOptions['rootPageId']);
+        $strIndex = $this->getIndexName($rootId ?: $this->arrOptions['rootPageId']);
         $arrAnalyzer = $this->arrAnalyzer;
 
         $arrAnalyzer["autocomplete"] = [
@@ -417,12 +415,14 @@ class Elasticsearch extends AbstractAdapter
 
     public function clientMapping($arrParams): void
     {
-        $blnExists = $this->getClient()->indices()->exists([
-            "index" => $arrParams['index']
-        ])->asBool();
+        $blnExists = $this->getClient()
+            ->indices()
+            ->exists([
+                "index" => $arrParams['index']
+            ])
+            ->asBool();
 
         if (!$blnExists) {
-
             $this->getClient()->indices()->create($arrParams);
 
             System::getContainer()
@@ -431,14 +431,14 @@ class Elasticsearch extends AbstractAdapter
         }
     }
 
-    public function indexByDocument($arrDocument): void
+    protected function indexByDocument($arrDocument): void
     {
         $objIndicesModel = IndicesModel::findByPk($arrDocument['id']);
         if (!$objIndicesModel) {
             return;
         }
 
-        $strIndex = $this->getIndexName($this->getRootIdentifierFromIndicesId($arrDocument['id']));
+        $strIndex = $this->getIndexName($this->getRootIdentifierFromIndicesId($objIndicesModel->id));
 
         $arrParams = [
             'index' => $strIndex,
@@ -501,11 +501,17 @@ class Elasticsearch extends AbstractAdapter
         }
 
         $this->connect();
+        $level = 0;
         $arrDocuments = $this->getIndex($strIndicesId);
-        $this->createMapping();
 
         foreach ($arrDocuments as $arrDocument) {
+            if (!$level) {
+                $rootId = $this->getRootIdentifierFromIndicesId($arrDocument['id']);
+                $this->createMapping($rootId);
+            }
+
             $this->indexByDocument($arrDocument);
+            $level++;
         }
     }
 

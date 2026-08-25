@@ -25,14 +25,14 @@
     "php": "^8.3",
     "ext-curl": "*",
     "contao/core-bundle": "~4.13 || ~5.0",
-    "fusonic/opengraph": "^2.3",
-    "smalot/pdfparser": "^2.8",
-    "guzzlehttp/guzzle": "^7.8",
-    "elasticsearch/elasticsearch": "^8.12",
+    "fusonic/opengraph": "^3.0",
+    "smalot/pdfparser": "^2.12",
+    "guzzlehttp/guzzle": "^7.10",
+    "elasticsearch/elasticsearch": "^8.19",
     "opensearch-project/opensearch-php": "^2.0",
     "menatwork/contao-multicolumnwizard-bundle": "^3.6",
     "alnv/contao-open-ai-assistant-bundle": "^1.0",
-    "phpoffice/phpspreadsheet": ">=1.29"
+    "phpoffice/phpspreadsheet": "^5.4"
   },
   "config": {
     "preferred-install": "dist"

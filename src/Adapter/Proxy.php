@@ -99,7 +99,7 @@ class Proxy
                 'json' => [
                     'body' => $arrParams
                 ],
-                'timeout' => 10,
+                'timeout' => 15,
                 'connect_timeout' => 10
             ]);
 

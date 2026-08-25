@@ -65,15 +65,18 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         ],
         'operations' => [
             'edit' => [
+                'primary' => true,
                 'icon' => 'header.svg',
                 'href' => 'act=edit'
             ],
             'delete' => [
+                'primary' => true,
                 'href' => 'act=delete',
                 'icon' => 'delete.svg',
                 'attributes' => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? '') . '\'))return false;Backend.getScrollOffset()"'
             ],
             'show' => [
+                'primary' => true,
                 'href' => 'act=show',
                 'icon' => 'show.svg',
             ]
@@ -191,12 +194,12 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                     'key' => [
                         'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['key'],
                         'inputType' => 'text',
-                        'eval' => ['style' => 'width:100%']
+                        'eval' => ['style' => 'width:100%;min-width:200px']
                     ],
                     'domain' => [
                         'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['domain'],
                         'inputType' => 'text',
-                        'eval' => ['style' => 'width:100%'],
+                        'eval' => ['style' => 'width:100%;'],
                         'save_callback' => [[Authorization::class, 'parseDomain']]
                     ]
                 ]
