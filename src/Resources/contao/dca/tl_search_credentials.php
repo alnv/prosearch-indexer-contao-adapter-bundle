@@ -175,12 +175,11 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
         'authToken' => [
             'inputType' => 'text',
             'eval' => [
-                'maxlength' => 255,
                 'mandatory' => true,
                 'tl_class' => 'long clr',
                 'decodeEntities' => true
             ],
-            'sql' => "varchar(255) NOT NULL default ''"
+            'sql' => "text NULL"
         ],
         'keys' => [
             'inputType' => 'multiColumnWizard',

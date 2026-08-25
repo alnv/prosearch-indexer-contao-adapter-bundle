@@ -86,9 +86,9 @@ class Authorization
 
         try {
             $objClient = new Client();
-
             $request = new Request('GET', $this->strUrl . '/' . $this->strMethod . $arrLicenseFragments['license'], [
-                'Authorization' => 'Bearer ' . ($arrLicenseFragments['authToken'] ?? '')
+                'Authorization' => 'Bearer ' . ($arrLicenseFragments['authToken'] ?? ''),
+                'Accept' => 'application/json',
             ], '');
 
             $objResponse = $objClient->send($request);
