@@ -179,7 +179,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                 'tl_class' => 'long clr',
                 'decodeEntities' => true
             ],
-            'sql' => "varchar(255) NOT NULL default ''"
+            'sql' => "text NULL"
         ],
         'keys' => [
             'inputType' => 'rowWizard',

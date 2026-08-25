@@ -4,6 +4,7 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Elasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Text;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
@@ -72,11 +73,7 @@ class PDFIndices extends Searcher
 
             $_File = new File($objFile->path);
             if (($_File->filesize / 1000001) > 5) {
-
-                System::getContainer()
-                    ->get('monolog.logger.contao')
-                    ->log(LogLevel::ERROR, 'PDF Parser (' . $objFile->path . '): MAX 5mb allowed!', ['contao' => new ContaoContext(__CLASS__ . '::' . __FUNCTION__)]);
-
+                Logger::set('PDF Parser (' . $objFile->path . '): MAX 5mb allowed!', LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
                 continue;
             }
 
@@ -87,6 +84,7 @@ class PDFIndices extends Searcher
             $strMetaDescription = $arrMeta['caption'] ?? '';
             $strMetaTitle = $arrMeta['title'] ?? '';
             $strMetaAlt = $arrMeta['alt'] ?? '';
+
             $strFilename = StringUtil::specialchars($_File->basename);
 
             try {
