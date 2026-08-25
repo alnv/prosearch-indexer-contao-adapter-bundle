@@ -67,6 +67,10 @@ class ElasticsearchController extends AbstractController
             'results' => []
         ];
 
+        if ($arrKeywords['keyword'] === '') {
+            return new JsonResponse($arrResults);
+        }
+
         switch ($arrCredentials['type']) {
             case 'elasticsearch':
             case 'opensearch':
