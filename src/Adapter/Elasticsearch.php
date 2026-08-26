@@ -500,18 +500,18 @@ class Elasticsearch extends AbstractAdapter
             return;
         }
 
+        $rootIds = [];
         $this->connect();
-        $level = 0;
         $arrDocuments = $this->getIndex($strIndicesId);
 
         foreach ($arrDocuments as $arrDocument) {
-            if (!$level) {
-                $rootId = $this->getRootIdentifierFromIndicesId($arrDocument['id']);
+            $rootId = $this->getRootIdentifierFromIndicesId($arrDocument['id']);
+            if (!\in_array($rootId, $rootIds)) {
                 $this->createMapping($rootId);
+                $rootIds[] = $rootId;
             }
 
             $this->indexByDocument($arrDocument);
-            $level++;
         }
     }
 
