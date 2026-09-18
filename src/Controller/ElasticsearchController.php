@@ -71,7 +71,7 @@ class ElasticsearchController extends AbstractController
             return new JsonResponse($arrResults);
         }
 
-        switch ($arrCredentials['type']) {
+        switch ($arrCredentials['type'] ?? '') {
             case 'elasticsearch':
             case 'opensearch':
             case 'elasticsearch_cloud':
@@ -92,9 +92,9 @@ class ElasticsearchController extends AbstractController
                 break;
         }
 
-        $arrHits = $arrResults['results']['hits'];
-        if ($arrElasticOptions['useOpenAi']) {
+        $arrHits = $arrResults['results']['hits'] ?? [];
 
+        if ($arrElasticOptions['useOpenAi'] ?? '') {
             $intFirstScore = ((int)($arrHits[0]['_score'] ?? 0));
             $intSearchWords = count($arrKeywords['words'] ?? []);
 

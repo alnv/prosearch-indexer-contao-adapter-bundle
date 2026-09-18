@@ -83,7 +83,7 @@ abstract class AbstractAdapter
 
     public function getIndexName($strRootIdentifier): string
     {
-        $blnUseSingleDocument = (bool)$this->arrCredentials['singleDocument'];
+        $blnUseSingleDocument = (bool)($this->arrCredentials['singleDocument'] ?? false);
         if ($blnUseSingleDocument) {
             $strRootIdentifier = 'single';
         }

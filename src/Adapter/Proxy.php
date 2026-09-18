@@ -39,7 +39,6 @@ class Proxy
             ]);
 
             $state = \json_decode($response->getBody()->getContents(), true);
-
             if (isset($state['error'])) {
                 return false;
             }
