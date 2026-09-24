@@ -83,16 +83,17 @@ class Elasticsearch extends AbstractAdapter
                 break;
             case 'licence':
                 $objAuthorization = new Authorization();
-                $strDomain = Environment::get('httpHost');
+                $domain = Environment::get('httpHost');
+                $domain = $objAuthorization->parseDomain($domain);
                 $arrLicenseKeys = StringUtil::deserialize($this->arrCredentials['keys'], true);
 
                 if (empty($arrLicenseKeys)) {
-                    $strLicense = $this->arrCredentials['key'] ?? '';
+                    $license = $this->arrCredentials['key'] ?? '';
                 } else {
-                    $strLicense = $objAuthorization->pluckKeyFromKeysGlobalByDomain($arrLicenseKeys, $strDomain);
+                    $license = $objAuthorization->pluckKeyFromKeysGlobalByDomain($arrLicenseKeys, $domain);
                 }
 
-                $this->strLicense = $objAuthorization->encodeLicense($strLicense, $strDomain, ($this->arrCredentials['authToken'] ?? ''));
+                $this->strLicense = $objAuthorization->encodeLicense($license, $domain, ($this->arrCredentials['authToken'] ?? ''));
                 return;
         }
 

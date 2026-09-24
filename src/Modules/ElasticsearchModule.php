@@ -26,8 +26,8 @@ class ElasticsearchModule extends Module
             $objTemplate->id = $this->id;
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
-            $objTemplate->href = 'contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
-            $objTemplate->wildcard = '### ' . \strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch'][0]) . ' ###';
+            $objTemplate->href = 'contao?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
+            $objTemplate->wildcard = '### ' . \strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch'][0] ?? '') . ' ###';
 
             return $objTemplate->parse();
         }
@@ -37,7 +37,6 @@ class ElasticsearchModule extends Module
 
     protected function compile()
     {
-
         global $objPage;
 
         $this->loadAssets();
@@ -82,7 +81,6 @@ class ElasticsearchModule extends Module
 
     protected function getInputCategories(): array
     {
-
         $varInputCategories = Input::get('categories') ?: null;
 
         if ($varInputCategories && \is_string($varInputCategories)) {
@@ -98,7 +96,7 @@ class ElasticsearchModule extends Module
 
     protected function getElementId(): string
     {
-        return 'id_search_' . \uniqid() . $this->id;
+        return 'id_search_' . $this->id;
     }
 
     protected function getKeywords(): string
@@ -108,7 +106,6 @@ class ElasticsearchModule extends Module
 
     protected function loadAssets(): void
     {
-
         $objCombiner = new Combiner();
         $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/vue.min.js');
         $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/vue-resource.min.js');

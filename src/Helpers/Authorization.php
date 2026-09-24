@@ -2,6 +2,7 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
+use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\System;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -13,31 +14,35 @@ class Authorization
 
     private string $strMethod = 'api/license/check/';
 
-    public function parseDomain(string $strDomain): string
+    public function parseDomain(string $domain): string
     {
-        $arrFragments = parse_url($strDomain) ?? [];
-        $strHost = $arrFragments['host'] ?? '';
-        $strPort = $arrFragments['port'] ?? '';
+        $hasScheme = \parse_url($domain, PHP_URL_SCHEME) !== null;
+        $urlToParse = $hasScheme ? $domain : 'https://' . $domain;
 
-        if (!$strHost) {
-            return $strDomain;
+        $arrFragments = \parse_url($urlToParse) ?? [];
+        $host = $arrFragments['host'] ?? '';
+        $port = $arrFragments['port'] ?? '';
+
+        if (!$host) {
+            return $domain;
         }
 
-        $strHost = str_replace('www.', '', $strHost);
+        $host = \preg_replace('/^www\./i', '', $host);
 
-        return trim($strHost) . ($strPort ? ':' . $strPort : '');
+        return trim($host) . ($port ? ':' . $port : '');
     }
 
-    public function pluckKeyFromKeysGlobalByDomain(array $arrKeys, string $strDomain): string
+    public function pluckKeyFromKeysGlobalByDomain(array $keys, string $domain): string
     {
-        $strDomain = $this->parseDomain($strDomain);
-        foreach ($arrKeys as $arrKey) {
-            if ($arrKey['domain'] == $strDomain) {
-                return $arrKey['key'];
+        $domain = $this->parseDomain($domain);
+
+        foreach ($keys as $key) {
+            if ($this->parseDomain($key['domain']) == $domain) {
+                return $key['key'];
             }
         }
 
-        return $arrKeys[0]['key'] ?? '';
+        return $keys[0]['key'] ?? '';
     }
 
     /**
@@ -59,25 +64,25 @@ class Authorization
             return true;
         }
 
-        $arrLicenseFragments = $this->decodeLicense($strLicenseIdentifier);
-        if (!$arrLicenseFragments['license']) {
+        $licenseFragments = $this->decodeLicense($strLicenseIdentifier);
+        if (!($licenseFragments['license'] ?? '')) {
             return false;
         }
 
-        if ($this->testKeys4DevOnly($arrLicenseFragments['license'])) {
+        if ($this->testKeys4DevOnly($licenseFragments['license'])) {
             return true;
         }
 
         $strFileContent = '';
         $strRootDir = System::getContainer()->getParameter('kernel.project_dir');
-        $strCacheFolder = $strRootDir . '/var/authorization';
+        $cacheFolder = $strRootDir . '/var/authorization';
 
-        if (!file_exists($strCacheFolder)) {
-            mkdir($strCacheFolder, 0777, true);
+        if (!file_exists($cacheFolder)) {
+            \mkdir($cacheFolder, 0777, true);
         }
 
-        if (file_exists($strCacheFolder . '/auth.txt')) {
-            $strFileContent = file_get_contents($strCacheFolder . '/auth.txt', true);
+        if (\file_exists($cacheFolder . '/auth.txt')) {
+            $strFileContent = \file_get_contents($cacheFolder . '/auth.txt');
         }
 
         if ($strFileContent == $strLicenseIdentifier) {
@@ -86,20 +91,22 @@ class Authorization
 
         try {
             $objClient = new Client();
-            $request = new Request('GET', $this->strUrl . '/' . $this->strMethod . $arrLicenseFragments['license'], [
-                'Authorization' => 'Bearer ' . ($arrLicenseFragments['authToken'] ?? ''),
+            $request = new Request('GET', $this->strUrl . '/' . $this->strMethod . $licenseFragments['license'], [
+                'Authorization' => 'Bearer ' . ($licenseFragments['authToken'] ?? ''),
                 'Accept' => 'application/json',
             ], '');
 
             $objResponse = $objClient->send($request);
             $arrJsonReturn = \json_decode($objResponse->getBody()->getContents(), true);
 
-            $blnValid = $arrJsonReturn['valid'] ?? false;
-            $strDomain = $arrJsonReturn['domain'] ?? '';
+            $valid = $arrJsonReturn['valid'] ?? false;
+            $domain = $arrJsonReturn['domain'] ?? '';
 
-            if ($blnValid === true && $strDomain == $arrLicenseFragments['domain']) {
-                $strFilename = $strCacheFolder . '/auth.txt';
-                file_put_contents($strFilename, $strLicenseIdentifier, FILE_APPEND | LOCK_EX);
+            if ($valid === true && $domain == $licenseFragments['domain']) {
+                $strFilename = $cacheFolder . '/auth.txt';
+
+                \file_put_contents($strFilename, $strLicenseIdentifier, LOCK_EX);
+
                 return true;
             }
 
@@ -115,10 +122,20 @@ class Authorization
         return rtrim(strtr(base64_encode($strLicense . '::' . $strDomain . '::' . $strAuthToken), '+/', '-_'), '=');
     }
 
-    public function decodeLicense($strLicenseIdentifier): array
+    public function decodeLicense(string $strLicenseIdentifier): array
     {
-        $strFragments = rtrim(strtr(base64_decode($strLicenseIdentifier), '+/', '-_'), '=');
-        $arrFragments = explode('::', $strFragments);
+        $b64 = \strtr($strLicenseIdentifier, '-_', '+/');
+        $remainder = \strlen($b64) % 4;
+        if ($remainder) {
+            $b64 .= \str_repeat('=', 4 - $remainder);
+        }
+
+        $strFragments = \base64_decode($b64, true);
+        if ($strFragments === false) {
+            return ['license' => '', 'domain' => '', 'authToken' => ''];
+        }
+
+        $arrFragments = \explode('::', $strFragments);
 
         return [
             'license' => $arrFragments[0] ?? '',

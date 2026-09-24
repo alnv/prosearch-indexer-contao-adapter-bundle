@@ -201,20 +201,26 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                         'label' => &$GLOBALS['TL_LANG']['tl_search_credentials']['domain'],
                         'inputType' => 'text',
                         'eval' => ['style' => 'width:100%;'],
-                        'save_callback' => [[Authorization::class, 'parseDomain']]
+                        'save_callback' => [function ($val) {
+                            return (new Authorization())->parseDomain($val);
+                        }]
                     ]
                 ]
             ],
-            'save_callback' => [function ($varValue, DataContainer $dc) {
-                $arrKeys = StringUtil::deserialize($varValue, true);
-                foreach ($arrKeys as $arrKey) {
-                    $strKey = (new Authorization())->encodeLicense(($arrKey['key'] ?? ''), ($arrKey['domain'] ?? ''), $dc->activeRecord->authToken);
-                    $blnValid = (new Authorization())->isValid($strKey);
-                    if (!$blnValid) {
-                        throw new Exception('Licence for domain ' . ($arrKey['domain'] ?? '') . ' is invalid! You can purchase a licence at this address: https://app.sineos.de');
+            'save_callback' => [function ($values, DataContainer $dc) {
+                $authorization = new Authorization();
+                $keys = StringUtil::deserialize($values, true);
+
+                foreach ($keys as $key) {
+                    $domain = $authorization->parseDomain($key['domain'] ?? '');
+                    $license = $authorization->encodeLicense($key['key'] ?? '', $domain, $dc->activeRecord->authToken);
+
+                    if (!$authorization->isValid($license)) {
+                        throw new Exception('Licence for domain ' . $domain . ' is invalid! You can purchase a licence at this address: https://app.sineos.de');
                     }
                 }
-                return $varValue;
+
+                return $values;
             }],
             'sql' => "blob NULL"
         ],
@@ -235,7 +241,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                 'mandatory' => true,
                 'includeBlankOption' => true
             ],
-            'options_callback' => function() {
+            'options_callback' => function () {
                 $objAdapter = (new Adapter())->getInstance((new Options())->getOptions());
                 $arrAnalyzer = \array_keys($objAdapter->getAnalyzer());
                 $arrAnalyzer[] = 'whitespace';

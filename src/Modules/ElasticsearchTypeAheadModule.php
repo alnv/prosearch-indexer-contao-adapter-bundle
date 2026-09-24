@@ -4,11 +4,11 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Modules;
 
 use Contao\BackendTemplate;
 use Contao\Combiner;
+use Contao\FrontendTemplate;
 use Contao\Input;
 use Contao\Module;
 use Contao\PageModel;
 use Contao\StringUtil;
-use Contao\FrontendTemplate;
 use Contao\System;
 
 class ElasticsearchTypeAheadModule extends Module
@@ -18,15 +18,14 @@ class ElasticsearchTypeAheadModule extends Module
 
     public function generate(): string
     {
-
         if (System::getContainer()->get('request_stack')->getCurrentRequest()->get('_scope') == 'backend') {
 
             $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->id = $this->id;
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
-            $objTemplate->href = 'contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
-            $objTemplate->wildcard = '### ' . strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch_type_ahead'][0]) . ' ###';
+            $objTemplate->href = 'contao?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
+            $objTemplate->wildcard = '### ' . strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch_type_ahead'][0] ?? '') . ' ###';
 
             return $objTemplate->parse();
         }
@@ -36,7 +35,6 @@ class ElasticsearchTypeAheadModule extends Module
 
     protected function compile()
     {
-
         global $objPage;
 
         $strKeywords = trim(Input::get('keywords'));
@@ -109,7 +107,7 @@ class ElasticsearchTypeAheadModule extends Module
 
     private function getElementId(): string
     {
-        return 'id_search_' . uniqid() . $this->id;
+        return 'id_search_' . $this->id;
     }
 
     protected function loadAssets(): void

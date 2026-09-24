@@ -21,33 +21,32 @@ class ElasticsearchProxyController extends AbstractController
     {
         $this->container->get('contao.framework')->initialize();
 
-        $arrBody = \json_decode(file_get_contents('php://input'), true);
-        $objElasticsearch = (new Adapter())->getInstance($arrBody['options']);
+        $body = \json_decode(file_get_contents('php://input'), true);
+        $objElasticsearch = (new Adapter())->getInstance($body['options']);
         $objElasticsearch->connect();
 
         if (!$objElasticsearch->getClient()) {
             return new JsonResponse([]);
         }
 
-        return new JsonResponse($objElasticsearch->search($arrBody['keywords'], $arrBody['index']));
+        return new JsonResponse($objElasticsearch->search($body['keywords'], $body['index']));
     }
 
     #[Route(path: '/search/autocompletion', methods: ["POST"])]
     public function autocompletion(): JsonResponse
     {
-
         $this->container->get('contao.framework')->initialize();
 
-        $arrBody = \json_decode(file_get_contents('php://input'), true);
+        $body = \json_decode(file_get_contents('php://input'), true);
 
-        $objElasticsearch = (new Adapter())->getInstance($arrBody['options']);
+        $objElasticsearch = (new Adapter())->getInstance($body['options']);
         $objElasticsearch->connect();
 
         if (!$objElasticsearch->getClient()) {
             return new JsonResponse([]);
         }
 
-        return new JsonResponse($objElasticsearch->autoCompilation($arrBody['keywords'], $arrBody['index']));
+        return new JsonResponse($objElasticsearch->autoCompilation($body['keywords'], $body['index']));
     }
 
     #[Route(path: '/search/index', methods: ["POST"])]
@@ -55,7 +54,7 @@ class ElasticsearchProxyController extends AbstractController
     {
         $this->container->get('contao.framework')->initialize();
 
-        $arrBody = \json_decode(file_get_contents('php://input'), true);
+        $body = \json_decode(file_get_contents('php://input'), true);
         $strLicence = Input::post('licence') ?: Input::get('licence');
 
         if (!(new Authorization())->isValid($strLicence)) {
@@ -72,7 +71,7 @@ class ElasticsearchProxyController extends AbstractController
             ]);
         }
 
-        $objElasticsearch->clientIndex($arrBody['body'] ?? []);
+        $objElasticsearch->clientIndex($body['body'] ?? []);
 
         return new JsonResponse([
             'success' => true
@@ -82,10 +81,9 @@ class ElasticsearchProxyController extends AbstractController
     #[Route(path: '/search/delete', methods: ["POST"])]
     public function delete(): JsonResponse
     {
-
         $this->container->get('contao.framework')->initialize();
 
-        $arrBody = \json_decode(file_get_contents('php://input'), true);
+        $body = \json_decode(file_get_contents('php://input'), true);
         $objElasticsearch = (new Adapter())->getInstance((new Options())->getOptions());
         $objElasticsearch->connect();
 
@@ -97,7 +95,7 @@ class ElasticsearchProxyController extends AbstractController
         }
 
 
-        $objElasticsearch->clientDelete($arrBody['body']['index'], $arrBody['body']['id']);
+        $objElasticsearch->clientDelete($body['body']['index'], $body['body']['id']);
 
         return new JsonResponse([
             'success' => true
@@ -110,7 +108,7 @@ class ElasticsearchProxyController extends AbstractController
         $this->container->get('contao.framework')->initialize();
 
         $strLicence = Input::post('licence') ?: Input::get('licence');
-        $arrBody = \json_decode(file_get_contents('php://input'), true);
+        $body = \json_decode(file_get_contents('php://input'), true);
 
         if (!(new Authorization())->isValid($strLicence)) {
             throw new AccessDeniedException('Page access denied:  ' . Environment::get('uri'));
@@ -126,7 +124,7 @@ class ElasticsearchProxyController extends AbstractController
             ]);
         }
 
-        $objElasticsearch->clientMapping($arrBody['body'] ?? []);
+        $objElasticsearch->clientMapping($body['body'] ?? []);
 
         return new JsonResponse([
             'success' => true
