@@ -6,7 +6,6 @@ use Contao\StringUtil;
 
 class Toolkit
 {
-
     public static function parseDocumentIndex($varDocumentIndex): array
     {
 

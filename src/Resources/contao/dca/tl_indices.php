@@ -144,11 +144,6 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'showColumns' => true
         ],
         'global_operations' => [
-            'vector_files' => [
-                'href' => 'table=tl_search_vector_files',
-                'class' => 'header_edit_all',
-                'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"'
-            ],
             'all' => [
                 'href' => 'act=select',
                 'class' => 'header_edit_all',

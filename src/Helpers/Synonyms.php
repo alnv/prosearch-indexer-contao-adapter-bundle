@@ -13,12 +13,12 @@ class Synonyms
     public function __construct()
     {
 
-        $objSynonyms = Database::getInstance()->prepare('SELECT * FROM tl_synonyms WHERE disable!=?')->execute('1');
+        $objSynonyms = Database::getInstance()
+            ->prepare('SELECT * FROM tl_synonyms WHERE disable!=?')
+            ->execute('1');
 
         while ($objSynonyms->next()) {
-
             $strKeyword = Text::tokenize($objSynonyms->keyword);
-
             if (!$strKeyword) {
                 continue;
             }
@@ -43,11 +43,8 @@ class Synonyms
 
     public function predict($strQuery)
     {
-
         foreach ($this->arrSynonyms as $strKeyWord => $arrSynonyms) {
-
             foreach ($arrSynonyms as $strSynonym) {
-
                 similar_text($strQuery, $strSynonym, $intPercent);
 
                 if ($intPercent >= 75) {

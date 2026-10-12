@@ -4,7 +4,6 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Entity;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Security\ContaoCorePermissions;
 use Contao\FilesModel;
 use Contao\StringUtil;
@@ -117,33 +116,7 @@ class Result
             'types' => $this->arrHit['source']['types'] ?? [],
             'score' => $this->arrHit['source']['score'] ?? 0,
             'sort' => $this->arrHit['source']['sort'] ?? 0,
-            'microdata' => [],
-            'rich_snippet' => ''
         ];
-
-        if (($objMicroData = MicrodataModel::findAll(['column' => ['pid=?'], 'value' => [$this->arrHit['id']]])) && $blnUseRichSnippets) {
-
-            $arrMicrodata = [];
-            while ($objMicroData->next()) {
-
-                if (!$objMicroData->type || !is_array($GLOBALS['PS_MICRODATA_CLASSES']) || !isset($GLOBALS['PS_MICRODATA_CLASSES'][$objMicroData->type])) {
-                    continue;
-                }
-
-                $strClass = $GLOBALS['PS_MICRODATA_CLASSES'][$objMicroData->type];
-
-                if (!isset($arrMicrodata[$objMicroData->type])) {
-                    $arrMicrodata[$objMicroData->type] = [];
-                }
-
-                $objMicroDataClass = new $strClass(StringUtil::deserialize($objMicroData->data, true));
-                $objMicroDataClass->match($this->arrHit['source']['keywords']);
-                $arrMicrodata[$objMicroData->type][] = $objMicroDataClass;
-            }
-
-            $arrReturn['microdata'] = $arrMicrodata;
-            $arrReturn['rich_snippet'] = $this->getRichSnippets($arrMicrodata, $arrReturn);
-        }
 
         if (isset($GLOBALS['TL_HOOKS']['psParseSearchHit']) && is_array($GLOBALS['TL_HOOKS']['psParseSearchHit'])) {
             foreach ($GLOBALS['TL_HOOKS']['psParseSearchHit'] as $arrCallback) {

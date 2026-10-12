@@ -23,24 +23,9 @@ class Options
     protected string $language = '';
 
     /**
-     * @var bool
-     */
-    protected bool $useOpenAi = false;
-
-    /**
      * @var array
      */
     protected array $categories = [];
-
-    /**
-     * @var integer
-     */
-    protected int $openAiRelevanceScore = 0;
-
-    /**
-     * @var string
-     */
-    protected string $openAiAssistant = '';
 
     /**
      * @var string
@@ -104,24 +89,6 @@ class Options
     public function setLanguage(string $strLanguage = ''): void
     {
         $this->language = $strLanguage;
-    }
-
-    /**
-     * @param string $strOpenAiAssistant
-     * @return void
-     */
-    public function setOpenAiAssistant(string $strOpenAiAssistant = ''): void
-    {
-        $this->openAiAssistant = $strOpenAiAssistant;
-    }
-
-    /**
-     * @param bool $useAi
-     * @return void
-     */
-    public function setUseOpenAi(bool $useAi = false): void
-    {
-        $this->useOpenAi = $useAi;
     }
 
     /**
@@ -203,34 +170,21 @@ class Options
     }
 
     /**
-     * @param int $openAiRelevanceScore
-     * @return void
-     */
-    public function setOpenAiRelevanceScore(int $openAiRelevanceScore = 0): void
-    {
-        $this->openAiRelevanceScore = $openAiRelevanceScore;
-    }
-
-    /**
      * @return array
      */
     public function getOptions(): array
     {
-
         return [
             'analyzer' => $this->analyzer,
             'language' => $this->language,
             'rootPageId' => $this->rootPageId,
             'perPage' => $this->perPage,
             'fuzzy' => $this->fuzzy,
-            'useOpenAi' => $this->useOpenAi,
-            'openAiAssistant' => $this->openAiAssistant,
             'openDocumentsInBrowser' => $this->openDocumentsInBrowser,
             'useRichSnippets' => $this->useRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
             'domain' => $this->domain,
-            'categories' => $this->categories,
-            'openAiRelevanceScore' => $this->openAiRelevanceScore
+            'categories' => $this->categories
         ];
     }
 }

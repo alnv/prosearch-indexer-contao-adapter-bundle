@@ -13,7 +13,6 @@ class Categories
 
     public function getCategories(): array
     {
-
         $this->setCategories();
 
         $arrCategories = [];
@@ -28,7 +27,6 @@ class Categories
 
     public function getTranslatedCategories($strRootId = ''): array
     {
-
         $this->setCategories();
 
         $arrCategories = [];

@@ -25,7 +25,6 @@ class Backend
         }
 
         $objOptions = new Options();
-
         if ($objPage = PageModel::findByPk($objIndicesModel->pageId)) {
             $objPage->loadDetails();
             $objOptions->setRootPageId($objPage->rootId);
@@ -33,7 +32,6 @@ class Backend
 
         $objOptions->setLanguage($objIndicesModel->language);
         $adapter = (new Adapter())->getInstance($objOptions->getOptions());
-
 
         $adapter->indexDocuments($objIndicesModel->id);
 

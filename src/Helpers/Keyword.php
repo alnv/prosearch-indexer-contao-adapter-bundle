@@ -44,11 +44,9 @@ class Keyword
 
     public function convertSynonyms($arrWords): array
     {
-
         $arrReturn = [];
 
         foreach ($arrWords as $strWord) {
-
             if (!$strWord) {
                 continue;
             }

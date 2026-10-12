@@ -9,7 +9,6 @@ class Credentials
 
     public function getCredentials(): array|bool
     {
-
         if (!Database::getInstance()->tableExists('tl_search_credentials')) {
             return false;
         }

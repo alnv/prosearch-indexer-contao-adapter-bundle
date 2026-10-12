@@ -7,7 +7,6 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Monolog\ContaoContext;
 use Contao\Environment;
 use Contao\PageModel;
@@ -156,8 +155,6 @@ class Elasticsearch extends AbstractAdapter
 
         $strIndex = $this->getIndexName($this->getRootIdentifierFromIndicesId($strIndicesId));
         $objIndicesModel = IndicesModel::findByPk($strIndicesId);
-        $objMicrodataModel = MicrodataModel::findByPid($strIndicesId);
-
         if (!$objIndicesModel) {
             return;
         }
@@ -169,12 +166,6 @@ class Elasticsearch extends AbstractAdapter
 
         } else {
             $this->clientDelete($strIndex, $strIndicesId);
-        }
-
-        if ($objMicrodataModel) {
-            while ($objMicrodataModel->next()) {
-                $objMicrodataModel->delete();
-            }
         }
 
         System::getContainer()
@@ -536,16 +527,6 @@ class Elasticsearch extends AbstractAdapter
         ];
 
         $arrTypes = StringUtil::deserialize($objIndices->types, true);
-        $objMicroData = MicrodataModel::findByPid($strIndicesId);
-
-        if ($objMicroData) {
-            while ($objMicroData->next()) {
-                if ($objMicroData->type && !in_array($objMicroData->type, $arrTypes)) {
-                    $arrTypes[] = $objMicroData->type;
-                }
-            }
-        }
-
         $arrDocument['types'] = array_filter($arrTypes, function ($strType) {
             return strtolower($strType);
         });

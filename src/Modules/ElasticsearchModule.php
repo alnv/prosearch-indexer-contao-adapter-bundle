@@ -61,7 +61,6 @@ class ElasticsearchModule extends Module
 
     protected function isResultsPage(): bool
     {
-
         global $objPage;
 
         return $objPage->id === $this->jumpTo;
@@ -69,7 +68,6 @@ class ElasticsearchModule extends Module
 
     protected function getRedirectUrl(): string
     {
-
         $strRedirect = '';
 
         if ($objPage = PageModel::findByPk($this->jumpTo)) {

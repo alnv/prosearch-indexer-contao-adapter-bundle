@@ -5,7 +5,6 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Controller;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Proxy;
-use Alnv\ProSearchIndexerContaoAdapterBundle\AI\AiElasticsearch;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Entity\Result;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
@@ -93,19 +92,6 @@ class ElasticsearchController extends AbstractController
         }
 
         $arrHits = $arrResults['results']['hits'] ?? [];
-
-        if ($arrElasticOptions['useOpenAi'] ?? '') {
-            $intFirstScore = ((int)($arrHits[0]['_score'] ?? 0));
-            $intSearchWords = count($arrKeywords['words'] ?? []);
-
-            if (empty($arrHits) || ($arrElasticOptions['openAiRelevanceScore'] > 0 && ($arrElasticOptions['openAiRelevanceScore'] > $intFirstScore && $intSearchWords > 1))) {
-                $arrHits = (new AiElasticsearch($arrElasticOptions['openAiAssistant'], []))->getHits($arrKeywords['keyword']);
-                $arrResults['results']['didYouMean'] = [];
-                $arrResults['results']['autocomplete'] = [];
-                $arrResults['results']['max_score'] = 0;
-            }
-        }
-
         $arrResults['results']['hits'] = [];
 
         $objModule = ModuleModel::findByPk($strModuleId);
@@ -293,13 +279,8 @@ class ElasticsearchController extends AbstractController
         $strLanguage = $objModule?->psLanguage ? $objModule->psLanguage : '';
         $strDomains = $objModule?->psDomains ? $objModule->psDomains : '';
 
-        $strOpenAssistant = $objModule?->psOpenAssistant ? $objModule->psOpenAssistant : '';
-        $blnUseOpenAi = (bool)$objModule?->psUseOpenAi;
-
         $objElasticOptions = new Options();
         $objElasticOptions->setLanguage($strLanguage);
-        $objElasticOptions->setOpenAiAssistant($strOpenAssistant);
-        $objElasticOptions->setUseOpenAi($blnUseOpenAi);
         $objElasticOptions->setRootPageId($strRootPageId);
         $objElasticOptions->setPerPage($objModule?->perPage ?: 50);
         $objElasticOptions->setAnalyzer($strAnalyzer);
@@ -308,7 +289,6 @@ class ElasticsearchController extends AbstractController
         $objElasticOptions->setUseRichSnippets((bool)$objModule?->psUseRichSnippets);
         $objElasticOptions->setOpenDocumentsInBrowser(((bool)$objModule?->psOpenDocumentInBrowser));
         $objElasticOptions->setMinKeywordLength(($objModule?->minKeywordLength ?: 3));
-        $objElasticOptions->setOpenAiRelevanceScore((int)($objModule?->psOpenAiRelevance ?: 0));
         $objElasticOptions->setDomain($strDomains);
 
         return $objElasticOptions->getOptions();
