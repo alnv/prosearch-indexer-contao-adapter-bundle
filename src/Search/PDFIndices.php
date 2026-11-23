@@ -100,7 +100,7 @@ class PDFIndices extends Searcher
 
                 $arrDocument = [
                     'text' => $arrText,
-                    'document' => [Text::tokenize($objPdf->getText())],
+                    'document' => [Text::tokenize(Text::toValidUtf8($objPdf->getText()))],
                     'strong' => [],
                     'h1' => [],
                     'h2' => [],
