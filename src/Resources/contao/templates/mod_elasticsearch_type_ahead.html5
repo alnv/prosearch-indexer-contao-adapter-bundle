@@ -1,45 +1,28 @@
 <?php $this->extend('block_unsearchable'); ?>
 <?php $this->block('content'); ?>
+<div id="<?= $this->elementId ?>" class="elasticsearch-container ps-search ps-search--list" data-prosearch="<?= $this->config ?>">
+  <form id="<?= $this->formId ?>" class="ps-search__form" action="<?= $this->action ?>" method="post" role="search" aria-label="<?= $this->formLabel ?>">
+    <input type="hidden" name="FORM_SUBMIT" value="prosearch_search">
+    <input type="hidden" name="REQUEST_TOKEN" value="<?= $this->requestToken ?>">
+    <div class="elasticsearch-input ps-combobox">
+      <label for="<?= $this->inputId ?>"<?php if (!$this->inputLabelVisible): ?> class="invisible"<?php endif; ?>><?= $this->inputLabel ?></label>
+      <input id="<?= $this->inputId ?>" class="ps-search__input" type="search" name="keywords" value="<?= $this->keywordsValue ?>"<?php if ($this->keywordLabel): ?> placeholder="<?= $this->keywordLabel ?>"<?php endif; ?> autocomplete="off" spellcheck="false" autocapitalize="off" enterkeyhint="search" aria-describedby="<?= $this->hintId ?>">
+      <button type="submit" class="elasticsearch-input-button">
+        <?php if ($this->searchIcon): ?><img src="<?= $this->searchIcon ?>" alt="" class="button-search-icon" data-ps-icon><?php endif; ?>
+        <?php if ($this->loadingIcon): ?><img src="<?= $this->loadingIcon ?>" alt="" class="button-loading-icon" data-ps-loading hidden><?php endif; ?>
+        <span<?php if (!$this->buttonLabelVisible): ?> class="invisible"<?php endif; ?>><?= $this->buttonLabel ?></span>
+      </button>
+      <ul id="<?= $this->listboxId ?>" class="ps-combobox__listbox" role="listbox" aria-label="<?= $this->suggestionsLabel ?>" data-ps-listbox hidden></ul>
+    </div>
+    <p id="<?= $this->hintId ?>" class="ps-search__hint invisible"><?= $this->hint ?></p>
+  </form>
 
-<div id="<?= $this->elementId ?>" class="elasticsearch-container" v-bind:class="{loading_results: loading}">
+  <p id="<?= $this->statusId ?>" class="ps-search__status invisible" role="status" aria-live="polite" aria-atomic="true" data-ps-status></p>
 
-    <form<?php if ($this->action): ?> action="<?= $this->action ?>"<?php endif; ?> method="GET" ref="form">
-        <div class="elasticsearch-input">
-            <?php if ($strLabelText = ($GLOBALS['TL_LANG']['MSC']['searchInputLabel'] ?? '')): ?>
-                <label v-if="!didYouMean.length" for="ctrl_keywords_<?= $this->uniqueId ?>"><?= $strLabelText ?></label>
-            <?php endif; ?>
-            <label v-if="didYouMean && didYouMean.length"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @keyup.enter.stop.prevent="setDidYouMeanToKeyword" @click.stop.prevent="setDidYouMeanToKeyword" href="#" role="button"><span>{{ didYouMean[0] }}</span></a>?</label>
-            <input type="search" autocomplete="off" v-model="keywords" name="keywords" id="ctrl_keywords_<?= $this->uniqueId ?>" value="<?= $this->keyword ?>" spellcheck=false autocorrect="off" autocomplete="off" autocapitalize="off">
-            <button type="submit" id="ctrl_submit_<?= $this->uniqueId ?>" @click="submitSearch" @keyup.enter="submitSearch" tabindex="0" class="elasticsearch-input-button">
-                <img v-if="!loading" src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonIcon'] ?? '') ?>" alt="<?= $this->search ?>">
-                <img v-else src="<?= ($GLOBALS['TL_LANG']['MSC']['searchButtonLoadingIcon'] ?? '') ?>" alt="">
-                <?php if ($strButtonText = ($GLOBALS['TL_LANG']['MSC']['searchButtonLabel'] ?? '')): ?>
-                    <span><?= $strButtonText ?></span>
-                <?php endif; ?>
-            </button>
-        </div>
-    </form>
-
-    <?php if ($this->isResultPage): ?>
-        <div class="suggest-results" v-if="results.length && keywords">
-            <p class="suggest-results-for"><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsForLabel'] ?? '') ?><span>{{ keywords }}</span></p>
-            <p v-if="didYouMean.length" class="suggest-results-mean"><?= $GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?> <a @keyup.enter.stop.prevent="setDidYouMeanToKeyword" @click.stop.prevent="setDidYouMeanToKeyword" href="#"><span>{{ didYouMean[0] }}</span></a>?</p>
-        </div>
-        <div class="search-results" v-if="results.length && keywords">
-            <div v-for="result in results" v-html="result.template" class="result-hit" @click="sendStat"></div>
-            <?php if ($this->perPage): ?>
-            <button v-if="loadMoreButton" class="elasticsearch-more-button" @click.stop.prevent="loadMoreResults" @keyup.enter.stop.prevent="loadMoreResults"><span><?= ($GLOBALS['TL_LANG']['MSC']['searchResultsMoreButton'] ?? '') ?></span></button>
-            <?php endif; ?>
-        </div>
-        <div v-if="!results.length && keywords && !loading && submitted" class="no-search-results">
-            <p><?= ($GLOBALS['TL_LANG']['MSC']['noSearchResults'] ?? '') ?></p>
-        </div>
-    <?php endif; ?>
-
+  <?php if ($this->showResults): ?>
+    <div id="<?= $this->panelId ?>" class="ps-search__results" data-ps-panel>
+      <div class="ps-search__content" data-ps-content><?= $this->panel ?></div>
+    </div>
+  <?php endif; ?>
 </div>
-
-<?php if ($this->script): ?>
-    <?= $this->script ?>
-<?php endif; ?>
-
 <?php $this->endblock(); ?>

@@ -2,14 +2,33 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
-use Contao\PageModel;
-use Contao\System;
 use Contao\Database;
+use Contao\PageModel;
 use Contao\StringUtil;
-use Symfony\Component\HttpFoundation\Request;
 
 class Categories
 {
+    public static function normalize(string $category): string
+    {
+        $category = mb_strtolower(trim(StringUtil::decodeEntities($category)));
+
+        return (string) preg_replace('/[^\p{L}\p{N}_-]+/u', '', $category);
+    }
+
+    public static function normalizeList(string $categories): array
+    {
+        $list = [];
+
+        foreach (explode(',', $categories) as $category) {
+            $category = self::normalize($category);
+
+            if ('' !== $category && !\in_array($category, $list, true)) {
+                $list[] = $category;
+            }
+        }
+
+        return $list;
+    }
 
     public function getCategories(): array
     {
@@ -17,7 +36,7 @@ class Categories
         $this->setCategories();
 
         $arrCategories = [];
-        $objCategories = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories ORDER BY tstamp')->execute();
+        $objCategories = Database::getInstance()->prepare("SELECT category FROM tl_ps_categories WHERE category!='' ORDER BY category")->execute();
 
         while ($objCategories->next()) {
             $arrCategories[] = $objCategories->category;
@@ -29,104 +48,104 @@ class Categories
     public function getTranslatedCategories($strRootId = ''): array
     {
 
-        $this->setCategories();
-
         $arrCategories = [];
         $strCurrentLanguage = $GLOBALS['TL_LANGUAGE'] ?? '';
 
-        if ($objRootPage = PageModel::findByPk($strRootId)) {
+        if ($strRootId && ($objRootPage = PageModel::findByPk($strRootId))) {
             $strCurrentLanguage = $objRootPage->language;
         }
 
         if (!$strCurrentLanguage) {
-            $objRootPage = Database::getInstance()->prepare('SELECT * FROM tl_page WHERE (type=? OR type=?) AND `language`!=?')->limit(1)->execute('rootfallback', 'root', '');
-            $strCurrentLanguage = $objRootPage?->language;
+            $objRootPage = Database::getInstance()->prepare("SELECT language FROM tl_page WHERE (type=? OR type=?) AND `language`!='' ORDER BY type='rootfallback' DESC, sorting")->limit(1)->execute('rootfallback', 'root');
+            $strCurrentLanguage = (string) $objRootPage->language;
         }
 
-        $objCategories = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE exist=? ORDER BY category')->execute('1');
+        $objCategories = Database::getInstance()->prepare("SELECT id, category, translating FROM tl_ps_categories WHERE exist='1' AND category!='' ORDER BY category")->execute();
 
         while ($objCategories->next()) {
-
-            if (!$objCategories->category) {
-                continue;
-            }
-
-            $strLabel = $objCategories->category;
-            $arrTranslations = StringUtil::deserialize($objCategories->translating, true);
-
-            foreach ($arrTranslations as $arrTranslation) {
-
-                if ($arrTranslation['language'] == $strCurrentLanguage) {
-                    $strLabel = $arrTranslation['label'] ?? '';
-                }
-            }
-
-            $arrSet = [
+            $arrCategories[$objCategories->category] = [
                 'id' => $objCategories->id,
                 'key' => $objCategories->category,
-                'label' => StringUtil::decodeEntities($strLabel)
+                'label' => self::translate($objCategories->category, $objCategories->translating, (string) $strCurrentLanguage)
             ];
-
-            $arrCategories[$objCategories->category] = $arrSet;
         }
 
         return $arrCategories;
     }
 
-    public function setCategories(): void
+    public static function translate(string $category, mixed $translations, string $language): string
     {
+        $language = self::normalizeLanguage($language);
+        $primary = explode('_', $language)[0];
+        $exact = $fallback = '';
 
-        $arrCategories = [];
-
-        $objIndices = Database::getInstance()->prepare('SELECT DISTINCT (types) FROM tl_indices WHERE state=?')->execute(States::ACTIVE);
-        while ($objIndices->next()) {
-            foreach (StringUtil::deserialize($objIndices->types, true) as $strType) {
-
-                if (!$strType) {
-                    continue;
-                }
-
-                $strType = trim($strType);
-
-                if (!in_array($strType, $arrCategories)) {
-                    $arrCategories[] = $strType;
-                }
-            }
-        }
-
-        $objMicrodata = Database::getInstance()->prepare('SELECT DISTINCT (type) FROM tl_microdata')->execute();
-        while ($objMicrodata->next()) {
-
-            if (!$objMicrodata->type) {
+        foreach (StringUtil::deserialize($translations, true) as $translation) {
+            if (!\is_array($translation)) {
                 continue;
             }
 
-            $objMicrodata->type = trim($objMicrodata->type);
+            $label = trim(StringUtil::decodeEntities((string) ($translation['label'] ?? '')));
+            $translationLanguage = self::normalizeLanguage((string) ($translation['language'] ?? ''));
 
-            if (!in_array($objMicrodata->type, $arrCategories)) {
-                $arrCategories[] = $objMicrodata->type;
+            if ('' === $label || '' === $translationLanguage) {
+                continue;
+            }
+
+            if ($translationLanguage === $language) {
+                $exact = $label;
+            } elseif ('' === $fallback && explode('_', $translationLanguage)[0] === $primary) {
+                $fallback = $label;
             }
         }
 
-        if (System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest(System::getContainer()->get('request_stack')->getCurrentRequest() ?? Request::create(''))) {
-            Database::getInstance()->prepare('UPDATE tl_ps_categories %s')->set(['tstamp' => time(), 'exist' => ''])->execute();
-        }
+        return $exact ?: ($fallback ?: $category);
+    }
 
-        foreach ($arrCategories as $strCategory) {
+    public function setCategories(): array
+    {
 
-            $arrSet = [
-                'exist' => '1',
-                'tstamp' => time(),
-                'category' => $strCategory
-            ];
+        $result = ['created' => 0, 'activated' => 0, 'deactivated' => 0];
+        $used = [];
 
-            $objCategory = Database::getInstance()->prepare('SELECT * FROM tl_ps_categories WHERE category=?')->limit(1)->execute($strCategory);
+        $objIndices = Database::getInstance()->prepare('SELECT DISTINCT types FROM tl_indices WHERE state=?')->execute(States::ACTIVE);
 
-            if ($objCategory->numRows) {
-                Database::getInstance()->prepare('UPDATE tl_ps_categories %s WHERE id=?')->set($arrSet)->execute($objCategory->id);
-            } else {
-                Database::getInstance()->prepare('INSERT INTO tl_ps_categories %s')->set($arrSet)->execute();
+        while ($objIndices->next()) {
+            foreach (StringUtil::deserialize($objIndices->types, true) as $strType) {
+                $strType = self::normalize((string) $strType);
+
+                if ('' !== $strType) {
+                    $used[$strType] = true;
+                }
             }
         }
+
+        $existing = [];
+        $objCategories = Database::getInstance()->prepare('SELECT id, category, exist FROM tl_ps_categories')->execute();
+        while ($objCategories->next()) {
+            $existing[$objCategories->category] = ['id' => (int) $objCategories->id, 'exist' => '1' === (string) $objCategories->exist];
+        }
+
+        foreach ($existing as $category => $row) {
+            $inUse = isset($used[$category]);
+
+            if ($inUse !== $row['exist']) {
+                Database::getInstance()->prepare('UPDATE tl_ps_categories %s WHERE id=?')->set(['tstamp' => time(), 'exist' => $inUse ? '1' : ''])->execute($row['id']);
+                ++$result[$inUse ? 'activated' : 'deactivated'];
+            }
+        }
+
+        foreach (array_keys($used) as $category) {
+            if (!isset($existing[$category])) {
+                Database::getInstance()->prepare('INSERT INTO tl_ps_categories %s')->set(['tstamp' => time(), 'category' => $category, 'exist' => '1'])->execute();
+                ++$result['created'];
+            }
+        }
+
+        return $result;
+    }
+
+    private static function normalizeLanguage(string $language): string
+    {
+        return strtolower(str_replace('-', '_', trim($language)));
     }
 }

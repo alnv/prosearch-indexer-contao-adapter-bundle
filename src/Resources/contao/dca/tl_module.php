@@ -1,21 +1,16 @@
 <?php
 
 use Contao\CoreBundle\Util\LocaleUtil;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Contao\Environment;
-use Contao\Database;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psUseOpenAi';
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psSearchCategories;psAutoCompletionType;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{open_ai_legend},psUseOpenAi;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psAnalyzer,psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psUseRichSnippets,psOpenDocumentInBrowser;{open_ai_legend},psUseOpenAi;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psLanguage,psDomains;psSearchCategories;psAutoCompletionType;minKeywordLength,perPage,fuzzy,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';
-$GLOBALS['TL_DCA']['tl_module']['subpalettes']['psUseOpenAi'] = 'psOpenAssistant,psOpenAiRelevance';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['psSearchCategories'] = [
     'inputType' => 'checkboxWizard',
@@ -25,7 +20,15 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psSearchCategories'] = [
         'tl_class' => 'w50'
     ],
     'options_callback' => function () {
-        return (new Categories())->getCategories();
+        $options = [];
+        $labels = (new Categories())->getTranslatedCategories();
+
+        foreach ((new Categories())->getCategories() as $category) {
+            $label = $labels[$category]['label'] ?? $category;
+            $options[$category] = $label === $category ? $category : $label . ' (' . $category . ')';
+        }
+
+        return $options;
     },
     'sql' => 'blob NULL',
 ];
@@ -52,14 +55,6 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psResultsTemplate'] = [
         return $this->getTemplateGroup('elasticsearch_result');
     },
     'sql' => "varchar(64) NOT NULL default ''"
-];
-
-$GLOBALS['TL_DCA']['tl_module']['fields']['psUseRichSnippets'] = [
-    'inputType' => 'checkbox',
-    'eval' => [
-        'tl_class' => 'clr'
-    ],
-    'sql' => "char(1) NOT NULL default ''"
 ];
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['psPreventCssLoading'] = [
@@ -108,63 +103,4 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['psOpenDocumentInBrowser'] = [
         'tl_class' => 'clr'
     ],
     'sql' => "char(1) NOT NULL default '1'"
-];
-
-$GLOBALS['TL_DCA']['tl_module']['fields']['psAnalyzer'] = [
-    'inputType' => 'select',
-    'default' => 'contao',
-    'eval' => [
-        'chosen' => true,
-        'tl_class' => 'w50',
-        'includeBlankOption' => true
-    ],
-    'options_callback' => function () {
-        $objAdapter = (new Adapter())->getInstance((new Options())->getOptions());
-        $arrAnalyzer = \array_keys($objAdapter->getAnalyzer());
-        $arrAnalyzer[] = 'whitespace';
-        $arrAnalyzer[] = 'standard';
-        $arrAnalyzer[] = 'keyword';
-        $arrAnalyzer[] = 'simple';
-        $arrAnalyzer[] = 'stop';
-        return $arrAnalyzer;
-    },
-    'reference' => &$GLOBALS['TL_LANG']['MSC']['psAnalyzer'],
-    'sql' => "varchar(64) NOT NULL default 'contao'"
-];
-
-$GLOBALS['TL_DCA']['tl_module']['fields']['psOpenAssistant'] = [
-    'inputType' => 'select',
-    'eval' => [
-        'chosen' => true,
-        'tl_class' => 'w50',
-        'includeBlankOption' => true
-    ],
-    'options_callback' => function () {
-        $arReturn = [];
-        if (Database::getInstance()->tableExists('tl_ai_assistants')) {
-            $objAssistants = Database::getInstance()->prepare('SELECT * FROM tl_ai_assistants ORDER BY `name`')->execute();
-            while ($objAssistants->next()) {
-                $arReturn[] = $objAssistants->name;
-            }
-        }
-        return $arReturn;
-    },
-    'sql' => "varchar(128) NOT NULL default ''"
-];
-$GLOBALS['TL_DCA']['tl_module']['fields']['psOpenAiRelevance'] = [
-    'inputType' => 'text',
-    'eval' => [
-        'minval' => 0,
-        'maxval' => 100,
-        'tl_class' => 'w50'
-    ],
-    'sql' => ['type' => 'integer', 'notnull' => false, 'unsigned' => true, 'default' => 0]
-];
-$GLOBALS['TL_DCA']['tl_module']['fields']['psUseOpenAi'] = [
-    'inputType' => 'checkbox',
-    'eval' => [
-        'tl_class' => 'clr',
-        'submitOnChange' => true
-    ],
-    'sql' => "char(1) NOT NULL default ''"
 ];

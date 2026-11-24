@@ -1,5 +1,6 @@
 <?php
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Contao\System;
 use Contao\DC_Table;
 
@@ -8,6 +9,10 @@ $GLOBALS['TL_DCA']['tl_ps_categories'] = [
         'dataContainer' => DC_Table::class,
         'closed' => true,
         'backendSearchIgnore' => true,
+        // categories in use are maintained automatically (new ones created, "Aktiv" updated)
+        'onload_callback' => [static function (): void {
+            (new Categories())->setCategories();
+        }],
         'sql' => [
             'keys' => [
                 'id' => 'primary',

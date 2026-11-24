@@ -1,4 +1,5 @@
-<script>
+<?php /* legacy front end (ProSearch < 4), used by custom templates without data-prosearch */ ?>
+<script<?= $this->nonce ? ' nonce="'.$this->nonce.'"' : '' ?>>
     window.elasticInstaces = window.elasticInstaces || [];
     (function () {
         let objState = {
@@ -6,29 +7,22 @@
             initial: true,
             timeout: null,
             categories: <?= \json_encode($this->inputCategories, null, 512) ?>,
+            requestToken: <?= \json_encode((string) $this->requestToken, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             loading: false,
             hasResults: false,
             resultsOnly: false,
             autoCompleteJS: null,
             loadMoreButton: true,
             lastSort: '',
-            timer: null,
-            time: 0,
-            showOpenAiText: false,
-            openAi: <?= $this->openAi ? 'true' : 'false' ?>,
             views: {
                 total: 0,
                 results: [],
                 didYouMean: [],
                 autocompletion: [],
-                categories: [],
-                globalRichSnippets: {}
+                categories: []
             },
             options: {
                 categories: <?= \json_encode($this->categoryOptions, null, 512) ?>
-            },
-            richSnippets: {
-                faq: {}
             },
             urls: []
         };
@@ -75,8 +69,6 @@
                         this.loading = false;
                         return;
                     }
-
-                    this.startAiTimer();
 
                     let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
                     this.$http.post('/elastic/search/results?query=' + this.keywords + searchAfter, {
@@ -134,12 +126,9 @@
                         }
 
                         this.countResults();
-                        this.views.globalRichSnippets = res.body.globalRichSnippets;
                         this.maxScore = res.body.results['max_score'];
-                        this.setFaqRichSnippets();
                         this.loading = false;
                         this.resultsOnly = false;
-                        this.stopAiTimer();
                         this.clickOutside();
                         this.autoFocusFirstInputField();
 
@@ -151,23 +140,6 @@
                             this.$refs['elasticsearchResultsContainer'].querySelector('input[type="search"]').focus();
                         }
                     }.bind(this), 50);
-                },
-                startAiTimer: function () {
-                    if (!this.openAi) {
-                        return;
-                    }
-                    this.timer = setInterval(function () {
-                        this.time += 1;
-                        if (this.time > 6 && !this.showOpenAiText) {
-                            this.showOpenAiText = true;
-                        }
-                    }.bind(this), 1000);
-                },
-                stopAiTimer: function () {
-                    clearInterval(this.timer);
-                    this.showOpenAiText = false;
-                    this.timer = null;
-                    this.time = 0;
                 },
                 add2ResultsByCategory: function (category, results) {
                     let added = false;
@@ -198,28 +170,6 @@
                     this.keywords = this.views.didYouMean[0];
                     this.views.didYouMean = [];
                     this.fetch({})
-                },
-                setFaqRichSnippets: function () {
-                    this.richSnippets['faq'] = {};
-                    if (Object.keys(this.views.globalRichSnippets).length && this.views.globalRichSnippets.hasOwnProperty('FAQPage')) {
-                        for (let i = 0; i < this.views.globalRichSnippets['FAQPage'].length; i++) {
-                            let faqPages = this.views.globalRichSnippets['FAQPage'][i];
-                            for (let j = 0; j < faqPages['mainEntity'].length; j++) {
-                                let page = faqPages['mainEntity'][j];
-                                if (page['name'] && page['acceptedAnswer'] && page['acceptedAnswer']['text'] && page['_matched']) {
-                                    this.richSnippets['faq'][page.name] = {
-                                        question: page['name'],
-                                        answer: page['acceptedAnswer']['text'],
-                                        active: false
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                toggleFaqSnippet: function (name) {
-                    this.richSnippets['faq'][name]['active'] = !this.richSnippets['faq'][name]['active'];
-                    this.$forceUpdate();
                 },
                 groupResults: function (hits) {
 
@@ -334,17 +284,33 @@
                     if (!href) {
                         return;
                     }
+                    this.sendHrefStat(href);
+                },
+                sendHrefStat: function (href, retried) {
                     this.$http.post('/stat/click?query=' + this.keywords, {
                             url: href,
-                            categories: this.categories
+                            categories: this.categories,
+                            REQUEST_TOKEN: this.requestToken
                         },
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     ).then(function (res) {
-                        //
-                    });
+                        this.adoptRequestToken(res);
+                    }.bind(this), function (res) {
+                        // Expired token (e.g. page from the HTTP cache): use the fresh token and retry once
+                        if (this.adoptRequestToken(res) && 403 === res.status && !retried) {
+                            this.sendHrefStat(href, true);
+                        }
+                    }.bind(this));
+                },
+                adoptRequestToken: function (res) {
+                    if (res && res.body && res.body.requestToken) {
+                        this.requestToken = res.body.requestToken;
+                        return true;
+                    }
+                    return false;
                 },
                 clickOutside: function () {
                     if (this.$refs['elasticsearchContainerInside']) {

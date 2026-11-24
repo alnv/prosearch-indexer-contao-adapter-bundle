@@ -2,25 +2,30 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Search;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Collector\PageDocumentCollector;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Collector\PdfDocumentCollector;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\IndicesRepository;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Search\Document;
 use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Contao\CoreBundle\Search\Indexer\IndexerInterface;
-use Contao\StringUtil;
+use Contao\System;
+use Psr\Log\LogLevel;
 
-/**
- * https://docs.contao.org/dev/framework/search-indexing/
- */
 class ProSearchIndexer implements IndexerInterface
 {
-
     private ContaoFramework $framework;
 
     private bool $indexProtected;
 
-    public function __construct(ContaoFramework $framework, bool $indexProtected = false)
+    public function __construct(
+        ContaoFramework                $framework,
+        bool                           $indexProtected = false,
+        private ?PageDocumentCollector $pageCollector = null,
+        private ?PdfDocumentCollector  $pdfCollector = null,
+        private ?IndicesRepository     $repository = null,
+    )
     {
         $this->framework = $framework;
         $this->indexProtected = $indexProtected;
@@ -28,7 +33,6 @@ class ProSearchIndexer implements IndexerInterface
 
     public function index(Document $document): void
     {
-
         if (200 !== $document->getStatusCode()) {
             $this->throwBecause('HTTP Statuscode is not equal to 200.');
         }
@@ -39,13 +43,13 @@ class ProSearchIndexer implements IndexerInterface
 
         try {
             $title = $document->getContentCrawler()->filterXPath('//head/title')->first()->text(null, true);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             $title = '';
         }
 
         try {
             $language = $document->getContentCrawler()->filterXPath('//html[@lang]')->first()->attr('lang');
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             $language = 'en';
         }
 
@@ -53,7 +57,7 @@ class ProSearchIndexer implements IndexerInterface
             'title' => $title,
             'language' => $language,
             'protected' => false,
-            'groups' => []
+            'groups' => [],
         ];
 
         $this->extendMetaFromJsonLdScripts($document, $meta);
@@ -79,59 +83,58 @@ class ProSearchIndexer implements IndexerInterface
 
         $this->framework->initialize();
 
-        new Indices($document, $meta);
-        new PDFIndices($document, $meta);
+        $pageError = null;
+
+        try {
+            $this->pages()->collect($document, $meta);
+        } catch (IndexerException $e) {
+            $pageError = $e;
+        } catch (\Throwable $e) {
+            Logger::set('ProSearch: indexing ' . $document->getUri() . ' failed: ' . $e->getMessage(), LogLevel::ERROR, __METHOD__);
+            $pageError = new IndexerException('Indexing failed: ' . $e->getMessage(), 0, $e);
+        }
+
+        // linked PDFs are captured even if the page itself is skipped (e.g. canonical page)
+        try {
+            $this->pdfs()->collect($document, $meta);
+        } catch (\Throwable $e) {
+            Logger::set('ProSearch: indexing the PDF files of ' . $document->getUri() . ' failed: ' . $e->getMessage(), LogLevel::ERROR, __METHOD__);
+        }
+
+        if (null !== $pageError) {
+            throw $pageError;
+        }
     }
 
     public function delete(Document $document): void
     {
-
         $this->framework->initialize();
-
-        $strUrl = $document->getUri()->__toString();
-        $strUrl = StringUtil::decodeEntities($strUrl);
-        $strUrl = strtok($strUrl, '?');
-
-        $objIndices = IndicesModel::findByUrl($strUrl);
-
-        if (!$objIndices) {
-            return;
-        }
-
-        $arrSettings = StringUtil::deserialize($objIndices->settings, true);
-
-        if (\in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
-            return;
-        }
-
-        $objIndices->state = States::DELETE;
-        $objIndices->save();
+        $this->repo()->markDeletedByUrl(PageDocumentCollector::normalizeUrl($document->getUri()->__toString()));
     }
 
     public function clear(): void
     {
-
         $this->framework->initialize();
+        $this->repo()->markAllDeleted();
+    }
 
-        $objIndices = IndicesModel::findAll();
-        if (!$objIndices) {
-            return;
-        }
+    private function pages(): PageDocumentCollector
+    {
+        return $this->pageCollector ??= System::getContainer()->get(PageDocumentCollector::class);
+    }
 
-        while ($objIndices->next()) {
-            $arrSettings = StringUtil::deserialize($objIndices->settings, true);
-            if (\in_array('preventIndexMetadata', $arrSettings) || in_array('preventIndex', $arrSettings)) {
-                continue;
-            }
+    private function pdfs(): PdfDocumentCollector
+    {
+        return $this->pdfCollector ??= System::getContainer()->get(PdfDocumentCollector::class);
+    }
 
-            $objIndices->state = States::DELETE;
-            $objIndices->save();
-        }
+    private function repo(): IndicesRepository
+    {
+        return $this->repository ??= System::getContainer()->get(IndicesRepository::class);
     }
 
     private function throwBecause(string $message, bool $onlyWarning = true): void
     {
-
         if ($onlyWarning) {
             throw IndexerException::createAsWarning($message);
         }
@@ -141,7 +144,6 @@ class ProSearchIndexer implements IndexerInterface
 
     private function extendMetaFromJsonLdScripts(Document $document, array &$meta): void
     {
-
         $jsonLds = $document->extractJsonLdScripts('https://schema.contao.org/', 'Page');
 
         if (0 === \count($jsonLds)) {

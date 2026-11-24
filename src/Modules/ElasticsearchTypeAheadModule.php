@@ -3,29 +3,27 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Modules;
 
 use Contao\BackendTemplate;
-use Contao\Combiner;
-use Contao\FrontendTemplate;
-use Contao\Input;
 use Contao\Module;
-use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
 
 class ElasticsearchTypeAheadModule extends Module
 {
+    use SearchModuleTrait;
 
     protected $strTemplate = 'mod_elasticsearch_type_ahead';
 
     public function generate(): string
     {
-        if (System::getContainer()->get('request_stack')->getCurrentRequest()->get('_scope') == 'backend') {
+        $request = System::getContainer()->get('request_stack')->getCurrentRequest();
 
+        if ($request && System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request)) {
             $objTemplate = new BackendTemplate('be_wildcard');
             $objTemplate->id = $this->id;
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
-            $objTemplate->href = 'contao?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
-            $objTemplate->wildcard = '### ' . strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch_type_ahead'][0] ?? '') . ' ###';
+            $objTemplate->href = 'contao?do=themes&amp;table=tl_module&amp;act=edit&amp;id='.$this->id;
+            $objTemplate->wildcard = '### '.strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch_type_ahead'][0] ?? '').' ###';
 
             return $objTemplate->parse();
         }
@@ -37,102 +35,53 @@ class ElasticsearchTypeAheadModule extends Module
     {
         global $objPage;
 
-        $strKeywords = trim(Input::get('keywords'));
+        $search = $this->getSearchRequest();
 
+        // template variables of ProSearch < 4 (also used by custom templates)
         $this->Template->uniqueId = $this->id;
         $this->Template->rootPageId = $objPage->rootId;
         $this->Template->redirect = $this->getRedirectUrl();
         $this->Template->isResultPage = $this->isResultsPage();
-        $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
-        $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
-        $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
-
-        $this->Template->keyword = StringUtil::specialchars($strKeywords);
+        $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'] ?? '';
+        $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel'] ?? '');
+        $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel'] ?? '');
+        $this->Template->keyword = StringUtil::specialchars($search['keywords']);
         $this->Template->action = $this->getActionUrl();
-
         $this->Template->categories = StringUtil::deserialize($this->psSearchCategories, true);
         $this->Template->elementId = $this->getElementId();
+        $this->Template->requestToken = System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue();
 
-        $this->getJsScript();
-    }
+        if ($this->isLegacyTemplate()) {
+            $this->loadLegacyAssets([
+                'elasticsearch-default' => ['autoComplete.scss', 'default.scss'],
+                'elasticsearch_type_ahead' => ['elasticsearch_type_ahead.scss'],
+            ], 'j_elasticsearch_type_ahead');
 
-    protected function isResultsPage(): bool
-    {
-
-        global $objPage;
-
-        return $objPage->id === $this->jumpTo;
-    }
-
-    protected function getRedirectUrl(): string
-    {
-
-        $strRedirect = '';
-
-        if ($objPage = PageModel::findByPk($this->jumpTo)) {
-            $strRedirect = $objPage->getFrontendUrl();
-        }
-
-        return $strRedirect;
-    }
-
-    protected function getActionUrl(): string
-    {
-
-        if ($objJump = PageModel::findByPk($this->jumpTo)) {
-            return $objJump->getFrontendUrl();
-        }
-
-        global $objPage;
-
-        $pageRegistry = System::getContainer()->get('contao.routing.page_registry');
-
-        if ($pageRegistry->isRoutable($objPage)) {
-            return $objPage->getFrontendUrl();
-        }
-
-        return '/';
-    }
-
-    protected function getJsScript(): void
-    {
-
-        $this->loadAssets();
-
-        $objTemplate = new FrontendTemplate('j_elasticsearch_type_ahead');
-        $objTemplate->setData($this->Template->getData());
-
-        $this->Template->script = $objTemplate->parse();
-    }
-
-    private function getElementId(): string
-    {
-        return 'id_search_' . $this->id;
-    }
-
-    protected function loadAssets(): void
-    {
-
-        $objCombiner = new Combiner();
-        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/vue.min.js');
-        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/vue-resource.min.js');
-        $GLOBALS['TL_HEAD']['vue'] = '<script src="' . $objCombiner->getCombinedFile() . '"></script>';
-
-        $objCombiner = new Combiner();
-        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/autoComplete.min.js');
-        $GLOBALS['TL_HEAD']['autoComplete'] = '<script src="' . $objCombiner->getCombinedFile() . '"></script>';
-
-        if ($this->psPreventCssLoading) {
             return;
         }
 
-        $objCombiner = new Combiner();
-        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/autoComplete.scss');
-        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/default.scss');
-        $GLOBALS['TL_HEAD']['elasticsearch-default'] = '<link href="' . $objCombiner->getCombinedFile() . '" rel="stylesheet">';
+        // results are listed here on the results page or if there is no results page
+        $showResults = $this->isResultsPage() || '' === $this->getRedirectUrl();
+        $panel = $showResults && $search['submitted'] ? $this->renderResults($search, false) : null;
 
-        $objCombiner = new Combiner();
-        $objCombiner->add('bundles/alnvprosearchindexercontaoadapter/elasticsearch_type_ahead.scss');
-        $GLOBALS['TL_HEAD']['elasticsearch_type_ahead'] = '<link href="' . $objCombiner->getCombinedFile() . '" rel="stylesheet">';
+        $this->Template->showResults = $showResults;
+        $this->Template->panel = $panel['html'] ?? '';
+
+        $this->addFrontendData($this->Template, [
+            'type' => 'list',
+            'group' => false,
+            'live' => false,
+            'nativeSubmit' => !$showResults,
+            'suggest' => 'advanced' === $this->psAutoCompletionType ? 'hits' : 'terms',
+            'categories' => $search['categories'],
+            'searchAfter' => $panel['searchAfter'] ?? '',
+            'loaded' => $panel['count'] ?? 0,
+            'total' => $panel['total'] ?? 0,
+        ], $search['keywords']);
+
+        $this->loadFrontendAssets([
+            'elasticsearch-default' => ['default.scss'],
+            'elasticsearch_type_ahead' => ['elasticsearch_type_ahead.scss'],
+        ]);
     }
 }

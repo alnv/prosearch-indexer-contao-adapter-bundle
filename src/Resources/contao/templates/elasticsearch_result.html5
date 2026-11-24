@@ -1,27 +1,26 @@
-<a href="<?= $this->usedUrl ?>" target="<?= $this->target ?>" class="hit<?= (!empty($this->mainImage) && $this->mainImage['icon']?' icon':'') . (empty($this->mainImage)?'':' with-image') ?>">
-    <?php if ($this->rich_snippet): ?>
-        <?= $this->rich_snippet ?>
-    <?php else: ?>
-        <?php if (!empty($this->mainImage)): ?>
-            <div class="image">
-                <?php if (!$this->mainImage['icon']): ?>
-                    <figure>{{image::<?= $this->mainImage['path'] ?>?alt=}}</figure>
-                <?php else: ?>
-                    <figure><img src="<?= $this->mainImage['path'] ?>" alt=""></figure>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        <div class="text">
-            <p class="title"><strong><?= $this->title ?></strong></p>
-            <?php if ($this->description): ?>
-                <p class="description"><?= $this->description ?></p>
-            <?php endif; ?>
-            <?php if ($this->summary): ?>
-                <p class="summary"><?= $this->summary ?></p>
-            <?php endif; ?>
-            <?php if ($this->usedUrl): ?>
-                <p class="url"><?= $this->usedUrl ?></p>
+<?php
+$blnNewWindow = $this->target && '_self' !== $this->target;
+?>
+<a href="<?= $this->usedUrl ?>"<?php if ($blnNewWindow): ?> target="<?= $this->target ?>" rel="noopener"<?php endif; ?> class="hit<?= (!empty($this->mainImage) && $this->mainImage['icon']?' icon':'') . (empty($this->mainImage)?'':' with-image') ?>">
+    <?php if (!empty($this->mainImage)): ?>
+        <div class="image">
+            <?php if (!$this->mainImage['icon']): ?>
+                <figure>{{image::<?= $this->mainImage['path'] ?>?alt=}}</figure>
+            <?php else: ?>
+                <figure><img src="<?= $this->mainImage['path'] ?>" alt=""></figure>
             <?php endif; ?>
         </div>
     <?php endif; ?>
+    <div class="text">
+        <p class="title"><strong><?= $this->title ?></strong><?php if ($blnNewWindow): ?> <span class="invisible"><?= $GLOBALS['TL_LANG']['MSC']['searchResultNewWindow'] ?? '(opens in a new window)' ?></span><?php endif; ?></p>
+        <?php if ($this->description): ?>
+            <p class="description"><?= $this->description ?></p>
+        <?php endif; ?>
+        <?php if ($this->summary): ?>
+            <p class="summary"><?= $this->summary ?></p>
+        <?php endif; ?>
+        <?php if ($this->usedUrl): ?>
+            <p class="url"><?= $this->usedUrl ?></p>
+        <?php endif; ?>
+    </div>
 </a>

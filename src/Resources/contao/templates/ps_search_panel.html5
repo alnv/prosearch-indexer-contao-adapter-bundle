@@ -1,0 +1,60 @@
+<?php if ($this->hasKeywords && !$this->error && ($this->count || $this->loaded || !empty($this->didYouMean))): ?>
+  <div class="suggest-results">
+    <?php if ($this->count || $this->loaded): ?>
+      <p class="suggest-results-for" data-ps-summary><?= $this->status ?></p>
+    <?php endif; ?>
+    <?php if (!empty($this->didYouMean)): ?>
+      <p class="suggest-results-mean" data-ps-didyoumean><?= $this->labels['didYouMean'] ?> <?php foreach ($this->didYouMean as $i => $suggestion): ?><?= $i ? ', ' : '' ?><button type="submit" class="ps-search__didyoumean" form="<?= $this->formId ?>" name="didyoumean" value="<?= $suggestion ?>"><?= $suggestion ?></button><?php endforeach; ?>?</p>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
+
+<?php if (!empty($this->categories)): ?>
+  <div class="categories-results" data-ps-categories>
+    <div class="categories-headline">
+      <p id="<?= $this->idPrefix ?>_categories"><?= $this->labels['categories'] ?></p>
+    </div>
+    <ul role="list" aria-labelledby="<?= $this->idPrefix ?>_categories">
+      <?php foreach ($this->categories as $category): ?>
+        <li class="category-item<?= $category['active'] ? ' active' : '' ?>">
+          <button type="submit" class="category-item-button" form="<?= $this->formId ?>" name="ps_toggle_category" value="<?= $category['key'] ?>" aria-pressed="<?= $category['active'] ? 'true' : 'false' ?>" data-ps-category="<?= $category['key'] ?>">
+            <span><?= $category['label'] ?></span> <i>(<?= $category['count'] ?>)</i>
+          </button>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  </div>
+<?php endif; ?>
+
+<?php foreach ($this->activeCategories as $category): ?>
+  <input type="hidden" name="categories[]" value="<?= $category ?>" form="<?= $this->formId ?>" data-ps-active-category>
+<?php endforeach; ?>
+
+<div class="search-results" data-ps-results>
+  <?php if ($this->error): ?>
+    <div class="no-search-results ps-search__error"><p><?= $this->status ?></p></div>
+  <?php elseif ($this->hasKeywords && !$this->count && !$this->loaded): ?>
+    <div class="no-search-results"><p><?= $this->labels['noResults'] ?></p></div>
+  <?php else: ?>
+    <?php foreach ($this->groups as $g => $group): ?>
+      <div class="results-group" data-ps-group="<?= $group['value'] ?>">
+        <?php if ($group['label']): ?>
+          <div class="result-category">
+            <<?= $this->groupHeading ?> class="category-name" id="<?= $this->idPrefix ?>_group_<?= $g ?>_<?= $this->loaded ?>"><?= $group['label'] ?> <span class="category-count">(<?= \count($group['hits']) ?>)</span></<?= $this->groupHeading ?>>
+          </div>
+        <?php endif; ?>
+        <ul class="result-list" role="list"<?php if ($group['label']): ?> aria-labelledby="<?= $this->idPrefix ?>_group_<?= $g ?>_<?= $this->loaded ?>"<?php endif; ?>>
+          <?php foreach ($group['hits'] as $hit): ?>
+            <li class="result-hit" data-ps-url="<?= $hit['url'] ?>"><?= $hit['html'] ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
+</div>
+
+<?php if ($this->hasMore): ?>
+  <div class="ps-search__more" data-ps-more>
+    <button type="submit" class="elasticsearch-more-button" form="<?= $this->formId ?>" name="search_after" value="<?= $this->searchAfter ?>" data-ps-load-more><span><?= $this->labels['more'] ?></span></button>
+  </div>
+<?php endif; ?>

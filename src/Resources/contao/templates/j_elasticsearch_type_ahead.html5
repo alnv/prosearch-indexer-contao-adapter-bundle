@@ -1,7 +1,9 @@
-<script>
+<?php /* legacy front end (ProSearch < 4), used by custom templates without data-prosearch */ ?>
+<script<?= $this->nonce ? ' nonce="'.$this->nonce.'"' : '' ?>>
     (function () {
         let objState = {
             categories: <?= \json_encode((empty($this->categories) ? [] : $this->categories)) ?>,
+            requestToken: <?= \json_encode((string) $this->requestToken, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             keywords: '<?= $this->keyword ?>',
             didYouMean: [],
             results: [],
@@ -187,18 +189,31 @@
                     this.didYouMean = [];
                     this.autoCompleteJS.start(this.keywords);
                 },
-                sendHrefStat: function (href) {
+                sendHrefStat: function (href, retried) {
                     this.$http.post('/stat/click?query=' + this.keywords, {
                             url: href,
-                            categories: this.categories
+                            categories: this.categories,
+                            REQUEST_TOKEN: this.requestToken
                         },
                         {
                             emulateJSON: true,
                             'Content-Type': 'application/x-www-form-urlencoded'
                         }
                     ).then(function (res) {
-                        //
-                    });
+                        this.adoptRequestToken(res);
+                    }.bind(this), function (res) {
+                        // Expired token (e.g. page from the HTTP cache): use the fresh token and retry once
+                        if (this.adoptRequestToken(res) && 403 === res.status && !retried) {
+                            this.sendHrefStat(href, true);
+                        }
+                    }.bind(this));
+                },
+                adoptRequestToken: function (res) {
+                    if (res && res.body && res.body.requestToken) {
+                        this.requestToken = res.body.requestToken;
+                        return true;
+                    }
+                    return false;
                 },
                 sendStat: function (e) {
                     let href = e.currentTarget.querySelector('a').href;

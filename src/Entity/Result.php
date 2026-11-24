@@ -4,7 +4,6 @@ namespace Alnv\ProSearchIndexerContaoAdapterBundle\Entity;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\MicrodataModel;
 use Contao\CoreBundle\Security\ContaoCorePermissions;
 use Contao\FilesModel;
 use Contao\StringUtil;
@@ -99,13 +98,12 @@ class Result
         $strSummary = StringUtil::substrHtml($strSummary, 250, '…');
 
         $blnOpenDocumentsInBrowser = $this->arrHit['source']['elasticOptions']['openDocumentsInBrowser'] ?? false;
-        $blnUseRichSnippets = $this->arrHit['source']['elasticOptions']['useRichSnippets'] ?? false;
 
         $arrReturn = [
             'images' => $arrImages,
             'url' => $objDocument->url,
             'origin_url' => $objDocument->origin_url,
-            'usedUrl' => !$blnOpenDocumentsInBrowser ? ($objDocument->origin_url?$objDocument->origin_url:$objDocument->url) : $objDocument->url,
+            'usedUrl' => !$blnOpenDocumentsInBrowser ? ($objDocument->origin_url ? $objDocument->origin_url : $objDocument->url) : $objDocument->url,
             'id' => $this->arrHit['id'],
             'target' => $objDocument->origin_url && $blnOpenDocumentsInBrowser ? '_target' : '_self',
             'highlights' => $arrHighlights,
@@ -116,34 +114,8 @@ class Result
             'mainImage' => $arrImages[0] ?? [],
             'types' => $this->arrHit['source']['types'] ?? [],
             'score' => $this->arrHit['source']['score'] ?? 0,
-            'sort' => $this->arrHit['source']['sort'] ?? 0,
-            'microdata' => [],
-            'rich_snippet' => ''
+            'sort' => $this->arrHit['source']['sort'] ?? 0
         ];
-
-        if (($objMicroData = MicrodataModel::findAll(['column' => ['pid=?'], 'value' => [$this->arrHit['id']]])) && $blnUseRichSnippets) {
-
-            $arrMicrodata = [];
-            while ($objMicroData->next()) {
-
-                if (!$objMicroData->type || !is_array($GLOBALS['PS_MICRODATA_CLASSES']) || !isset($GLOBALS['PS_MICRODATA_CLASSES'][$objMicroData->type])) {
-                    continue;
-                }
-
-                $strClass = $GLOBALS['PS_MICRODATA_CLASSES'][$objMicroData->type];
-
-                if (!isset($arrMicrodata[$objMicroData->type])) {
-                    $arrMicrodata[$objMicroData->type] = [];
-                }
-
-                $objMicroDataClass = new $strClass(StringUtil::deserialize($objMicroData->data, true));
-                $objMicroDataClass->match($this->arrHit['source']['keywords']);
-                $arrMicrodata[$objMicroData->type][] = $objMicroDataClass;
-            }
-
-            $arrReturn['microdata'] = $arrMicrodata;
-            $arrReturn['rich_snippet'] = $this->getRichSnippets($arrMicrodata, $arrReturn);
-        }
 
         if (isset($GLOBALS['TL_HOOKS']['psParseSearchHit']) && is_array($GLOBALS['TL_HOOKS']['psParseSearchHit'])) {
             foreach ($GLOBALS['TL_HOOKS']['psParseSearchHit'] as $arrCallback) {
@@ -151,40 +123,6 @@ class Result
             }
         }
 
-
         return $arrReturn;
-    }
-
-    protected function getRichSnippets($arrMicrodata, $arrData = []): string
-    {
-
-        $arrRichSnippets = [];
-
-        foreach ($arrMicrodata as $strType => $arrEntities) {
-
-            $intCount = count($arrEntities);
-
-            foreach ($arrEntities as $objMicroData) {
-
-                if (!$objMicroData->richSnippet) {
-                    continue;
-                }
-
-                $arrJsonLdScriptsData = $objMicroData->getJsonLdScriptsData();
-                $strId = md5(serialize($arrJsonLdScriptsData));
-
-                if ($this->arrHit['source']['elasticOptions']['usedKeyWord'] && $strType !== $this->arrHit['source']['elasticOptions']['usedKeyWord']) {
-                    continue;
-                }
-
-                if ($intCount > 1 && !$arrJsonLdScriptsData['_matched']) {
-                    continue;
-                }
-
-                $arrRichSnippets[$strId] = $objMicroData->generate($arrData);
-            }
-        }
-
-        return implode('', $arrRichSnippets);
     }
 }

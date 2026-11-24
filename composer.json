@@ -2,8 +2,8 @@
   "name": "alnv/prosearch-indexer-contao-adapter-bundle",
   "type": "contao-bundle",
   "license": "proprietary",
-  "description": "Contao Search Pro || Elasticsearch",
-  "keywords": ["contao", "elasticsearch", "suche", "volltext", "typeahead", "autocomplete", "fulltext search", "ai", "ki"],
+  "description": "Contao Search Pro || Elasticsearch - Opensearch",
+  "keywords": ["contao", "elasticsearch", "opensearch"],
   "authors": [
     {
       "name": "SINEOS GmbH",
@@ -21,18 +21,21 @@
       "Alnv\\ProSearchIndexerContaoAdapterBundle\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Alnv\\ProSearchIndexerContaoAdapterBundle\\Tests\\": "tests/"
+    }
+  },
   "require": {
     "php": "^8.3",
-    "ext-curl": "*",
-    "contao/core-bundle": "~4.13 || ~5.0",
-    "fusonic/opengraph": "^3.0",
-    "smalot/pdfparser": "^2.12",
-    "guzzlehttp/guzzle": "^7.10",
-    "elasticsearch/elasticsearch": "^8.19",
-    "opensearch-project/opensearch-php": "^2.0",
+    "contao/core-bundle": "~5.0",
     "menatwork/contao-multicolumnwizard-bundle": "^3.6",
-    "alnv/contao-open-ai-assistant-bundle": "^1.0",
-    "phpoffice/phpspreadsheet": "^5.4"
+    "smalot/pdfparser": "^2.12",
+    "symfony/cache-contracts": "^2.5 || ^3.0",
+    "symfony/http-client": "^6.4 || ^7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
   },
   "config": {
     "preferred-install": "dist"

@@ -1,9 +1,11 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Signature;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\EngineCapabilities;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\Exception\ProxyException;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\LicenseProvider;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\ProxyClient;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Search\MappingFactory;
 use Contao\Database;
 use Contao\DataContainer;
 use Contao\DC_Table;
@@ -38,16 +40,41 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             }
         ],
         'onsubmit_callback' => [function (DataContainer $dataContainer) {
-            switch ($dataContainer->activeRecord->type) {
-                case 'elasticsearch':
-                case 'opensearch':
-                case 'elasticsearch_cloud':
-                    $objElasticsearchAdapter = (new Adapter())->getInstance((new Options())->getOptions());
-                    $objElasticsearchAdapter->connect();
-                    if (!$objElasticsearchAdapter->getClient()) {
-                        Message::addError('No connection to the server could be established');
-                    }
-                    break;
+            // Connection and license are checked by the ProSearch proxy, the adapter only transmits the data.
+            $container = System::getContainer();
+            $licenseProvider = $container->get(LicenseProvider::class);
+            $licenseProvider->reset();
+
+            if (!$licenseProvider->hasCredentials() || 'licence' !== ($licenseProvider->getCredentials()['type'] ?? '')) {
+                return;
+            }
+
+            $proxy = $container->get(ProxyClient::class);
+
+            try {
+                $health = $proxy->health();
+
+                if (($health['status'] ?? '') !== 'ok') {
+                    Message::addError(sprintf('ProSearch-Proxy %s ist erreichbar, aber das Such-Backend meldet einen Fehler.', $proxy->getBaseUrl()));
+                } else {
+                    Message::addConfirmation(sprintf('Verbindung zum ProSearch-Proxy %s hergestellt (%s %s).', $proxy->getBaseUrl(), $health['backend']['distribution'] ?? $health['backend']['type'] ?? '', $health['backend']['version'] ?? ''));
+                }
+
+                $license = $proxy->getLicenseStatus($licenseProvider->getLicenseIdentifier());
+
+                if (!($license['valid'] ?? false)) {
+                    Message::addError('ProSearch-Proxy: ' . ($license['message'] ?? 'Lizenz ungültig'));
+                }
+            } catch (ProxyException $exception) {
+                Message::addError(sprintf('Keine Verbindung zum ProSearch-Proxy %s: %s', $proxy->getBaseUrl(), $exception->getMessage()));
+            }
+
+            $engine = $container->get(EngineCapabilities::class)->refresh();
+
+            if ('' !== $engine->error) {
+                Message::addError('Suchserver konnte nicht erkannt werden, Chunks werden nicht übertragen: ' . $engine->error);
+            } else {
+                Message::addInfo(sprintf('Suchserver: %s – Chunks (semantische Suche): %s.', $engine->describe(), $engine->supportsChunks ? 'ja' : 'nein (nur OpenSearch 3 oder neuer)'));
             }
         }],
         'sql' => [
@@ -86,7 +113,7 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
     'palettes' => [
         '__selector__' => ['type', 'singleDocument'],
         'default' => 'signature;type',
-        'licence' => 'signature;type;authToken,keys;singleDocument'
+        'licence' => 'signature;type;proxyUrl,proxyApiKey;authToken,keys;singleDocument'
     ],
     'subpalettes' => [
         'singleDocument' => 'analyzer'
@@ -148,6 +175,48 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
             ],
             'sql' => "varchar(128) NOT NULL default ''"
         ],
+        'proxyUrl' => [
+            'inputType' => 'text',
+            'eval' => [
+                'maxlength' => 255,
+                'tl_class' => 'w50 clr',
+                'decodeEntities' => true,
+                'placeholder' => System::getContainer()->hasParameter('prosearch_adapter.proxy.url') ? (string)System::getContainer()->getParameter('prosearch_adapter.proxy.url') : ''
+            ],
+            'save_callback' => [function ($value) {
+                $value = trim((string)$value);
+
+                if ('' === $value) {
+                    return ''; // configured default (PROSEARCH_PROXY_URL)
+                }
+
+                try {
+                    $value = ProxyClient::normalizeBaseUrl($value);
+                } catch (\InvalidArgumentException $exception) {
+                    throw new Exception($exception->getMessage());
+                }
+
+                $host = strtolower((string)parse_url($value, PHP_URL_HOST));
+
+                if ('http' === strtolower((string)parse_url($value, PHP_URL_SCHEME)) && !in_array($host, ['localhost', '127.0.0.1', '::1', '[::1]'], true)) {
+                    Message::addInfo('Die ProSearch-Proxy-URL nutzt http: Lizenz und API-Token werden unverschlüsselt übertragen. Im Live-Betrieb https verwenden.');
+                }
+
+                return $value;
+            }],
+            'sql' => "varchar(255) NOT NULL default ''"
+        ],
+        'proxyApiKey' => [
+            'inputType' => 'text',
+            'eval' => [
+                'maxlength' => 255,
+                'tl_class' => 'w50',
+                'decodeEntities' => true,
+                'hideInput' => true,
+                'autocomplete' => 'off'
+            ],
+            'sql' => "varchar(255) NOT NULL default ''"
+        ],
         'singleDocument' => [
             'inputType' => 'checkbox',
             'eval' => [
@@ -202,21 +271,38 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                         'inputType' => 'text',
                         'eval' => ['style' => 'width:100%;'],
                         'save_callback' => [function ($val) {
-                            return (new Authorization())->parseDomain($val);
+                            return System::getContainer()->get(LicenseProvider::class)->parseDomain((string)$val);
                         }]
                     ]
                 ]
             ],
             'save_callback' => [function ($values, DataContainer $dc) {
-                $authorization = new Authorization();
+                $container = System::getContainer();
+                $licenseProvider = $container->get(LicenseProvider::class);
                 $keys = StringUtil::deserialize($values, true);
+                $proxy = $container->get(ProxyClient::class);
+                $proxyUrl = trim((string)($dc->activeRecord->proxyUrl ?? ''));
+
+                if ('' !== $proxyUrl) {
+                    try {
+                        $proxy = $proxy->withConnection($proxyUrl, trim((string)($dc->activeRecord->proxyApiKey ?? '')));
+                    } catch (\InvalidArgumentException $exception) {
+                        throw new Exception($exception->getMessage());
+                    }
+                }
 
                 foreach ($keys as $key) {
-                    $domain = $authorization->parseDomain($key['domain'] ?? '');
-                    $license = $authorization->encodeLicense($key['key'] ?? '', $domain, $dc->activeRecord->authToken);
+                    $domain = $licenseProvider->parseDomain($key['domain'] ?? '');
+                    $license = $licenseProvider->encodeLicense($key['key'] ?? '', $domain, (string)$dc->activeRecord->authToken);
 
-                    if (!$authorization->isValid($license)) {
-                        throw new Exception('Licence for domain ' . $domain . ' is invalid! You can purchase a licence at this address: https://app.sineos.de');
+                    try {
+                        $status = $proxy->getLicenseStatus($license);
+                    } catch (ProxyException $exception) {
+                        throw new Exception('The licence for domain ' . $domain . ' could not be validated, the ProSearch proxy ' . $proxy->getBaseUrl() . ' is not reachable: ' . $exception->getMessage());
+                    }
+
+                    if (!($status['valid'] ?? false)) {
+                        throw new Exception('Licence for domain ' . $domain . ' is invalid! ' . ($status['message'] ?? 'You can purchase a licence at this address: https://app.sineos.de'));
                     }
                 }
 
@@ -242,17 +328,33 @@ $GLOBALS['TL_DCA']['tl_search_credentials'] = [
                 'includeBlankOption' => true
             ],
             'options_callback' => function () {
-                $objAdapter = (new Adapter())->getInstance((new Options())->getOptions());
-                $arrAnalyzer = \array_keys($objAdapter->getAnalyzer());
-                $arrAnalyzer[] = 'whitespace';
-                $arrAnalyzer[] = 'standard';
-                $arrAnalyzer[] = 'keyword';
-                $arrAnalyzer[] = 'simple';
-                $arrAnalyzer[] = 'stop';
-                return $arrAnalyzer;
+                $arrAnalyzer = \array_keys(System::getContainer()->get(MappingFactory::class)->getAnalyzers());
+
+                return \array_values(\array_unique([...$arrAnalyzer, 'standard', 'simple', 'whitespace', 'stop']));
             },
             'reference' => &$GLOBALS['TL_LANG']['MSC']['psAnalyzer'],
             'sql' => "varchar(64) NOT NULL default 'contao'"
+        ],
+        'engineType' => [
+            'sql' => "varchar(32) NOT NULL default ''"
+        ],
+        'engineVersion' => [
+            'sql' => "varchar(32) NOT NULL default ''"
+        ],
+        'engineChunks' => [
+            'sql' => "char(1) NOT NULL default ''"
+        ],
+        'engineVectors' => [
+            'sql' => "char(1) NOT NULL default ''"
+        ],
+        'engineCheckedAt' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'engineError' => [
+            'sql' => "varchar(255) NOT NULL default ''"
+        ],
+        'engineConnection' => [
+            'sql' => "varchar(64) NOT NULL default ''"
         ]
     ]
 ];

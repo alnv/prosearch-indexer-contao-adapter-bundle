@@ -18,3 +18,6 @@ composer.lock
 # build
 build/
 build.properties
+
+# tests
+.phpunit.cache/

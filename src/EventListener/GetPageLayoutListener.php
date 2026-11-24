@@ -2,19 +2,21 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\EventListener;
 
+use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Contao\LayoutModel;
 use Contao\PageModel;
 use Contao\PageRegular;
-
+use Contao\StringUtil;
 
 class GetPageLayoutListener
 {
 
     public function getPageLayout(PageModel $pageModel, LayoutModel $layout, PageRegular $pageRegular): void
     {
-        if ($pageModel->psSearchCategory) {
-            $strCategories = str_replace(' ', '', $pageModel->psSearchCategory);
-            $GLOBALS['TL_HEAD']['search:type'] = '<meta name="search:type" content="'. $strCategories .'"/>';
+        $categories = Categories::normalizeList((string) $pageModel->psSearchCategory);
+
+        if ([] !== $categories) {
+            $GLOBALS['TL_HEAD']['search:type'] = '<meta name="search:type" content="' . StringUtil::specialchars(implode(',', $categories)) . '">';
         }
     }
 }

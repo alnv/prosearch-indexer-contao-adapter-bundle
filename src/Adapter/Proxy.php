@@ -2,166 +2,64 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Authorization;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Logger;
-use GuzzleHttp\Client;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\Exception\ProxyException;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\ProxyClient;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Search\SearchService;
+use Contao\System;
 use Psr\Log\LogLevel;
 
 class Proxy
 {
-    protected string $strProxyDomain = "https://elasticsearch.sineos.de/proxy";
-
-    protected string $strLicence = "";
+    protected string $strLicence = '';
 
     public function __construct($strLicence)
     {
-        $this->strLicence = $strLicence ?: "";
+        trigger_deprecation('alnv/prosearch-indexer-contao-adapter-bundle', '4.0', 'Using "%s" is deprecated, use "%s" instead.', __CLASS__, ProxyClient::class);
 
-        if (!(new Authorization())->isValid($this->strLicence)) {
-            $this->strLicence = '';
-        }
+        $this->strLicence = $strLicence ?: '';
     }
 
     public function indexDocument($arrParams): bool
     {
-        if (!$this->strLicence) {
-            return false;
-        }
-
-        try {
-            $objClient = new Client();
-            $response = $objClient->request('POST', $this->strProxyDomain . '/search/index?licence=' . $this->strLicence, [
-                'json' => [
-                    'body' => $arrParams
-                ],
-                'timeout' => 10,
-                'connect_timeout' => 10,
-            ]);
-
-            $state = \json_decode($response->getBody()->getContents(), true);
-            if (isset($state['error'])) {
-                return false;
-            }
-
-        } catch (\Exception $e) {
-            Logger::set($e->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
-            return false;
-        }
-
-        return true;
+        return $this->call(fn(ProxyClient $c) => $c->upsertDocument($this->strLicence, (string)$arrParams['index'], (string)$arrParams['id'], (array)$arrParams['body']));
     }
 
     public function deleteDatabase($strIndex): bool
     {
-        $objClient = new Client();
-        $response = $objClient->request('POST', $this->strProxyDomain . '/delete/database/' . $strIndex);
-
-        $state = \json_decode($response->getBody()->getContents(), true);
-        if (isset($state['error'])) {
-            return false;
-        }
-
-        return true;
+        return $this->call(fn(ProxyClient $c) => $c->deleteIndex($this->strLicence, (string)$strIndex));
     }
 
     public function deleteDocument($strIndex, $strDocumentId): bool
     {
-        $objClient = new Client();
-        $response = $objClient->request('POST', $this->strProxyDomain . '/search/delete', [
-            'json' => [
-                'body' => [
-                    'index' => $strIndex,
-                    'id' => $strDocumentId
-                ]
-            ],
-            'timeout' => 10,
-            'connect_timeout' => 10
-        ]);
-
-        $state = \json_decode($response->getBody()->getContents(), true);
-        if (isset($state['error'])) {
-            return false;
-        }
-
-        return true;
+        return $this->call(fn(ProxyClient $c) => $c->deleteDocument($this->strLicence, (string)$strIndex, (string)$strDocumentId));
     }
 
     public function indexMapping($arrParams): bool
     {
-        if (!$this->strLicence) {
-            return false;
-        }
-
-        try {
-            $client = new Client();
-            $response = $client->request('POST', $this->strProxyDomain . '/search/mapping?licence=' . $this->strLicence, [
-                'json' => [
-                    'body' => $arrParams
-                ],
-                'timeout' => 15,
-                'connect_timeout' => 10
-            ]);
-
-            $state = \json_decode($response->getBody()->getContents(), true);
-            if (isset($state['error'])) {
-                return false;
-            }
-
-        } catch (\Exception $e) {
-            Logger::set($e->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
-            return false;
-        }
-
-        return true;
+        return $this->call(fn(ProxyClient $c) => $c->createIndex($this->strLicence, (string)$arrParams['index'], (array)($arrParams['body'] ?? [])));
     }
 
     public function search($arrKeywords, $strIndex, $arrOptions)
     {
-        if (!$this->strLicence) {
-            return false;
-        }
-
-        try {
-            $client = new Client();
-            $res = $client->request('POST', $this->strProxyDomain . '/search/results?licence=' . $this->strLicence, [
-                'json' => [
-                    'keywords' => $arrKeywords,
-                    'options' => $arrOptions,
-                    'index' => $strIndex,
-                ],
-                'timeout' => 30,
-                'connect_timeout' => 30
-            ]);
-
-            return json_decode($res->getBody()->getContents(), true);
-        } catch (\Exception $e) {
-            Logger::set($e->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
-            return false;
-        }
+        return System::getContainer()->get(SearchService::class)->search((array)$arrKeywords, (array)$arrOptions, (string)$strIndex);
     }
 
     public function autocompletion($arrKeywords, $strIndex, $arrOptions)
     {
-        if (!$this->strLicence) {
-            return false;
-        }
+        return System::getContainer()->get(SearchService::class)->autocomplete((array)$arrKeywords, (array)$arrOptions, (string)$strIndex);
+    }
 
+    private function call(\Closure $operation): bool
+    {
         try {
-            $client = new Client();
-            $res = $client->request('POST', $this->strProxyDomain . '/search/autocompletion?licence=' . $this->strLicence, [
-                'json' => [
-                    'keywords' => $arrKeywords,
-                    'options' => $arrOptions,
-                    'index' => $strIndex,
-                ],
-                'timeout' => 10,
-                'connect_timeout' => 10
-            ]);
+            $operation(System::getContainer()->get(ProxyClient::class));
+        } catch (ProxyException $e) {
+            Logger::set($e->getMessage(), LogLevel::ERROR, __CLASS__);
 
-            return json_decode($res->getBody()->getContents(), true);
-        } catch (\Exception $e) {
-            Logger::set($e->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
             return false;
         }
+
+        return true;
     }
 }

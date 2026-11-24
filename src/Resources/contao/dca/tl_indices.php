@@ -1,134 +1,28 @@
 <?php
 
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Adapter;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Adapter\Options;
+use Alnv\ProSearchIndexerContaoAdapterBundle\EventListener\DataContainer\IndicesListener;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Categories;
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\States;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Toolkit;
-use Alnv\ProSearchIndexerContaoAdapterBundle\Models\IndicesModel;
-use Contao\CoreBundle\DataContainer\PaletteManipulator;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\SyncStatus;
 use Contao\MemberGroupModel;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Contao\Input;
-use Contao\Message;
-use Contao\StringUtil;
 
 $GLOBALS['TL_DCA']['tl_indices'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
         'backendSearchIgnore' => true,
-        'onload_callback' => [function (DataContainer $objDataContainer) {
-            $strAct = Input::get('act') ?: '';
-            $blnIsSavin = Input::post('FORM_SUBMIT') === $objDataContainer->table;
-
-            if ($strAct != 'edit') {
-                return;
-            }
-
-            $objIndices = IndicesModel::findByPk($objDataContainer->id);
-            if (!$objIndices) {
-                return;
-            }
-
-            $varSettings = Input::post('settings') ?: $objIndices->settings;
-            $arrSettings = StringUtil::deserialize($varSettings, true);
-
-            if (!in_array('preventIndexMetadata', $arrSettings) && !in_array('preventIndex', $arrSettings)) {
-                $GLOBALS['TL_DCA']['tl_indices']['fields']['title']['eval']['readonly'] = true;
-                $GLOBALS['TL_DCA']['tl_indices']['fields']['description']['eval']['readonly'] = true;
-                PaletteManipulator::create()->removeField('images')->applyToPalette('default', 'tl_indices');
-            }
-
-            $arrPalettes = [];
-            $strFieldPrefix = 'indices_';
-
-            foreach (Toolkit::parseDocumentIndex($objIndices->document) as $strField => $varData) {
-
-                $strFieldName = $strFieldPrefix . $strField;
-
-                $arrField = [
-                    'label' => &$GLOBALS['TL_LANG']['tl_indices'][$strFieldName],
-                    'inputType' => 'listWizard',
-                    'eval' => [
-                        'alwaysSave' => true,
-                        'doNotSaveEmpty' => true,
-                        'decodeEntities' => true,
-                        'doNotCopy' => true,
-                        'tl_class' => 'clr'
-                    ],
-                    'load_callback' => [function ($strValue, DataContainer $objDataContainer) {
-                        return Input::post('__' . $objDataContainer->inputName . '__');
-                    }],
-                    'save_callback' => [function ($strValue, DataContainer $objDataContainer) {
-                        Input::setPost($objDataContainer->inputName, StringUtil::deserialize($strValue, true));
-                        return '';
-                    }]
-                ];
-
-                if (!in_array('preventIndex', $arrSettings)) {
-                    $arrField['eval']['readonly'] = true;
-                }
-
-                if ($blnIsSavin) {
-                    unset($arrField['load_callback']);
-                }
-
-                if ($strField == 'text' || $strField == 'document') {
-                    $arrField['inputType'] = 'textarea';
-                    if (is_array($varData)) {
-                        $varData = implode(' ', $varData);
-                    }
-                }
-
-                Input::setPost('__' . $strFieldName . '__', $varData);
-
-                $arrPalettes[] = $strFieldName;
-                $GLOBALS['TL_DCA']['tl_indices']['fields'][$strFieldName] = $arrField;
-            }
-
-            $strPrevField = $arrPalettes[0] ?? '';
-            $objPaletteManipulator = PaletteManipulator::create();
-            $objPaletteManipulator->addLegend('document_legend');
-            $objPaletteManipulator->addField($strPrevField, 'document_legend');
-
-            foreach ($arrPalettes as $index => $strField) {
-
-                if (!$index) {
-                    continue;
-                }
-
-                $objPaletteManipulator->addField($strField, $strPrevField);
-                $strPrevField = $strField;
-            }
-
-            $objPaletteManipulator->applyToPalette('default', 'tl_indices');
-        }],
-        'onsubmit_callback' => [function (DataContainer $objDataContainer) {
-            $objIndices = IndicesModel::findByPk($objDataContainer->id);
-            if (!$objIndices) {
-                return;
-            }
-
-            $strFieldPrefix = 'indices_';
-            $arrDocumentData = [];
-            foreach (Toolkit::parseDocumentIndex($objIndices->document) as $strField => $varData) {
-                $arrDocumentData[$strField] = Input::post($strFieldPrefix . $strField);
-            }
-
-            $objIndices->document = serialize($arrDocumentData);
-            $objIndices->save();
-
-            Message::addInfo('Änderungen werden erst bei einer Re-Indexierung übernommen!');
-        }],
-        'ondelete_callback' => [function (DataContainer $objDataContainer) {
-            $objElasticsearch = (new Adapter())->getInstance((new Options())->getOptions());
-            $objElasticsearch->deleteIndex($objDataContainer->id);
-        }],
+        'onload_callback' => [[IndicesListener::class, 'onLoad']],
+        'onsubmit_callback' => [[IndicesListener::class, 'onSubmit']],
+        'ondelete_callback' => [[IndicesListener::class, 'onDelete']],
         'sql' => [
             'keys' => [
-                'id' => 'primary'
+                'id' => 'primary',
+                'url_hash' => 'unique',
+                'sync_status,sync_next_at' => 'index',
+                'sync_claim' => 'index'
             ]
         ]
     ],
@@ -140,15 +34,12 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             'panelLayout' => 'filter,limit;sort,search'
         ],
         'label' => [
-            'fields' => ['last_indexed', 'title', 'url', 'state'],
-            'showColumns' => true
+            'fields' => ['last_indexed', 'title', 'url', 'state', 'sync_status', 'chunk_count'],
+            'showColumns' => true,
+            // column "Suchindex": check mark, pending (gray) or failed (red), see IndicesListener::listLabel()
+            'label_callback' => [IndicesListener::class, 'listLabel']
         ],
         'global_operations' => [
-            'vector_files' => [
-                'href' => 'table=tl_search_vector_files',
-                'class' => 'header_edit_all',
-                'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"'
-            ],
             'all' => [
                 'href' => 'act=select',
                 'class' => 'header_edit_all',
@@ -172,6 +63,11 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
                 'href' => 'act=delete',
                 'icon' => 'delete.svg',
                 'attributes' => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? '') . '\'))return false;Backend.getScrollOffset()"'
+            ],
+            'show' => [
+                'primary' => true,
+                'href' => 'act=show',
+                'icon' => 'show.svg',
             ]
         ]
     ],
@@ -197,7 +93,15 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
                 'tl_class' => 'clr'
             ],
             'options_callback' => function () {
-                return (new Categories())->getCategories();
+                $options = [];
+                $labels = (new Categories())->getTranslatedCategories();
+
+                foreach ((new Categories())->getCategories() as $category) {
+                    $label = $labels[$category]['label'] ?? $category;
+                    $options[$category] = $label === $category ? $category : $label . ' (' . $category . ')';
+                }
+
+                return $options;
             },
             'filter' => true,
             'sql' => "blob NULL"
@@ -251,8 +155,63 @@ $GLOBALS['TL_DCA']['tl_indices'] = [
             ],
             'sql' => "blob NULL"
         ],
-        'document' => [
-            'sql' => "longblob NULL"
+        'text' => [
+            'search' => true,
+            'sql' => "mediumtext NULL"
+        ],
+        'strong' => [
+            'sql' => "blob NULL"
+        ],
+        'headings' => [
+            'sql' => "blob NULL"
+        ],
+        'url_hash' => [
+            'sql' => "char(40) NOT NULL default ''"
+        ],
+        'rootId' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'content_hash' => [
+            'sql' => "char(64) NOT NULL default ''"
+        ],
+        'checksum' => [
+            'sql' => "char(64) NOT NULL default ''"
+        ],
+        'source_hash' => [
+            'sql' => "varchar(64) NOT NULL default ''"
+        ],
+        'chunk_count' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        // transfer queue (see Indexing\Queue\IndexQueue)
+        'revision' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'synced_revision' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'sync_status' => [
+            'filter' => true,
+            'reference' => &$GLOBALS['TL_LANG']['tl_indices']['sync_states'],
+            'sql' => "varchar(16) NOT NULL default '" . SyncStatus::PENDING . "'"
+        ],
+        'sync_attempts' => [
+            'sql' => ['type' => 'smallint', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'sync_error' => [
+            'sql' => "text NULL"
+        ],
+        'sync_next_at' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'sync_claim' => [
+            'sql' => "varchar(32) NOT NULL default ''"
+        ],
+        'sync_claimed_until' => [
+            'sql' => ['type' => 'integer', 'notnull' => true, 'unsigned' => true, 'default' => 0]
+        ],
+        'synced_index' => [
+            'sql' => "varchar(255) NOT NULL default ''"
         ],
         'last_indexed' => [
             'flag' => 6,

@@ -2,145 +2,81 @@
 
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Helpers;
 
-use Contao\CoreBundle\Monolog\ContaoContext;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\Exception\ProxyException;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\LicenseProvider;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\ProxyClient;
 use Contao\System;
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
 use Psr\Log\LogLevel;
 
+/**
+ * Former license check. The license logic now lives exclusively in the ProSearch proxy
+ * (alnv/prosearch-proxy-bundle, License\LicenseChecker). This class only remains for
+ * backwards compatibility: identifier helpers delegate to {@see LicenseProvider}, isValid() asks the proxy.
+ *
+ * @deprecated since 4.0, will be removed in 5.0: use LicenseProvider and ProxyClient::getLicenseStatus().
+ */
 class Authorization
 {
-    private string $strUrl = "https://app.sineos.de";
-
-    private string $strMethod = 'api/license/check/';
-
     public function parseDomain(string $domain): string
     {
-        $hasScheme = \parse_url($domain, PHP_URL_SCHEME) !== null;
-        $urlToParse = $hasScheme ? $domain : 'https://' . $domain;
-
-        $arrFragments = \parse_url($urlToParse) ?? [];
-        $host = $arrFragments['host'] ?? '';
-        $port = $arrFragments['port'] ?? '';
-
-        if (!$host) {
-            return $domain;
-        }
-
-        $host = \preg_replace('/^www\./i', '', $host);
-
-        return trim($host) . ($port ? ':' . $port : '');
+        return $this->provider()->parseDomain($domain);
     }
 
     public function pluckKeyFromKeysGlobalByDomain(array $keys, string $domain): string
     {
-        $domain = $this->parseDomain($domain);
-
-        foreach ($keys as $key) {
-            if ($this->parseDomain($key['domain']) == $domain) {
-                return $key['key'];
-            }
-        }
-
-        return $keys[0]['key'] ?? '';
+        return $this->provider()->pluckKeyFromKeysGlobalByDomain($keys, $domain);
     }
 
     /**
-     *
-     * Diese Lizenzen nur für Testzwecke verwenden!
+     * Asks the proxy whether the license identifier is valid (no local license logic).
      */
-    private function testKeys4DevOnly($strLicense): bool
-    {
-        return in_array($strLicense, ['ck-23-kiel', 'alpha-test']);
-    }
-
     public function isValid(string $strLicenseIdentifier): bool
     {
         if (!$strLicenseIdentifier) {
             return false;
         }
 
-        if ($this->testKeys4DevOnly($strLicenseIdentifier)) {
-            return true;
-        }
+        try {
+            return true === (System::getContainer()->get(ProxyClient::class)->getLicenseStatus($strLicenseIdentifier)['valid'] ?? false);
+        } catch (ProxyException $e) {
+            Logger::set($e->getMessage(), LogLevel::ERROR, __METHOD__);
 
-        $licenseFragments = $this->decodeLicense($strLicenseIdentifier);
-        if (!($licenseFragments['license'] ?? '')) {
             return false;
         }
-
-        if ($this->testKeys4DevOnly($licenseFragments['license'])) {
-            return true;
-        }
-
-        $strFileContent = '';
-        $strRootDir = System::getContainer()->getParameter('kernel.project_dir');
-        $cacheFolder = $strRootDir . '/var/authorization';
-
-        if (!file_exists($cacheFolder)) {
-            \mkdir($cacheFolder, 0777, true);
-        }
-
-        if (\file_exists($cacheFolder . '/auth.txt')) {
-            $strFileContent = \file_get_contents($cacheFolder . '/auth.txt');
-        }
-
-        if ($strFileContent == $strLicenseIdentifier) {
-            return true;
-        }
-
-        try {
-            $objClient = new Client();
-            $request = new Request('GET', $this->strUrl . '/' . $this->strMethod . $licenseFragments['license'], [
-                'Authorization' => 'Bearer ' . ($licenseFragments['authToken'] ?? ''),
-                'Accept' => 'application/json',
-            ], '');
-
-            $objResponse = $objClient->send($request);
-            $arrJsonReturn = \json_decode($objResponse->getBody()->getContents(), true);
-
-            $valid = $arrJsonReturn['valid'] ?? false;
-            $domain = $arrJsonReturn['domain'] ?? '';
-
-            if ($valid === true && $domain == $licenseFragments['domain']) {
-                $strFilename = $cacheFolder . '/auth.txt';
-
-                \file_put_contents($strFilename, $strLicenseIdentifier, LOCK_EX);
-
-                return true;
-            }
-
-        } catch (\Exception $objError) {
-            Logger::set($objError->getMessage(), LogLevel::ERROR, __CLASS__ . '::' . __FUNCTION__);
-        }
-
-        return false;
     }
 
     public function encodeLicense($strLicense, $strDomain, $strAuthToken = ''): string
     {
-        return rtrim(strtr(base64_encode($strLicense . '::' . $strDomain . '::' . $strAuthToken), '+/', '-_'), '=');
+        return $this->provider()->encodeLicense((string) $strLicense, (string) $strDomain, (string) $strAuthToken);
     }
 
+    /**
+     * Decodes an identifier into its fragments (format helper, no validation).
+     */
     public function decodeLicense(string $strLicenseIdentifier): array
     {
-        $b64 = \strtr($strLicenseIdentifier, '-_', '+/');
+        $b64 = strtr($strLicenseIdentifier, '-_', '+/');
         $remainder = \strlen($b64) % 4;
+
         if ($remainder) {
-            $b64 .= \str_repeat('=', 4 - $remainder);
+            $b64 .= str_repeat('=', 4 - $remainder);
         }
 
-        $strFragments = \base64_decode($b64, true);
-        if ($strFragments === false) {
+        $fragments = base64_decode($b64, true);
+
+        if (false === $fragments) {
             return ['license' => '', 'domain' => '', 'authToken' => ''];
         }
 
-        $arrFragments = \explode('::', $strFragments);
+        $fragments = explode('::', $fragments);
 
-        return [
-            'license' => $arrFragments[0] ?? '',
-            'domain' => $arrFragments[1] ?? '',
-            'authToken' => $arrFragments[2] ?? ''
-        ];
+        return ['license' => $fragments[0] ?? '', 'domain' => $fragments[1] ?? '', 'authToken' => $fragments[2] ?? ''];
+    }
+
+    private function provider(): LicenseProvider
+    {
+        $container = System::getContainer();
+
+        return null !== $container && $container->has(LicenseProvider::class) ? $container->get(LicenseProvider::class) : new LicenseProvider();
     }
 }

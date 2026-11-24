@@ -16,10 +16,15 @@
     width: 100%;
     line-height: 42px;
     height: 42px;
-    border: 1px solid #f1f1f1;
+    border: 1px solid #767676;
     background: #fff;
     padding: 0 15px;
-    outline: none;
+
+    // WCAG 2.4.7: the focus must stay visible
+    &:focus-visible {
+      outline: 2px solid #005fcc;
+      outline-offset: 2px;
+    }
   }
 
   button {
@@ -39,6 +44,11 @@
     &:focus {
       background: none;
       border: 0;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #005fcc;
+      outline-offset: 2px;
     }
 
     img {
@@ -111,5 +121,145 @@
 
   a {
     color: #333;
+
+    &:focus-visible {
+      outline: 2px solid #005fcc;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// accessible front end (ProSearch 4)
+.ps-search {
+  position: relative;
+
+  // CSS display rules must not override the hidden attribute
+  [hidden] {
+    display: none !important;
+  }
+
+  // visually hidden, but read by screen readers (Contao class name)
+  .invisible {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  .elasticsearch-input {
+    flex-wrap: nowrap;
+
+    label:not(.invisible) {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+  }
+
+  .elasticsearch-input > input[type="search"] {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .elasticsearch-input:has(label:not(.invisible)) {
+    flex-wrap: wrap;
+  }
+
+  // text buttons that look like links ("did you mean")
+  .ps-search__didyoumean {
+    display: inline;
+    width: auto;
+    height: auto;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  .result-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .result-hit {
+    list-style: none;
+  }
+
+  .elasticsearch-more-button {
+    width: auto;
+    min-height: 44px;
+    margin-top: 15px;
+    padding: 0 20px;
+    border: 1px solid #333;
+    color: #333;
+
+    &[aria-disabled="true"] {
+      opacity: .6;
+      cursor: progress;
+    }
+  }
+
+  .ps-search__error {
+    color: #a4161a;
+  }
+}
+
+// suggestions (ARIA combobox, prosearch-search.js)
+.ps-combobox {
+  position: relative;
+
+  .ps-combobox__listbox {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 300px;
+    margin: 4px 0 0;
+    padding: 4px 0;
+    overflow-y: auto;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #767676;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, .15);
+  }
+
+  .ps-combobox__option {
+    margin: 0;
+    padding: 10px 15px;
+    color: #212121;
+    cursor: pointer;
+    list-style: none;
+
+    &:hover,
+    &.is-active {
+      background: #e8f0fe;
+    }
+
+    &.is-active {
+      outline: 2px solid #005fcc;
+      outline-offset: -2px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-search *,
+  .ps-search *::before,
+  .ps-search *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+// Windows high contrast / forced colors: keep focus and selection visible
+@media (forced-colors: active) {
+  .ps-combobox .ps-combobox__option.is-active {
+    outline: 2px solid Highlight;
   }
 }

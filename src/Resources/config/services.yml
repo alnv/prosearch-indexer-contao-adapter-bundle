@@ -2,20 +2,206 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
-  Alnv\ProSearchIndexerContaoAdapterBundle\Cron\DeleteIndices:
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\ProxyClient:
+    public: true
+    arguments:
+      $client: '@http_client'
+      $baseUrl: '%prosearch_adapter.proxy.url%'
+      $apiKey: '%prosearch_adapter.proxy.api_key%'
+      $verifyTls: '%prosearch_adapter.proxy.verify_tls%'
+      $timeout: '%prosearch_adapter.proxy.timeout%'
+      $logger: '@?monolog.logger.contao.error'
+      $credentials: '@Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\LicenseProvider'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\LicenseProvider:
+    public: true
+    arguments:
+      $credentialsReader: null
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\IndexNameResolver:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\MappingFactory:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\DocumentFactory:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\IndexingService:
+    public: true
+    arguments:
+      $contaoLogger: '@?monolog.logger.contao'
+
+  # analyzer of new indices (tl_page.psAnalyzer) and of searches (live mapping, cached)
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\IndexSchemaResolver:
+    public: true
+    arguments:
+      $cache: '@?cache.app'
+      $logger: '@?logger'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\SearchService:
+    public: true
+    arguments:
+      $profile: '%prosearch_adapter.proxy.search_profile%'
+      # proxy capabilities (synonym support), cached for an hour
+      $cache: '@?cache.app'
+
+  # Search statistics (tl_search_stats_log) and dashboard
+  Alnv\ProSearchIndexerContaoAdapterBundle\Stats\SearchStatsRepository: ~
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Stats\SearchStatsExporter: ~
+
+  # Key callbacks of the back end module "Suchprotokoll" (instantiated by Contao via the container)
+  Alnv\ProSearchIndexerContaoAdapterBundle\Stats\SearchStatsLogActions:
+    public: true
+    arguments:
+      $tokenManager: '@contao.csrf.token_manager'
+      $csrfTokenName: '%contao.csrf_token_name%'
+
+  # 4.0: merges tl_search_stats into tl_search_stats_log
+  Alnv\ProSearchIndexerContaoAdapterBundle\Migration\MergeSearchStatsMigration:
     tags:
-      - { name: contao.cron, interval: minutely }
+      - { name: contao.migration }
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Stats\SearchStatsLogger:
+    public: true
+    arguments:
+      $retentionDays: '%prosearch_adapter.stats.log_retention_days%'
+      $logger: '@?monolog.logger.contao.error'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Stats\SearchDashboard: ~
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\Backend\SearchStatsController:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Cron\PurgeSearchStatsLog:
+    arguments:
+      $logger: '@?monolog.logger.contao.cron'
+    tags:
+      - { name: contao.cronjob, interval: daily }
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Chunking\UnicodeTokenizer:
+    arguments:
+      $maxPieceLength: '%prosearch_adapter.indexing.tokenizer_piece_length%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Chunking\TokenizerInterface: '@Alnv\ProSearchIndexerContaoAdapterBundle\Chunking\UnicodeTokenizer'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Chunking\TextChunker:
+    arguments:
+      $maxTokens: '%prosearch_adapter.indexing.chunk_size%'
+      $overlap: '%prosearch_adapter.indexing.chunk_overlap%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Extraction\HtmlTextExtractor: ~
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Extraction\PdfTextExtractor:
+    arguments:
+      $maxFileSize: '%prosearch_adapter.indexing.pdf_max_file_size%'
+      $maxTextBytes: '%prosearch_adapter.indexing.max_text_bytes%'
+      $maxPages: '%prosearch_adapter.indexing.pdf_max_pages%'
+      $decodeMemoryLimit: '%prosearch_adapter.indexing.pdf_decode_memory_limit%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\IndicesRepository:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Collector\PageDocumentCollector:
+    public: true
+    arguments:
+      $maxTextBytes: '%prosearch_adapter.indexing.max_text_bytes%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Collector\PdfDocumentCollector:
+    public: true
+    arguments:
+      $projectDir: '%kernel.project_dir%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Queue\IndexQueue:
+    public: true
+    arguments:
+      $claimTtl: '%prosearch_adapter.queue.claim_ttl%'
+      $maxAttempts: '%prosearch_adapter.queue.max_attempts%'
+      $retryDelay: '%prosearch_adapter.queue.retry_delay%'
+      $maxRetryDelay: '%prosearch_adapter.queue.max_retry_delay%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Queue\DocumentPayloadBuilder: ~
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Indexing\Queue\IndexSynchronizer:
+    public: true
+    arguments:
+      $logger: '@?logger'
+      $batchSize: '%prosearch_adapter.queue.batch_size%'
+      $maxRequestBytes: '%prosearch_adapter.queue.max_request_bytes%'
+      $retryDelay: '%prosearch_adapter.queue.retry_delay%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Proxy\EngineCapabilities:
+    public: true
+    arguments:
+      $logger: '@?logger'
+      $ttl: '%prosearch_adapter.queue.engine_ttl%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Purge\PurgeElasticsearch:
+    public: true
+    arguments:
+      $logger: '@?monolog.logger.contao.general'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Command\:
+    resource: '../../Command'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Migration\IndicesChunksMigration:
+    tags:
+      - { name: contao.migration }
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Migration\IndicesUniqueUrlMigration:
+    tags:
+      - { name: contao.migration }
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Cron\SyncIndexQueue:
+    arguments:
+      $timeLimit: '%prosearch_adapter.queue.cron_time_limit%'
+      $enabled: '%prosearch_adapter.queue.cron_enabled%'
+    tags:
+      - { name: contao.cronjob, interval: minutely }
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Cron\IndexMaintenance:
+    arguments:
+      $logger: '@?logger'
+    tags:
+      - { name: contao.cronjob, interval: daily }
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Cron\DeleteIndices:
+    public: true
+
   Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ElasticsearchController:
     public: true
-  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ElasticsearchProxyController:
-    public: true
+
   Alnv\ProSearchIndexerContaoAdapterBundle\Controller\StatController:
     public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\SearchResultProvider:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\SearchPanelRenderer:
+    public: true
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\Search\FrontendRequestToken:
+    public: true
+    arguments:
+      $tokenManager: '@contao.csrf.token_manager'
+      $tokenName: '%contao.csrf_token_name%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\EventListener\LegacySearchScriptListener:
+    arguments:
+      $projectDir: '%kernel.project_dir%'
+
+  Alnv\ProSearchIndexerContaoAdapterBundle\EventListener\DataContainer\IndicesListener:
+    public: true
+
   Alnv\ProSearchIndexerContaoAdapterBundle\EventListener\GetPageLayoutListener:
     tags:
       - { name: contao.hook, hook: getPageLayout, method: getPageLayout, priority: 100 }
+
   Alnv\ProSearchIndexerContaoAdapterBundle\Search\ProSearchIndexer:
     arguments:
-      - '@contao.framework'
+      $framework: '@contao.framework'
+      $indexProtected: false
     tags:
       - { name: 'contao.search_indexer' }

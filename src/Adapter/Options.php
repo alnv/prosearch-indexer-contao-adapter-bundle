@@ -3,6 +3,8 @@
 namespace Alnv\ProSearchIndexerContaoAdapterBundle\Adapter;
 
 use Alnv\ProSearchIndexerContaoAdapterBundle\Helpers\Credentials;
+use Alnv\ProSearchIndexerContaoAdapterBundle\Search\IndexSchemaResolver;
+use Contao\System;
 
 class Options
 {
@@ -23,24 +25,9 @@ class Options
     protected string $language = '';
 
     /**
-     * @var bool
-     */
-    protected bool $useOpenAi = false;
-
-    /**
      * @var array
      */
     protected array $categories = [];
-
-    /**
-     * @var integer
-     */
-    protected int $openAiRelevanceScore = 0;
-
-    /**
-     * @var string
-     */
-    protected string $openAiAssistant = '';
 
     /**
      * @var string
@@ -58,11 +45,6 @@ class Options
     protected bool $openDocumentsInBrowser = true;
 
     /**
-     * @var bool
-     */
-    protected bool $useRichSnippets = false;
-
-    /**
      * @var int
      */
     protected int $rootPageId = 0;
@@ -77,7 +59,6 @@ class Options
      */
     protected int $perPage = 100;
 
-
     public function __construct()
     {
         $objCredentials = new Credentials();
@@ -90,11 +71,15 @@ class Options
      */
     public function setAnalyzer(string $strAnalyzer = ''): void
     {
+        // empty: setting of the root page (call setRootPageId() first), otherwise of the credentials
         if (!$strAnalyzer) {
-            $strAnalyzer = $this->arrCredentials['analyzer'] ?? '';
+            $container = System::getContainer();
+            $strAnalyzer = $container->has(IndexSchemaResolver::class)
+                ? $container->get(IndexSchemaResolver::class)->getConfiguredAnalyzer($this->rootPageId)
+                : (string)(($this->arrCredentials ?: [])['analyzer'] ?? '');
         }
 
-        $this->analyzer = $strAnalyzer;
+        $this->analyzer = $strAnalyzer ?: IndexSchemaResolver::DEFAULT_ANALYZER;
     }
 
     /**
@@ -104,24 +89,6 @@ class Options
     public function setLanguage(string $strLanguage = ''): void
     {
         $this->language = $strLanguage;
-    }
-
-    /**
-     * @param string $strOpenAiAssistant
-     * @return void
-     */
-    public function setOpenAiAssistant(string $strOpenAiAssistant = ''): void
-    {
-        $this->openAiAssistant = $strOpenAiAssistant;
-    }
-
-    /**
-     * @param bool $useAi
-     * @return void
-     */
-    public function setUseOpenAi(bool $useAi = false): void
-    {
-        $this->useOpenAi = $useAi;
     }
 
     /**
@@ -176,15 +143,6 @@ class Options
     }
 
     /**
-     * @param bool $blnUseRichSnippets
-     * @return void
-     */
-    public function setUseRichSnippets(bool $blnUseRichSnippets): void
-    {
-        $this->useRichSnippets = $blnUseRichSnippets;
-    }
-
-    /**
      * @param bool $blnOpenDocumentsInBrowser
      * @return void
      */
@@ -203,15 +161,6 @@ class Options
     }
 
     /**
-     * @param int $openAiRelevanceScore
-     * @return void
-     */
-    public function setOpenAiRelevanceScore(int $openAiRelevanceScore = 0): void
-    {
-        $this->openAiRelevanceScore = $openAiRelevanceScore;
-    }
-
-    /**
      * @return array
      */
     public function getOptions(): array
@@ -223,14 +172,10 @@ class Options
             'rootPageId' => $this->rootPageId,
             'perPage' => $this->perPage,
             'fuzzy' => $this->fuzzy,
-            'useOpenAi' => $this->useOpenAi,
-            'openAiAssistant' => $this->openAiAssistant,
             'openDocumentsInBrowser' => $this->openDocumentsInBrowser,
-            'useRichSnippets' => $this->useRichSnippets,
             'minKeywordLength' => $this->minKeywordLength,
             'domain' => $this->domain,
-            'categories' => $this->categories,
-            'openAiRelevanceScore' => $this->openAiRelevanceScore
+            'categories' => $this->categories
         ];
     }
 }
