@@ -21,7 +21,7 @@
     function isSearchEndpoint(url) {
         try {
             var parsed = new URL(url, window.location.href);
-            return parsed.origin === window.location.origin && /\/(elastic\/search|stat\/click)(\/|$)/.test(parsed.pathname);
+            return parsed.origin === window.location.origin && /\/((?:elastic|prosearch)\/search|stat\/click)(\/|$)/.test(parsed.pathname);
         } catch (e) {
             return false;
         }

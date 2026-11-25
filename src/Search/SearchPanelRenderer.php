@@ -32,7 +32,7 @@ class SearchPanelRenderer
 
     public function buildData(array $result, array $context): array
     {
-        // loaded by the page or ElasticsearchController::applyLanguage(); load it if a caller did not
+        // loaded by the page or ProSearchController::applyLanguage(); load it if a caller did not
         if (!isset($GLOBALS['TL_LANG']['MSC']['searchResultsCount'])) {
             System::loadLanguageFile('default');
         }

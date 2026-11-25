@@ -31,6 +31,15 @@ final class LegacySearchScriptListenerTest extends TestCase
         $this->assertStringContainsString('prosearch-legacy.js', (string) $response->getContent());
     }
 
+    public function testDetectsTheNewPathsInLegacyTemplates(): void
+    {
+        // j_elasticsearch* of the bundle call /prosearch/search/* and /prosearch/stat/click since 4.0
+        foreach (["this.\$http.post('/prosearch/search/results?query='+q, {})", "this.\$http.post('/prosearch/stat/click?query='+q, {})"] as $call) {
+            $response = $this->dispatch('<head></head><script>'.$call.'</script>');
+            $this->assertStringContainsString('prosearch-legacy.js', (string) $response->getContent(), $call);
+        }
+    }
+
     public function testLeavesOtherPagesAlone(): void
     {
         // new front end: endpoints only in the data attribute, behaviour in an external file

@@ -70,7 +70,7 @@ auch übernommene Altdaten löschen, deren Datum älter ist.
    `tl_search_vector_files` und die Spalten `tl_module.psUseOpenAi`, `psOpenAssistant`, `psOpenAiRelevance`,
    `psUseRichSnippets` entfernt erst `contao:migrate --with-deletes` (vorher Backup). Früher erzeugte
    Vektordateien unter `files/_vectors/` können gelöscht werden.
-4. Backend → Elasticsearch → Zugangsdaten öffnen, bei Bedarf die „ProSearch-Proxy-URL“ eintragen (leer = gehosteter
+4. Backend → ProSearch → Zugangsdaten öffnen, bei Bedarf die „ProSearch-Proxy-URL“ eintragen (leer = gehosteter
    Proxy) und speichern: Verbindung und Lizenz werden über den Proxy geprüft, Fehler erscheinen als Meldung.
 5. Optional Suchindex neu aufbauen (Systemwartung → „Den Suchindex aktualisieren“). Nötig ist das nicht, das
    Mapping ist unverändert.
@@ -182,7 +182,7 @@ Eintrag zum Löschen vorgemerkt und wird automatisch entfernt, sobald der Proxy 
 
 ## Frontend: Barrierefreiheit, POST/CSRF, Content Security Policy
 
-Die Suchmodule „Elasticsearch“ und „Elasticsearch Type Ahead“ haben ein neues Frontend: semantisches HTML, ARIA-Combobox,
+Die Suchmodule „ProSearch“ und „ProSearch Type Ahead“ (bisher „Elasticsearch“ und „Elasticsearch Type Ahead“) haben ein neues Frontend: semantisches HTML, ARIA-Combobox,
 Live-Region, serverseitig gerenderte Ergebnisse (Template `ps_search_panel`) und ein externes Skript
 `prosearch-search.js` ohne Vue. Details siehe README, Abschnitt „Frontend-Modul“.
 
@@ -211,9 +211,27 @@ Template-Variablen der Module, die nicht mehr gesetzt bzw. geändert sind:
 - Entfernte geschützte Methoden der Modulklassen: `loadAssets()`, `getJsScript()`, `getKeywords()`,
   `getInputCategories()`. Ersatz ist der Trait `Modules\SearchModuleTrait`.
 
+### Umbenennung Elasticsearch → ProSearch
+
+| Bisher | Neu | Hinweis |
+|---|---|---|
+| Backend-Menü und Modulgruppe „Elasticsearch“ | „ProSearch“ | nur Beschriftung |
+| Frontend-Modultyp `elasticsearch` | `prosearch` | `FrontendModuleTypeMigration` stellt `tl_module.type` und die erlaubten Modultypen von Benutzern/Gruppen (`frontendModules`) um |
+| Frontend-Modultyp `elasticsearch_type_ahead` | `prosearch_type_ahead` | wie oben |
+| `$GLOBALS['TL_LANG']['FMD']['elasticsearch']`, `['elasticsearch_type_ahead']` | `['prosearch']`, `['prosearch_type_ahead']` | eigene Übersetzungen in `contao/languages` anpassen |
+| CSS-Klasse `mod_elasticsearch`, `mod_elasticsearch_type_ahead` | `mod_prosearch`, `mod_prosearch_type_ahead` | die alte Klasse wird vorerst zusätzlich gesetzt (deprecated, entfällt in 5.0) |
+| `POST /elastic/search/results`, `/elastic/search/autocompletion` (Routen `elastic-controller.*`) | `POST /prosearch/search/results`, `/prosearch/search/autocompletion` (`prosearch-controller.*`) | alte Pfade und Routennamen funktionieren weiter, deprecated, entfallen in 5.0 |
+| `POST /stat/click` (`elastic-stat-controller.click`) | `POST /prosearch/stat/click` (`prosearch-stat-controller.click`) | wie oben |
+| `Controller\ElasticsearchController` | `Controller\ProSearchController` | alter Name als Alias (`class_alias`), deprecated, entfällt in 5.0; betrifft z. B. `instanceof`-Prüfungen auf `$context` im Hook `psParseSearchResults` |
+
+Templates (`mod_elasticsearch*`, `j_elasticsearch*`, `elasticsearch_result`) und die Modulklassen (`ElasticsearchModule`,
+`ElasticsearchTypeAheadModule`) bleiben unverändert, eigene Templates gelten also weiter.
+
+Nach dem Update: `vendor/bin/contao-console contao:migrate` (bzw. Contao Manager → Datenbank aktualisieren).
+
 ### Endpunkte nur noch per POST mit Request-Token
 
-`/elastic/search/results`, `/elastic/search/autocompletion` und `/stat/click` nehmen **nur noch POST** an
+`/prosearch/search/results`, `/prosearch/search/autocompletion` und `/prosearch/stat/click` (sowie die alten Pfade `/elastic/search/*`, `/stat/click`) nehmen **nur noch POST** an
 (GET → 404). Außerdem verlangen sie das Contao-Request-Token im Header `X-CSRF-Token` oder im Feld `REQUEST_TOKEN`,
 sonst antworten sie mit `403` und einem frischen Token in `requestToken`.
 

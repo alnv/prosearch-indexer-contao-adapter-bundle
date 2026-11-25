@@ -30,7 +30,7 @@ composer require alnv/prosearch-indexer-contao-adapter-bundle
 
 ## Setup
 
-Nach der Installation erscheint im Backend ein neuer Navigationspunkt namens "Elasticsearch". Als erstes musst du die Zugangsdaten eingeben. Klicke dazu auf "Zugangsdaten" und wähle unter "Paket" die Option "API-Key" aus. Trage anschließend deinen API-Token und den Lizenzschlüssel für deine Domain ein.
+Nach der Installation erscheint im Backend ein neuer Navigationspunkt namens "ProSearch". Als erstes musst du die Zugangsdaten eingeben. Klicke dazu auf "Zugangsdaten" und wähle unter "Paket" die Option "API-Key" aus. Trage anschließend deinen API-Token und den Lizenzschlüssel für deine Domain ein.
 
 ### Kostenlos testen
 
@@ -38,7 +38,7 @@ Nach der Installation erscheint im Backend ein neuer Navigationspunkt namens "El
 
 ### Seitenstruktur
 
-In der Seitenstruktur im Seitentyp "Startpunkt einer Webseite" gibt es weitere Elasticsearch-Einstellungen. Hier kannst du für deine Webseite den passenden Analyzer auswählen.
+In der Seitenstruktur im Seitentyp "Startpunkt einer Webseite" gibt es weitere ProSearch-Einstellungen. Hier kannst du für deine Webseite den passenden Analyzer auswählen.
 
 ### Was sind Analyzer?
 
@@ -81,12 +81,17 @@ Der search:type wird erst nach einem erneuten Aufbau des Suchindexes übernommen
 
 ### Frontend-Modul
 
-Es gibt zwei Frontend-Module "Elasticsearch" und "Elasticsearch Type Ahead". Lege dein gewünschtes Modul an und binde es in der Seite ein.
+Es gibt zwei Frontend-Module "ProSearch" (Typ `prosearch`) und "ProSearch Type Ahead" (Typ `prosearch_type_ahead`). Lege dein gewünschtes Modul an und binde es in der Seite ein.
+
+Bis 4.0 hießen die Modultypen `elasticsearch` und `elasticsearch_type_ahead`. Bestehende Module stellt die Migration
+`FrontendModuleTypeMigration` um (`contao:migrate`). Die Templates behalten ihre Namen (`mod_elasticsearch*`,
+`j_elasticsearch*`, `elasticsearch_result`), eigene Templates bleiben also gültig. Der Modul-Wrapper trägt neben der
+neuen CSS-Klasse `mod_prosearch` bzw. `mod_prosearch_type_ahead` vorerst auch noch die alte (`mod_elasticsearch*`).
 
 | Modul | Verhalten |
 |---|---|
-| Elasticsearch (`mod_elasticsearch`, Variante `mod_elasticsearch_header`) | Live-Ergebnisse in einem Panel, gruppiert nach Kategorie, mit Kategorie-Filter und „Mehr laden“. Auf der Weiterleitungsseite selbst ist es nur ein Suchformular. |
-| Elasticsearch Type Ahead (`mod_elasticsearch_type_ahead`) | Suchfeld mit Vorschlägen: Suchbegriffe („einfach“) oder Treffer („erweitert“, Auswahl öffnet die Seite). Die Ergebnisliste erscheint auf der Weiterleitungsseite bzw. ohne Weiterleitungsseite direkt unter dem Feld. |
+| ProSearch (Template `mod_elasticsearch`, Variante `mod_elasticsearch_header`) | Live-Ergebnisse in einem Panel, gruppiert nach Kategorie, mit Kategorie-Filter und „Mehr laden“. Auf der Weiterleitungsseite selbst ist es nur ein Suchformular. |
+| ProSearch Type Ahead (Template `mod_elasticsearch_type_ahead`) | Suchfeld mit Vorschlägen: Suchbegriffe („einfach“) oder Treffer („erweitert“, Auswahl öffnet die Seite). Die Ergebnisliste erscheint auf der Weiterleitungsseite bzw. ohne Weiterleitungsseite direkt unter dem Feld. |
 
 **Barrierefreiheit (BFSG, EN 301 549 / WCAG 2.1 AA):**
 
@@ -126,7 +131,7 @@ Jetzt kannst du den Suchindex aufbauen. Gehe dazu in die Systemwartung und klick
 
 ### Kategorien Texte einpflegen
 
-Nach der Indexierung stehen dir die Kategorien unter Elasticsearch → Kategorien zur Verfügung. Hier siehst du eine Auflistung aller gefundenen Kategorien. Zudem kannst du je Kategorie ein Label vergeben oder die Kategorie übersetzen.
+Nach der Indexierung stehen dir die Kategorien unter ProSearch → Kategorien zur Verfügung. Hier siehst du eine Auflistung aller gefundenen Kategorien. Zudem kannst du je Kategorie ein Label vergeben oder die Kategorie übersetzen.
 
 - Neue Kategorien werden automatisch angelegt, „Aktiv“ zeigt, ob Dokumente die Kategorie verwenden. Abgeglichen wird
   beim Öffnen der Kategorien und der Moduleinstellungen, nach jeder Übertragung der Queue und täglich. Die
@@ -137,7 +142,7 @@ Nach der Indexierung stehen dir die Kategorien unter Elasticsearch → Kategorie
 
 ### Synonyme
 
-Unter Elasticsearch → Synonyme legst du fest, bei welchen Suchbegriffen zusätzlich nach einem Zielbegriff gesucht
+Unter ProSearch → Synonyme legst du fest, bei welchen Suchbegriffen zusätzlich nach einem Zielbegriff gesucht
 wird. Beispiel: Zielbegriff „Bürgergeld“, Synonyme „Hartz 4“, „ALG 2“, „Jobcenter“. Wer „hartz 4 antrag“ sucht,
 findet Seiten zu „hartz 4 antrag“ **und** zu „Bürgergeld antrag“.
 
@@ -165,7 +170,7 @@ Trefferzahl, Kontext (Kategorien der Suche), Quelle (Seite, auf der gesucht wurd
 Suchergebnisse samt aufgerufener Seiten. IP-Adressen oder andere personenbezogene Daten werden nicht gespeichert. Ein
 Klick wird der jeweils letzten Suche nach dem Begriff zugeordnet.
 
-**Elasticsearch → Suchprotokoll** listet alle Einträge (Suche, Filter „Altdaten“, Sortierung, einzelne Einträge
+**ProSearch → Suchprotokoll** listet alle Einträge (Suche, Filter „Altdaten“, Sortierung, einzelne Einträge
 löschen). Über das Menü „…“ oben rechts:
 
 - **Begriffe exportieren:** CSV mit einer Zeile je Suchbegriff (Suchanfragen, Ø Treffer, Suchen ohne Treffer, Klicks,
@@ -180,7 +185,7 @@ sind. Der Export wird gestreamt und braucht auch bei Millionen Zeilen kaum Speic
 
 ### Dashboard (Suchanalyse)
 
-Unter Elasticsearch → Dashboard findest du die Suchanalyse: Kennzahlen (heute, gestern, Woche, Monat, Zeitraum, gesamt,
+Unter ProSearch → Dashboard findest du die Suchanalyse: Kennzahlen (heute, gestern, Woche, Monat, Zeitraum, gesamt,
 einzigartige Begriffe, beliebtester Begriff, Ø pro Tag, Anteil ohne Treffer, Klickrate), den Verlauf im Vergleich zum
 Vorzeitraum, die beliebtesten Begriffe (Top 10/20/50), die Verteilung nach Wochentag und Uhrzeit, Begriffe im Trend
 (steigend, fallend, neu), häufige Suchen ohne Treffer sowie eine durchsuch- und sortierbare Tabelle aller Begriffe mit
@@ -387,7 +392,7 @@ der den Cluster anbindet, die Suchanfragen baut, die Lizenz prüft und Anfragen 
 
 ### Verbindung zum Proxy einrichten
 
-Backend → Elasticsearch → **Zugangsdaten** (Paket „API-Key“):
+Backend → ProSearch → **Zugangsdaten** (Paket „API-Key“):
 
 | Feld | Bedeutung |
 |---|---|
@@ -487,7 +492,7 @@ Der Proxy hat kein Contao-Manager-Plugin, die Contao-Installation registriert ih
 | Hook | Status | Signatur |
 |---|---|---|
 | `psCreateMapping` | unverändert | `(array &$params, array $options, object $context)` – Mapping vor dem Anlegen ändern |
-| `psParseSearchResults` | unverändert, dritter Parameter erweitert | `(array $results, array $options, object $context): array` – `$context` ist der `ElasticsearchController` (XHR) oder das Modul (serverseitiges Rendern nach POST) |
+| `psParseSearchResults` | unverändert, dritter Parameter erweitert | `(array $results, array $options, object $context): array` – `$context` ist der `ProSearchController` (XHR; bis 4.0 `ElasticsearchController`) oder das Modul (serverseitiges Rendern nach POST) |
 | `psProxySearchRequest` | **neu** | `(array &$request, array $keywords, array $options, string $mode)` – Proxy-Request (Profil, Filter, Strategien) ändern |
 | `psSearchQuery`, `psAutoCompilation` | **entfallen** (Deprecation-Hinweis) | Erhielten rohe Query-DSL; die Queries baut jetzt der Proxy. Ersatz: `psProxySearchRequest` oder ein `SearchBodyEvent`-Listener im Proxy |
 
@@ -532,9 +537,14 @@ bitte im Body senden, nicht in der URL.
 
 | Endpunkt | Parameter (Body) | Antwort |
 |---|---|---|
-| `POST /elastic/search/results` | `query`, `module` (ID des Frontend-Moduls), `root` (ID der Root-Seite), optional `categories[]`, `group` (`1` = nach Kategorie gruppiert), `search_after` (aus `results.searchAfter`), `view` (`1` = gerendertes Ergebnis-HTML in `view.html`) | `{keywords, results: {hits, total, didYouMean, autocomplete, searchAfter}, view?, requestToken}` |
-| `POST /elastic/search/autocompletion` | `query`, `module`, `root` | `{keywords, results: {hits: [{term}], didYouMean}, requestToken}` |
-| `POST /stat/click` | `url`, `query`, optional `categories[]` | `{requestToken}` |
+| `POST /prosearch/search/results` | `query`, `module` (ID des Frontend-Moduls), `root` (ID der Root-Seite), optional `categories[]`, `group` (`1` = nach Kategorie gruppiert), `search_after` (aus `results.searchAfter`), `view` (`1` = gerendertes Ergebnis-HTML in `view.html`) | `{keywords, results: {hits, total, didYouMean, autocomplete, searchAfter}, view?, requestToken}` |
+| `POST /prosearch/search/autocompletion` | `query`, `module`, `root` | `{keywords, results: {hits: [{term}], didYouMean}, requestToken}` |
+| `POST /prosearch/stat/click` | `url`, `query`, optional `categories[]` | `{requestToken}` |
+
+Die Pfade bis 4.0 (`/elastic/search/results`, `/elastic/search/autocompletion`, `/stat/click`, Routen
+`elastic-controller.*` und `elastic-stat-controller.click`) funktionieren weiter, sind aber deprecated und entfallen
+in 5.0. Die neuen Routennamen sind `prosearch-controller.search_results`, `prosearch-controller.search_autocompletion`
+und `prosearch-stat-controller.click`.
 
 ```js
 <script>
@@ -543,7 +553,7 @@ bitte im Body senden, nicht in der URL.
     let token = (document.querySelector('input[name="REQUEST_TOKEN"]') || {}).value || '';
 
     async function search(query, retried) {
-        const response = await fetch('/elastic/search/results', {
+        const response = await fetch('/prosearch/search/results', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {'X-CSRF-Token': token, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'},

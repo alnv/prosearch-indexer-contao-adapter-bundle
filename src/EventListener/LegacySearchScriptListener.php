@@ -13,7 +13,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * Keeps search front ends of ProSearch < 4 working after the endpoints became POST + CSRF only.
  *
  * Custom templates, layout scripts or content elements of older installations call /elastic/search/* or
- * /stat/click directly (Vue/vue-resource, fetch) without a request token. If a front end page contains such a
+ * /stat/click (since 4.0: /prosearch/search/*, /prosearch/stat/click) directly (Vue/vue-resource, fetch) without a request token. If a front end page contains such a
  * call, prosearch-legacy.js is added to the head: it adds the token to these requests (see the script).
  * Pages using the new front end (prosearch-search.js) do not need it.
  *
@@ -27,7 +27,7 @@ class LegacySearchScriptListener
     private const string SCRIPT = 'bundles/alnvprosearchindexercontaoadapter/prosearch-legacy.js';
 
     // inline calls of the old templates, e.g. this.$http.post('/elastic/search/results?query=' …) or fetch('/elastic/search/autocompletion?query=' …)
-    private const string LEGACY_CALL = '~(?:\$http\.(?:post|get)|fetch)\(\s*[\'"][^\'"]*/(?:elastic/search|stat/click)/?~';
+    private const string LEGACY_CALL = '~(?:\$http\.(?:post|get)|fetch)\(\s*[\'"][^\'"]*/(?:(?:elastic|prosearch)/search|stat/click)/?~';
 
     public function __construct(
         private readonly ScopeMatcher $scopeMatcher,

@@ -11,22 +11,21 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * Click statistics of the front end search (POST only, CSRF protected).
- *
- * The token is checked here for every request (header X-CSRF-Token or field REQUEST_TOKEN), see
- * FrontendRequestToken. "query" is read from the body; the query string is accepted for templates of ProSearch < 4.
- */
-#[Route(path: 'stat', name: 'elastic-stat-controller', defaults: ['_scope' => 'frontend'])]
+#[Route(defaults: ['_scope' => 'frontend'])]
 class StatController extends AbstractController
 {
     public function __construct(private readonly ?FrontendRequestToken $requestToken = null)
     {
     }
 
-    #[Route(path: '/click', name: '.click', methods: ['POST'], defaults: ['_token_check' => false])]
+    #[Route(path: '/prosearch/stat/click', name: 'prosearch-stat-controller.click', methods: ['POST'], defaults: ['_token_check' => false])]
+    #[Route(path: '/stat/click', name: 'elastic-stat-controller.click', methods: ['POST'], defaults: ['_token_check' => false])]
     public function stateClick(Request $request): JsonResponse
     {
+        if ('elastic-stat-controller.click' === $request->attributes->get('_route')) {
+            \trigger_deprecation('alnv/prosearch-indexer-contao-adapter-bundle', '4.0', 'The route "/stat/click" is deprecated and will be removed in 5.0, use "/prosearch/stat/click" instead.');
+        }
+
         $this->container->get('contao.framework')->initialize();
 
         if (!$this->requestToken()->isValid($request)) {

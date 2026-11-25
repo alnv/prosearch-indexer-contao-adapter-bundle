@@ -71,7 +71,7 @@
                     }
 
                     let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
-                    this.$http.post('/elastic/search/results?query=' + this.keywords + searchAfter, {
+                    this.$http.post('/prosearch/search/results?query=' + this.keywords + searchAfter, {
                             categories: this.categories,
                             module: "<?= $this->id ?>",
                             root: "<?= $this->rootPageId ?>",
@@ -287,7 +287,7 @@
                     this.sendHrefStat(href);
                 },
                 sendHrefStat: function (href, retried) {
-                    this.$http.post('/stat/click?query=' + this.keywords, {
+                    this.$http.post('/prosearch/stat/click?query=' + this.keywords, {
                             url: href,
                             categories: this.categories,
                             REQUEST_TOKEN: this.requestToken
@@ -340,7 +340,7 @@
                                 let headers = new Headers();
                                 headers.append('Accept', 'application/json');
                                 headers.append('Content-Type', 'application/json');
-                                const source = await fetch('/elastic/search/autocompletion?query=' + query, {
+                                const source = await fetch('/prosearch/search/autocompletion?query=' + query, {
                                     method: "POST",
                                     headers: headers,
                                     cache: "no-cache",

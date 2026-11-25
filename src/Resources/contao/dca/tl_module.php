@@ -6,8 +6,8 @@ use Contao\Environment;
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['__selector__'][] = 'psAutoCompletionType';
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psLanguage,psDomains;psSearchCategories;psAutoCompletionType;minKeywordLength,perPage,fuzzy,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['elasticsearch'] = '{title_legend},name,headline,type;{search_legend},psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['prosearch_type_ahead'] = '{title_legend},name,headline,type;{search_legend},psLanguage,psDomains;psSearchCategories;psAutoCompletionType;minKeywordLength,perPage,fuzzy,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['prosearch'] = '{title_legend},name,headline,type;{search_legend},psLanguage,psDomains;psSearchCategories;minKeywordLength,perPage,fuzzy,psOpenDocumentInBrowser;{style_legend},psPreventCssLoading;{redirect_legend:hide},jumpTo;{template_legend:hide},customTpl,psResultsTemplate;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_simple'] = '';
 $GLOBALS['TL_DCA']['tl_module']['subpalettes']['psAutoCompletionType_advanced'] = '';

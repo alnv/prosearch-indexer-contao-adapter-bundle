@@ -58,6 +58,19 @@ trait SearchModuleTrait
     }
 
     /**
+     * Until 4.0 the module types were "elasticsearch" and "elasticsearch_type_ahead" (see FrontendModuleTypeMigration),
+     * Contao renders the type as CSS class "mod_<type>". The old class is added so that theme styles keep working.
+     *
+     * @deprecated since 4.0, the classes mod_elasticsearch* will be removed in 5.0, use mod_prosearch*
+     */
+    protected function addLegacyCssClass(string $class): void
+    {
+        $cssID = \is_array($this->cssID) ? $this->cssID : StringUtil::deserialize($this->cssID, true);
+        $cssID[1] = trim(($cssID[1] ?? '').' '.$class);
+        $this->cssID = $cssID;
+    }
+
+    /**
      * Templates without data-prosearch were written for the Vue front end of ProSearch < 4.
      */
     protected function isLegacyTemplate(): bool
@@ -163,9 +176,9 @@ trait SearchModuleTrait
             'headingLevel' => $this->getGroupHeadingLevel(),
             'requestToken' => $requestToken,
             'endpoints' => [
-                'results' => $router->generate('elastic-controller.search_results'),
-                'autocomplete' => $router->generate('elastic-controller.search_autocompletion'),
-                'click' => $router->generate('elastic-stat-controller.click'),
+                'results' => $router->generate('prosearch-controller.search_results'),
+                'autocomplete' => $router->generate('prosearch-controller.search_autocompletion'),
+                'click' => $router->generate('prosearch-stat-controller.click'),
             ],
             'labels' => [
                 'loading' => $lang['searchResultsLoading'] ?? 'Searching …',

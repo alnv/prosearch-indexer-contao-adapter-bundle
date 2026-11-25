@@ -26,7 +26,7 @@
                     }
                     let self = this;
                     let type = '<?php if ($this->psAutoCompletionType == 'advanced'): ?>results<?php else: ?>autocompletion<?php endif; ?>';
-                    let fetchUrl = '/elastic/search/' + type + '?query=';
+                    let fetchUrl = '/prosearch/search/' + type + '?query=';
                     this.autoCompleteJS = new autoComplete({
                         selector: "#ctrl_keywords_<?= $this->uniqueId ?>",
                         placeHolder: "<?= $this->keywordLabel ?>",
@@ -135,7 +135,7 @@
                     this.didYouMean = [];
                     this.loading = true;
                     let searchAfter = params && params.hasOwnProperty('searchAfter') && params.searchAfter ? ('&search_after=' + params.searchAfter) : ''
-                    let fetchUrl = '/elastic/search/results?query=' + this.keywords + searchAfter;
+                    let fetchUrl = '/prosearch/search/results?query=' + this.keywords + searchAfter;
                     this.$http.post(fetchUrl, {
                             categories: this.categories,
                             module: "<?= $this->id ?>",
@@ -190,7 +190,7 @@
                     this.autoCompleteJS.start(this.keywords);
                 },
                 sendHrefStat: function (href, retried) {
-                    this.$http.post('/stat/click?query=' + this.keywords, {
+                    this.$http.post('/prosearch/stat/click?query=' + this.keywords, {
                             url: href,
                             categories: this.categories,
                             REQUEST_TOKEN: this.requestToken

@@ -37,11 +37,11 @@ $GLOBALS['TL_LANG']['MSC']['psAnalyzer'] = [
     'contao' => 'whitespace',
     'german' => 'lowercase//german_stopwords//german_stemmer',
     'english' => 'lowercase//english_stopwords//english_stemmer',
-    'standard' => 'Elasticsearch//Standard',
-    'lowercase' => 'Elasticsearch//lowercase',
-    'whitespace' => 'Elasticsearch//Whitespace',
-    'keyword' => 'Elasticsearch//Keyword',
-    'stop' => 'Elasticsearch//Stop',
-    'simple' => 'Elasticsearch//Simple',
+    'standard' => 'ProSearch//Standard',
+    'lowercase' => 'ProSearch//lowercase',
+    'whitespace' => 'ProSearch//Whitespace',
+    'keyword' => 'ProSearch//Keyword',
+    'stop' => 'ProSearch//Stop',
+    'simple' => 'ProSearch//Simple',
     'french' => 'lowercase//french_stopwords//french_stemmer'
 ];

@@ -6,7 +6,7 @@ use Alnv\ProSearchIndexerContaoAdapterBundle\Stats\SearchStatsLogger;
 use Contao\System;
 
 /**
- * Static entry points of the front end search statistics (used by ElasticsearchController and StatController).
+ * Static entry points of the front end search statistics (used by ProSearchController and StatController).
  * Everything is stored in tl_search_stats_log, see Stats\SearchStatsLogger.
  */
 class Stats

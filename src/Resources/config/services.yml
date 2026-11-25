@@ -154,6 +154,10 @@ services:
     tags:
       - { name: contao.migration }
 
+  Alnv\ProSearchIndexerContaoAdapterBundle\Migration\FrontendModuleTypeMigration:
+    tags:
+      - { name: contao.migration }
+
   Alnv\ProSearchIndexerContaoAdapterBundle\Cron\SyncIndexQueue:
     arguments:
       $timeLimit: '%prosearch_adapter.queue.cron_time_limit%'
@@ -170,7 +174,7 @@ services:
   Alnv\ProSearchIndexerContaoAdapterBundle\Cron\DeleteIndices:
     public: true
 
-  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ElasticsearchController:
+  Alnv\ProSearchIndexerContaoAdapterBundle\Controller\ProSearchController:
     public: true
 
   Alnv\ProSearchIndexerContaoAdapterBundle\Controller\StatController:

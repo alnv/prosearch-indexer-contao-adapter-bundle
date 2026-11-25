@@ -62,7 +62,7 @@ $GLOBALS['TL_PURGE']['custom']['deleteElasticsearchIndex'] = [
  */
 ArrayUtil::arrayInsert($GLOBALS['FE_MOD'], 3, [
     'prosearch-modules' => [
-        'elasticsearch_type_ahead' => ElasticsearchTypeAheadModule::class,
-        'elasticsearch' => ElasticsearchModule::class
+        'prosearch_type_ahead' => ElasticsearchTypeAheadModule::class,
+        'prosearch' => ElasticsearchModule::class
     ]
 ]);

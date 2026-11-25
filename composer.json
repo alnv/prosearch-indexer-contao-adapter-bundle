@@ -32,7 +32,8 @@
     "menatwork/contao-multicolumnwizard-bundle": "^3.6",
     "smalot/pdfparser": "^2.12",
     "symfony/cache-contracts": "^2.5 || ^3.0",
-    "symfony/http-client": "^6.4 || ^7.0"
+    "symfony/http-client": "^6.4 || ^7.0",
+    "symfony/css-selector": "^6.4 || ^7.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.5"

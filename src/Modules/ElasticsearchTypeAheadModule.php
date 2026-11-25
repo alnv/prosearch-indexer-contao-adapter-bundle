@@ -23,7 +23,7 @@ class ElasticsearchTypeAheadModule extends Module
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
             $objTemplate->href = 'contao?do=themes&amp;table=tl_module&amp;act=edit&amp;id='.$this->id;
-            $objTemplate->wildcard = '### '.strtoupper($GLOBALS['TL_LANG']['FMD']['elasticsearch_type_ahead'][0] ?? '').' ###';
+            $objTemplate->wildcard = '### '.strtoupper($GLOBALS['TL_LANG']['FMD']['prosearch_type_ahead'][0] ?? '').' ###';
 
             return $objTemplate->parse();
         }
@@ -36,6 +36,7 @@ class ElasticsearchTypeAheadModule extends Module
         global $objPage;
 
         $search = $this->getSearchRequest();
+        $this->addLegacyCssClass('mod_elasticsearch_type_ahead');
 
         // template variables of ProSearch < 4 (also used by custom templates)
         $this->Template->uniqueId = $this->id;
